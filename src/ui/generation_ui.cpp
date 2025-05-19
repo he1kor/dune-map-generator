@@ -7,17 +7,13 @@ GenerationUI::GenerationUI(Generation *generationPtr, MapRenderer *mapRendererPt
     this->generationPtr = generationPtr;
     this->mapRendererPtr = mapRendererPtr;
 }
-
-void GenerationUI::showMapPreview() {
-
-    mapRendererPtr->render();
-}
-
 void GenerationUI::build()
 {
     ImGui::Text("Generation");
     ImGui::Dummy(ImVec2(0, 5));
-    showMapPreview();
+    
+    mapRendererPtr->render();
+
     ImGui::Dummy(ImVec2(0, 5));
     ImGui::Text("Seed");
     ImGui::SetNextItemWidth(-1);

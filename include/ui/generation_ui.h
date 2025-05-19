@@ -9,7 +9,6 @@ class GenerationUI{
         void build();
         
     private:
-        void showMapPreview();
         Generation* generationPtr;
         MapRenderer* mapRendererPtr;
 };
