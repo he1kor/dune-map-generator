@@ -1,4 +1,5 @@
 #include "imgui.h"
+#include <glad/glad.h>
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include <GLFW/glfw3.h>
@@ -11,10 +12,19 @@
 #include "generation.h"
 #include "generation_ui.h"
 #include "icon.h"
+#include "map_render.h"
 
 constexpr float left_column_width = 200.0f;
-constexpr float min_middle_column_width = 200.0f;
+constexpr float min_map_size = 128.0f;
+constexpr float min_middle_column_width = min_map_size + 16;
+constexpr float max_middle_column_width = min_map_size * 4 + 16;
 constexpr float right_column_width = 200.0f;
+
+constexpr float min_window_width = left_column_width + min_middle_column_width + right_column_width;
+constexpr float max_window_width = left_column_width + max_middle_column_width + right_column_width;
+
+constexpr float min_window_height = 500.0f;
+constexpr float max_window_height = 800.0f;
 
 void buildLayout(QuickSettingsUI& quickSettingsUI, TemplatePickerUI& templatePickerUI, GenerationUI& generationUI){
 
@@ -51,14 +61,20 @@ int main(){
     if (!glfwInit())
         return -1;
 
-    GLFWwindow* window = glfwCreateWindow(700, 500, "Dune 2000 Map Generator", nullptr, nullptr);
-    glfwSetWindowSizeLimits(window, left_column_width + min_middle_column_width + right_column_width, 500.0f, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    GLFWwindow* window = glfwCreateWindow(672, 500, "Dune 2000 Map Generator", nullptr, nullptr);
+    glfwSetWindowSizeLimits(window, min_window_width, min_window_height, max_window_width, max_window_height);
     if (!window){
         glfwTerminate();
         return -1;
     }
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cerr << "Failed to initialize GLAD!" << std::endl;
+        return -1;
+    }
+
     GLFWimage gl_icon;
     gl_icon.width = ICON_WIDTH;
     gl_icon.height = ICON_WIDTH;
@@ -77,6 +93,8 @@ int main(){
 
     setFont();
 
+    MapRenderer mapRenderer;
+
     QuickSettings quickSettings;
     QuickSettingsUI quickSettingsUI(&quickSettings);
 
@@ -84,11 +102,33 @@ int main(){
     TemplatePickerUI templatePickerUI(&templatePicker);
 
     Generation generation;
-    GenerationUI generationUI(&generation);
+    GenerationUI generationUI(&generation, &mapRenderer);
     
 
 
 
+    int width = 64;
+    int height = 64;
+
+
+    std::vector<uint32_t> mapPixels(height * width);
+    // Example: Set some tiles (replace with your actual tile mapping)
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            mapPixels[y * width + x] = 0xFF00FFFF;
+            if (x + y < width)
+                mapPixels[y * width + x] = 0xFF0033FF;
+        }
+    }
+
+    mapRenderer.updateMap(mapPixels, width, height);
+    
+    
+    
+    
+    
+    
+    
     ImGuiStyle& style = ImGui::GetStyle();
     style.ChildRounding = 1.0f;
     style.FrameRounding = 3.0f;
@@ -96,9 +136,9 @@ int main(){
     style.ScrollbarRounding = 4.0f;
     style.GrabRounding = 4.0f;
     style.TabRounding = 4.0f;
-
-
-
+    
+    
+    
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
