@@ -65,6 +65,8 @@
         "xmemory": "cpp",
         "xtr1common": "cpp",
         "xutility": "cpp",
-        "array": "cpp"
+        "array": "cpp",
+        "map": "cpp",
+        "xtree": "cpp"
     }
 }

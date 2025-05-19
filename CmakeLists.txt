@@ -3,6 +3,8 @@ project(MapGeneratorApp)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(GLAD_SRC "${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c")
+set(GLAD_INCLUDE "${CMAKE_SOURCE_DIR}/libs/glad/include")
 set(GLFW_ROOT "${CMAKE_SOURCE_DIR}/libs/glfw-3.4.bin.WIN64")
 set(GLFW_LIBRARY "${GLFW_ROOT}/lib-mingw-w64/libglfw3.a")
 
