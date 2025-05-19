@@ -1,0 +1,2 @@
+C:\msys64\ucrt64\bin\ar.exe qc libui_module.a CMakeFiles/ui_module.dir/basic_settings.cpp.obj
+C:\msys64\ucrt64\bin\ranlib.exe libui_module.a
