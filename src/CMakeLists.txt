@@ -32,7 +32,16 @@ target_link_libraries(${PROJECT_NAME}
     opengl32
     glad
     gdi32
+    Dune2kMapApi
 )
+
+
+FetchContent_Declare(
+  dune2000-map-api
+  GIT_REPOSITORY https://github.com/he1kor/dune-map-api
+  GIT_TAG        0c5c454145f0c86a06e7d0b125fed4243bd90b6a
+)
+FetchContent_MakeAvailable(dune2000-map-api)
 
 if(MINGW)
     target_link_libraries(${PROJECT_NAME} mingw32)
