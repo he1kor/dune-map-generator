@@ -1,11 +1,38 @@
 #include "map_render.h"
 
-MapRenderer::MapRenderer() : textureID(0), mapWidth(0), mapHeight(0) {}
+MapRenderer::MapRenderer(Palette *palette) : textureID(0), mapWidth(0), mapHeight(0), palette(palette) {}
 
-MapRenderer::~MapRenderer(){
+MapRenderer::~MapRenderer()
+{
     if (textureID != 0) {
         glDeleteTextures(1, &textureID);
     }
+}
+
+const uint32_t MapRenderer::mapTile(const Tile tile){
+    std::string material = palette->findMaterialName(tile.tileID);
+    if (material == "sand"){
+        if (tile.entityID == 1)
+            return 0xff2e9ef7;
+        if (tile.entityID == 2)
+            return 0xff0072ce;
+        return 0xffb1cedd;
+    }
+    if (material == "rock")
+        return 0xff254d74;
+    if (material == "dunes")
+        return 0xffc5feff;
+    return 0xff091f30;
+}
+
+const std::vector<uint32_t> MapRenderer::convertMap(SmartMap map){
+    std::vector<uint32_t> result(map.height() * map.width());
+    for (int y = 0; y < map.height(); y++){
+        for (int x = 0; x < map.width(); x++){
+            result[y * map.width() + x] = mapTile(map.getTile(x, y));
+        }
+    }   
+    return result;
 }
 
 void MapRenderer::updateMap(const std::vector<uint32_t> &pixels, int width, int height) {

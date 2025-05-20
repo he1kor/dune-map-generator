@@ -7,16 +7,21 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <imgui.h>
+#include "smart_map.h"
+#include "palette.h"
 
 class MapRenderer {
 public:
     const int maxMapSize = 128;
     const int maxScaleFactor = 4;
 
-    MapRenderer();
+    MapRenderer(Palette* palette);
 
     ~MapRenderer();
 
+    const uint32_t mapTile(const Tile tile);
+
+    const std::vector<uint32_t> convertMap(SmartMap map);
     //RGBA format updating
     void updateMap(const std::vector<uint32_t>& pixels, int width, int height);
     int getOptimalMapSize(int availableWidth);
@@ -26,4 +31,5 @@ private:
     GLuint textureID;
     int mapWidth;
     int mapHeight;
+    Palette* palette;
 };

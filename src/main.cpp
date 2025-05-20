@@ -13,6 +13,10 @@
 #include "generation_ui.h"
 #include "icon.h"
 #include "map_render.h"
+#include "tileset_properties.h"
+#include "tileset_json_i.h"
+#include "map_bin_file_io.h"
+#include <palette.h>
 
 constexpr float left_column_width = 200.0f;
 constexpr float min_map_size = 128.0f;
@@ -98,7 +102,13 @@ int main(){
     setColors();
     setShape();
 
-    MapRenderer mapRenderer;
+    MapBinFileIO map_bin_file;
+    map_bin_file.open("test.map");
+    auto map = SmartMap::fromMap(map_bin_file.load());
+
+    TilesetProperties tilesetProperties = load("tileset.json");
+
+    MapRenderer mapRenderer(&tilesetProperties.palette);
 
     QuickSettings quickSettings;
     QuickSettingsUI quickSettingsUI(&quickSettings);
@@ -118,15 +128,17 @@ int main(){
 
     std::vector<uint32_t> mapPixels(height * width);
     // Example: Set some tiles (replace with your actual tile mapping)
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            mapPixels[y * width + x] = 0xFF00FFFF;
-            if (x + y < width)
-                mapPixels[y * width + x] = 0xFF0033FF;
-        }
-    }
+    //for (int y = 0; y < height; y++) {
+    //    for (int x = 0; x < width; x++) {
+    //        mapPixels[y * width + x] = 0xFF00FFFF;
+    //        if (x + y < width)
+    //            mapPixels[y * width + x] = 0xFF0033FF;
+    //    }
+    //}
+//
+    //mapRenderer.updateMap(mapPixels, width, height);
 
-    mapRenderer.updateMap(mapPixels, width, height);
+    mapRenderer.updateMap(mapRenderer.convertMap(map), map.width(), map.height());
     
     
     
