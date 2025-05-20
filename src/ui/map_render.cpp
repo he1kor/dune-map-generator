@@ -16,7 +16,7 @@ const uint32_t MapRenderer::mapTile(const Tile tile){
             return 0xff2e9ef7;
         if (tile.entityID == 2)
             return 0xff0072ce;
-        return 0xffb1cedd;
+        return 0xff8abde2;
     }
     if (material == "rock")
         return 0xff254d74;
