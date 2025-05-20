@@ -24,7 +24,7 @@ constexpr float min_window_width = left_column_width + min_middle_column_width +
 constexpr float max_window_width = left_column_width + max_middle_column_width + right_column_width;
 
 constexpr float min_window_height = 500.0f;
-constexpr float max_window_height = 800.0f;
+constexpr float max_window_height = 730.0f;
 
 void buildLayout(QuickSettingsUI& quickSettingsUI, TemplatePickerUI& templatePickerUI, GenerationUI& generationUI){
 

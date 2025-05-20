@@ -27,13 +27,13 @@ void TemplatePickerUI::build(){
 
     ImGui::PopStyleColor(3);
 
-    float available_space = ImGui::GetContentRegionAvail().y - 40.0f - ImGui::GetStyle().ItemSpacing.y;
+    float available_space = ImGui::GetContentRegionAvail().y - 30.0f - ImGui::GetStyle().ItemSpacing.y;
     ImGui::Dummy(ImVec2(0, available_space));
 
     ImGui::PushStyleColor(ImGuiCol_Button, VARIANT2_BASIC);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, VARIANT2_EXTRA);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, VARIANT2_ULTRA);
-    if (ImGui::Button("Generate", ImVec2(-1, 40))) {
+    if (ImGui::Button("Generate", ImVec2(-1, 30))) {
         // Generate action
     }
     ImGui::PopStyleColor(3);

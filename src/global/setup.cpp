@@ -72,4 +72,6 @@ void setShape(){
     style.ScrollbarRounding = 4.0f;
     style.GrabRounding = 4.0f;
     style.TabRounding = 4.0f;
+
+    style.GrabMinSize = 10.0f;
 }

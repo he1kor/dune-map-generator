@@ -34,7 +34,7 @@ void GenerationUI::build(){
     }
     ImGui::Checkbox("Use random##use random seed", &(generationPtr->is_seed_random));
 
-    float available_space = ImGui::GetContentRegionAvail().y - 40.0f - ImGui::GetStyle().ItemSpacing.y;
+    float available_space = ImGui::GetContentRegionAvail().y - 30.0f - ImGui::GetStyle().ItemSpacing.y;
     ImGui::Dummy(ImVec2(0, available_space));
-    ImGui::ProgressBar(generationPtr->generationProgress, ImVec2(-1, 40));
+    ImGui::ProgressBar(generationPtr->generationProgress, ImVec2(-1, 30));
 }
