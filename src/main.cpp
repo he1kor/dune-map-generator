@@ -37,6 +37,7 @@ void buildLayout(QuickSettingsUI& quickSettingsUI, TemplatePickerUI& templatePic
         ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_NoCollapse
     );
+    ImGui::GetStyle().WindowRounding = 6.0f;
 
     ImGui::Columns(3, "MyColumns", false);
     
@@ -54,10 +55,12 @@ void buildLayout(QuickSettingsUI& quickSettingsUI, TemplatePickerUI& templatePic
     templatePickerUI.build();
     
     ImGui::Columns(1);
+    ImGui::GetStyle().WindowRounding = 0.0f;
     ImGui::End();
 }
 
 int main(){
+
     if (!glfwInit())
         return -1;
 
@@ -92,6 +95,8 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 130");
 
     setFont();
+    setColors();
+    setShape();
 
     MapRenderer mapRenderer;
 
@@ -125,20 +130,6 @@ int main(){
     
     
     
-    
-    
-    
-    
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.ChildRounding = 1.0f;
-    style.FrameRounding = 3.0f;
-    style.PopupRounding = 8.0f;
-    style.ScrollbarRounding = 4.0f;
-    style.GrabRounding = 4.0f;
-    style.TabRounding = 4.0f;
-    
-    
-    
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
@@ -150,6 +141,7 @@ int main(){
         buildLayout(quickSettingsUI, templatePickerUI, generationUI);
 
         // Рендеринг
+        //ImGui::ShowStyleEditor();
         ImGui::Render();
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
