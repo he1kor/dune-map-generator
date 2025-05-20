@@ -59,7 +59,7 @@ void MapRenderer::render(){
     draw_list->AddRectFilled(
         squarePos, 
         ImVec2(squarePos.x + squareSize, squarePos.y + squareSize), 
-        IM_COL32(0, 0, 0, 255)
+        IM_COL32(43, 33, 32, 255)
     );
     
     // Draw the map texture (centered)
