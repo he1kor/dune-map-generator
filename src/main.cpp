@@ -114,9 +114,9 @@ int main(){
     QuickSettingsUI quickSettingsUI(&quickSettings);
 
     TemplatePicker templatePicker;
-    TemplatePickerUI templatePickerUI(&templatePicker);
-
     Generation generation;
+    TemplatePickerUI templatePickerUI(&templatePicker, &generation);
+
     GenerationUI generationUI(&generation, &mapRenderer);
     
 

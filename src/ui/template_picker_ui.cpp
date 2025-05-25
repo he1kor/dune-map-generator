@@ -3,9 +3,21 @@
 #include <iostream>
 #include "file_pick_button.h"
 #include "colors.h"
+#include <string>
 
-TemplatePickerUI::TemplatePickerUI(TemplatePicker *templatePickerPtr){
+
+TemplatePickerUI::TemplatePickerUI(TemplatePicker *templatePickerPtr, Generation *generationPtr){
     this->templatePickerPtr = templatePickerPtr;
+    this->generationPtr = generationPtr;
+}
+
+void TemplatePickerUI::buildGenerateButton(){
+    if (generationPtr->generationProgress == 1.0f || generationPtr->generationProgress == 0.0f){
+        if (ImGui::Button("Generate", ImVec2(-1, 30))){
+            //TODO: Generation
+        }
+    }
+    else ImGui::Button("Generation...", ImVec2(-1, 30));
 }
 
 void TemplatePickerUI::build(){
@@ -33,9 +45,9 @@ void TemplatePickerUI::build(){
     ImGui::PushStyleColor(ImGuiCol_Button, VARIANT2_BASIC);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, VARIANT2_EXTRA);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, VARIANT2_ULTRA);
-    if (ImGui::Button("Generate", ImVec2(-1, 30))) {
-        // Generate action
-    }
+    
+    buildGenerateButton();
+
     ImGui::PopStyleColor(3);
 
 }
