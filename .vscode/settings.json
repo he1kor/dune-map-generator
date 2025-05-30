@@ -78,6 +78,7 @@
         "stack": "cpp",
         "any": "cpp",
         "numeric": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "codecvt": "cpp"
     }
 }
