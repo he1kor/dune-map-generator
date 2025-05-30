@@ -18,6 +18,12 @@
 #include "map_bin_file_io.h"
 #include <palette.h>
 
+
+#include "test.h"
+#include "plane.h"
+#include "graph.h"
+#include "embedding.h"
+
 constexpr float left_column_width = 200.0f;
 constexpr float min_map_size = 128.0f;
 constexpr float min_middle_column_width = min_map_size + 16;
@@ -103,8 +109,8 @@ int main(){
     setShape();
 
     MapBinFileIO map_bin_file;
-    map_bin_file.open("test.map");
-    auto map = SmartMap::fromMap(map_bin_file.load());
+    //map_bin_file.open("test.map");
+    //auto map = SmartMap::fromMap(map_bin_file.load());
 
     TilesetProperties tilesetProperties = load("tileset.json");
 
@@ -122,23 +128,28 @@ int main(){
 
 
 
-    int width = 64;
-    int height = 64;
+    int width = 128;
+    int height = 128;
+    
+    Graph graph(
+        {
+            {1, 2, 3},  // 0
+            {0, 2, 4},   // 1
+            {0, 1, 3},   // 2
+            {0, 2, 4},   // 3
+            {1, 3}       // 4
+        }
+    );
 
-
-    std::vector<uint32_t> mapPixels(height * width);
-    // Example: Set some tiles (replace with your actual tile mapping)
-    //for (int y = 0; y < height; y++) {
-    //    for (int x = 0; x < width; x++) {
-    //        mapPixels[y * width + x] = 0xFF00FFFF;
-    //        if (x + y < width)
-    //            mapPixels[y * width + x] = 0xFF0033FF;
-    //    }
-    //}
-//
-    //mapRenderer.updateMap(mapPixels, width, height);
-
-    mapRenderer.updateMap(mapRenderer.convertMap(map), map.width(), map.height());
+    EmbeddablePlane plane(128, 128);
+    //plane.addSpot(5, 10);
+    //plane.addSpot(35, 10);
+    //plane.addSpot(55, 15);
+    //plane.addSpot(55, 105);
+    plane.embedGraph(graph);
+    std::cout << "embedded!\n";
+    //mapRenderer.updateMap(mapRenderer.convertMap(map), map.width(), map.height());
+    mapRenderer.updateMap(mapRenderer.convertPlane(plane, graph), plane.getWidth(), plane.getHeight());
     
     
     
