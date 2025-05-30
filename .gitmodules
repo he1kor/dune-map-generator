@@ -1,3 +1,6 @@
 [submodule "imgui"]
 	path = libs/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "libs/GenCore"]
+	path = libs/GenCore
+	url = https://github.com/he1kor/GenCore.git
