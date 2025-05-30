@@ -2,8 +2,7 @@
 
 MapRenderer::MapRenderer(Palette *palette) : textureID(0), mapWidth(0), mapHeight(0), palette(palette) {}
 
-MapRenderer::~MapRenderer()
-{
+MapRenderer::~MapRenderer(){
     if (textureID != 0) {
         glDeleteTextures(1, &textureID);
     }
@@ -23,6 +22,97 @@ const uint32_t MapRenderer::mapTile(const Tile tile){
     if (material == "dunes")
         return 0xffc5feff;
     return 0xff091f30;
+}
+
+const std::vector<uint32_t> MapRenderer::convertPlane(const Plane& plane, const Graph& graph) {
+    int width = plane.getWidth();
+    int height = plane.getHeight();
+    std::vector<uint32_t> result(width * height, 0xff000000); // Initialize with black background
+
+    // First draw edges (so spots appear on top)
+    const auto& spots = plane.getSpots();
+    for (int nodeId = 0; nodeId < graph.size(); ++nodeId) {
+        const Node& node = graph.getNode(nodeId);
+        Spot startSpot = spots[nodeId];
+        
+        for (int neighborId : node.getNeighbours()) {
+            // To avoid drawing edges twice, only draw when neighborId > nodeId
+            if (neighborId > nodeId) {
+                Spot endSpot = spots[neighborId];
+                drawLine(result, width, height, startSpot, endSpot, 0xffaaaaaa); // Light gray for edges
+            }
+        }
+    }
+
+    // Then draw spots on top of edges
+    for (auto spot : spots) {
+        int x = spot.getX();
+        int y = spot.getY();
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+            result[y * width + x] = 0xff0000ff; // Blue for nodes
+            // Draw a small circle around the spot for better visibility
+            drawCircle(result, width, height, x, y, 2, 0xff0000ff);
+        }
+    }
+
+    return result;
+}
+
+void MapRenderer::drawLine(std::vector<uint32_t>& pixels, int width, int height, 
+                          const Spot& start, const Spot& end, uint32_t color) {
+    int x0 = start.getX();
+    int y0 = start.getY();
+    int x1 = end.getX();
+    int y1 = end.getY();
+
+    bool steep = abs(y1 - y0) > abs(x1 - x0);
+    if (steep) {
+        std::swap(x0, y0);
+        std::swap(x1, y1);
+    }
+    if (x0 > x1) {
+        std::swap(x0, x1);
+        std::swap(y0, y1);
+    }
+
+    int dx = x1 - x0;
+    int dy = abs(y1 - y0);
+    int error = dx / 2;
+    int ystep = (y0 < y1) ? 1 : -1;
+    int y = y0;
+
+    for (int x = x0; x <= x1; x++) {
+        if (steep) {
+            if (y >= 0 && y < width && x >= 0 && x < height) {
+                pixels[x * width + y] = color;
+            }
+        } else {
+            if (x >= 0 && x < width && y >= 0 && y < height) {
+                pixels[y * width + x] = color;
+            }
+        }
+        error -= dy;
+        if (error < 0) {
+            y += ystep;
+            error += dx;
+        }
+    }
+}
+
+// Helper function to draw a simple circle
+void MapRenderer::drawCircle(std::vector<uint32_t>& pixels, int width, int height,
+                            int centerX, int centerY, int radius, uint32_t color) {
+    for (int y = -radius; y <= radius; y++) {
+        for (int x = -radius; x <= radius; x++) {
+            if (x*x + y*y <= radius*radius) {
+                int px = centerX + x;
+                int py = centerY + y;
+                if (px >= 0 && px < width && py >= 0 && py < height) {
+                    pixels[py * width + px] = color;
+                }
+            }
+        }
+    }
 }
 
 const std::vector<uint32_t> MapRenderer::convertMap(SmartMap map){

@@ -14,7 +14,7 @@ TemplatePickerUI::TemplatePickerUI(TemplatePicker *templatePickerPtr, Generation
 void TemplatePickerUI::buildGenerateButton(){
     if (generationPtr->generationProgress == 1.0f || generationPtr->generationProgress == 0.0f){
         if (ImGui::Button("Generate", ImVec2(-1, 30))){
-            //TODO: Generation
+        //TODO: Generation
         }
     }
     else ImGui::Button("Generation...", ImVec2(-1, 30));
