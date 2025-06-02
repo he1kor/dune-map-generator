@@ -27,31 +27,27 @@ const uint32_t MapRenderer::mapTile(const Tile tile){
 const std::vector<uint32_t> MapRenderer::convertPlane(const Plane& plane, const Graph& graph) {
     int width = plane.getWidth();
     int height = plane.getHeight();
-    std::vector<uint32_t> result(width * height, 0xff000000); // Initialize with black background
+    std::vector<uint32_t> result(width * height, 0xff000000);
 
-    // First draw edges (so spots appear on top)
     const auto& spots = plane.getSpots();
     for (int nodeId = 0; nodeId < graph.size(); ++nodeId) {
         const Node& node = graph.getNode(nodeId);
-        Spot startSpot = spots[nodeId];
+        Spot startSpot = spots.at(nodeId);
         
         for (int neighborId : node.getNeighbours()) {
-            // To avoid drawing edges twice, only draw when neighborId > nodeId
             if (neighborId > nodeId) {
-                Spot endSpot = spots[neighborId];
-                drawLine(result, width, height, startSpot, endSpot, 0xffaaaaaa); // Light gray for edges
+                Spot endSpot = spots.at(neighborId);
+                drawLine(result, width, height, startSpot, endSpot, 0xffaaaaaa);
             }
         }
     }
 
-    // Then draw spots on top of edges
     for (auto spot : spots) {
         int x = spot.getX();
         int y = spot.getY();
         if (x >= 0 && x < width && y >= 0 && y < height) {
-            result[y * width + x] = 0xff0000ff; // Blue for nodes
-            // Draw a small circle around the spot for better visibility
-            drawCircle(result, width, height, x, y, 2, 0xff0000ff);
+            result[y * width + x] = 0xff0000ff;
+            drawCircle(result, width, height, x, y, 3, 0xff0000ff);
         }
     }
 
@@ -99,7 +95,6 @@ void MapRenderer::drawLine(std::vector<uint32_t>& pixels, int width, int height,
     }
 }
 
-// Helper function to draw a simple circle
 void MapRenderer::drawCircle(std::vector<uint32_t>& pixels, int width, int height,
                             int centerX, int centerY, int radius, uint32_t color) {
     for (int y = -radius; y <= radius; y++) {
