@@ -1,6 +1,5 @@
 #include "imgui.h"
 #include "template_picker_ui.h"
-#include <iostream>
 #include "file_pick_button.h"
 #include "colors.h"
 #include <string>
@@ -14,7 +13,7 @@ TemplatePickerUI::TemplatePickerUI(TemplatePicker *templatePickerPtr, Generation
 void TemplatePickerUI::buildGenerateButton(){
     if (generationPtr->generationProgress == 1.0f || generationPtr->generationProgress == 0.0f){
         if (ImGui::Button("Generate", ImVec2(-1, 30))){
-        //TODO: Generation
+            generationPtr->generate();
         }
     }
     else ImGui::Button("Generation...", ImVec2(-1, 30));
