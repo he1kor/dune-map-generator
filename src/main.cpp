@@ -141,18 +141,9 @@ int main(){
         }
     );
 
-    EmbeddablePlane plane(128, 128);
-    //plane.addSpot(5, 10);
-    //plane.addSpot(35, 10);
-    //plane.addSpot(55, 15);
-    //plane.addSpot(55, 105);
-    plane.embedGraph(graph);
-    std::cout << "embedded!\n";
     //mapRenderer.updateMap(mapRenderer.convertMap(map), map.width(), map.height());
-    mapRenderer.updateMap(mapRenderer.convertPlane(plane, graph), plane.getWidth(), plane.getHeight());
-    
-    
-    
+    mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, Graph()), generation.plane.getWidth(), generation.plane.getHeight());
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
@@ -160,6 +151,12 @@ int main(){
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
+        if (generation.iterateNext){
+            generation.runIteration();
+            mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, generation.defaultGraph), generation.plane.getWidth(), generation.plane.getHeight());
+        }
+
 
         buildLayout(quickSettingsUI, templatePickerUI, generationUI);
 
