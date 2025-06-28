@@ -24,42 +24,13 @@ const uint32_t MapRenderer::mapTile(const Tile tile){
     return 0xff091f30;
 }
 
-const std::vector<uint32_t> MapRenderer::convertPlane(const Plane& plane, const Graph& graph) {
-    int width = plane.getWidth();
-    int height = plane.getHeight();
-    std::vector<uint32_t> result(width * height, 0xff000000);
-
-    const auto& spots = plane.getSpots();
-    for (int nodeId = 0; nodeId < graph.size(); ++nodeId) {
-        const Node& node = graph.getNode(nodeId);
-        Spot startSpot = spots.at(nodeId);
-        
-        for (int neighborId : node.getNeighbours()) {
-            if (neighborId > nodeId) {
-                Spot endSpot = spots.at(neighborId);
-                drawLine(result, width, height, startSpot, endSpot, 0xffaaaaaa);
-            }
-        }
-    }
-
-    for (auto spot : spots) {
-        int x = spot.getX();
-        int y = spot.getY();
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-            result[y * width + x] = 0xff0000ff;
-            drawCircle(result, width, height, x, y, 3, 0xff0000ff);
-        }
-    }
-
-    return result;
-}
 
 void MapRenderer::drawLine(std::vector<uint32_t>& pixels, int width, int height, 
-                          const Spot& start, const Spot& end, uint32_t color) {
-    int x0 = start.getX();
-    int y0 = start.getY();
-    int x1 = end.getX();
-    int y1 = end.getY();
+                          const Point2& start, const Point2& end, uint32_t color) {
+    int x0 = start.x;
+    int y0 = start.y;
+    int x1 = end.x;
+    int y1 = end.y;
 
     bool steep = abs(y1 - y0) > abs(x1 - x0);
     if (steep) {

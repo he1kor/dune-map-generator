@@ -24,9 +24,38 @@ public:
 
     const uint32_t mapTile(const Tile tile);
 
-    const std::vector<uint32_t> convertPlane(const Plane& plane, const Graph& graph);
+    template <typename T>
+    const std::vector<uint32_t> convertPlane(const Plane<T>& plane, const Graph& graph){
+        int width = plane.getWidth();
+        int height = plane.getHeight();
+        std::vector<uint32_t> result(width * height, 0xff000000);
 
-    void drawLine(std::vector<uint32_t> &pixels, int width, int height, const Spot &start, const Spot &end, uint32_t color);
+        const auto& spots = plane.getSpots();
+        for (int nodeId = 0; nodeId < graph.size(); ++nodeId) {
+            const Node& node = graph.getNode(nodeId);
+            Spot<T> startSpot = spots.at(nodeId);
+            
+            for (int neighborId : node.getNeighbours()) {
+                if (neighborId > nodeId) {
+                    Spot<T> endSpot = spots.at(neighborId);
+                    drawLine(result, width, height, startSpot.getCoords(), endSpot.getCoords(), 0xffaaaaaa);
+                }
+            }
+        }
+
+        for (auto spot : spots) {
+            int x = spot.getX();
+            int y = spot.getY();
+            if (x >= 0 && x < width && y >= 0 && y < height) {
+                result[y * width + x] = 0xff0000ff;
+                drawCircle(result, width, height, x, y, 3, 0xff0000ff);
+            }
+        }
+
+        return result;
+    }
+
+    void drawLine(std::vector<uint32_t> &pixels, int width, int height, const Point2 &start, const Point2 &end, uint32_t color);
 
     void drawCircle(std::vector<uint32_t> &pixels, int width, int height, int centerX, int centerY, int radius, uint32_t color);
 
