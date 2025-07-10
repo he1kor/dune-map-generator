@@ -9,17 +9,17 @@ MapRenderer::~MapRenderer(){
 }
 
 const uint32_t MapRenderer::mapTile(const Tile tile){
-    std::string material = palette->findMaterialName(tile.tileID);
-    if (material == "sand"){
+    const Material& material = palette->findMaterial(tile.tileID);
+    if (material == palette->operator[]("sand")){
         if (tile.entityID == 1)
             return 0xff2e9ef7;
         if (tile.entityID == 2)
             return 0xff0072ce;
         return 0xff8abde2;
     }
-    if (material == "rock")
+    if (material == palette->operator[]("rock"))
         return 0xff254d74;
-    if (material == "dunes")
+    if (material == palette->operator[]("dunes"))
         return 0xffc5feff;
     return 0xff091f30;
 }
