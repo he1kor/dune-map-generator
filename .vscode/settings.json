@@ -79,6 +79,7 @@
         "any": "cpp",
         "numeric": "cpp",
         "valarray": "cpp",
-        "codecvt": "cpp"
+        "codecvt": "cpp",
+        "unordered_set": "cpp"
     }
 }

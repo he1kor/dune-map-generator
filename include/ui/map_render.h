@@ -25,27 +25,26 @@ public:
     const uint32_t mapTile(const Tile tile);
 
     template <typename T>
-    const std::vector<uint32_t> convertPlane(const Plane<T>& plane, const Graph& graph){
+    const std::vector<uint32_t> convertPlane(const Plane<T>& plane, const Graph<T>& graph){
         int width = plane.getWidth();
         int height = plane.getHeight();
         std::vector<uint32_t> result(width * height, 0xff000000);
 
-        const auto& spots = plane.getSpots();
-        for (int nodeId = 0; nodeId < graph.size(); ++nodeId) {
-            const Node& node = graph.getNode(nodeId);
-            Spot<T> startSpot = spots.at(nodeId);
-            
-            for (int neighborId : node.getNeighbours()) {
-                if (neighborId > nodeId) {
-                    Spot<T> endSpot = spots.at(neighborId);
+        for (Identifiable id : plane.getIDs()){
+            Spot<T> startSpot = plane.getSpot(id);
+            const Node<T>& node = graph.getNode(id);
+
+            for (Identifiable neighbourId : node.getNeighbours()) {
+                if (neighbourId > id) {
+                    Spot<T> endSpot = plane.getSpot(neighbourId);
                     drawLine(result, width, height, startSpot.getCoords(), endSpot.getCoords(), 0xffaaaaaa);
                 }
             }
         }
 
-        for (auto spot : spots) {
-            int x = spot.getX();
-            int y = spot.getY();
+        for (Identifiable id : plane.getIDs()) {
+            int x = plane.getSpot(id).getX();
+            int y = plane.getSpot(id).getY();
             if (x >= 0 && x < width && y >= 0 && y < height) {
                 result[y * width + x] = 0xff0000ff;
                 drawCircle(result, width, height, x, y, 3, 0xff0000ff);

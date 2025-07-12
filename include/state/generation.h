@@ -9,7 +9,7 @@ class Generation{
         float generationProgress = 0.0f;
         long long seed = 12419;
         bool is_seed_random = true;
-        EmbeddablePlane<int> plane;
+        EmbeddablePlane<Identifiable> plane;
         bool iterateNext = false;
         //const Graph defaultGraph = Graph(
         //    {
@@ -19,7 +19,7 @@ class Generation{
         //        {0, 2, 4},   // 3
         //        {1, 3}       // 4
         //    });
-        const Graph<Identifiable> defaultGraph = Graph<Identifiable>(
+        const Graph<Identifiable> defaultGraph = Graph<Identifiable>(std::vector<std::pair<Identifiable, std::vector<Identifiable>>>
             {
                 {0, {1, 2, 3, 4}},       // 0
                 {1, {0, 2, 5, 6}},       // 1
