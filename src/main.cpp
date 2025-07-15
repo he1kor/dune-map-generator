@@ -23,6 +23,7 @@
 #include "plane.h"
 #include "graph.h"
 #include "embedding.h"
+#include "edge_graph.h"
 
 constexpr float left_column_width = 200.0f;
 constexpr float min_map_size = 128.0f;

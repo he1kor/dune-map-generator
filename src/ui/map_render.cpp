@@ -26,7 +26,7 @@ const uint32_t MapRenderer::mapTile(const Tile tile){
 
 
 void MapRenderer::drawLine(std::vector<uint32_t>& pixels, int width, int height, 
-                          const Point2& start, const Point2& end, uint32_t color) {
+                          const DoublePoint2& start, const DoublePoint2& end, uint32_t color) {
     int x0 = start.x;
     int y0 = start.y;
     int x1 = end.x;
