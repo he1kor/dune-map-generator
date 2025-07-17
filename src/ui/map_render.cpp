@@ -1,5 +1,7 @@
 #include "map_render.h"
 
+#include <math.h>
+
 MapRenderer::MapRenderer(Palette *palette) : textureID(0), mapWidth(0), mapHeight(0), palette(palette) {}
 
 MapRenderer::~MapRenderer(){
@@ -24,6 +26,43 @@ const uint32_t MapRenderer::mapTile(const Tile tile){
     return 0xff091f30;
 }
 
+std::vector<uint32_t> MapRenderer::generateDistinctColors(int n){
+    std::vector<uint32_t> colors;
+    if (n <= 0) return colors;
+    
+    const double golden_ratio_conjugate = 0.618033988749895;
+    double hue = 0.0; // Start from 0
+    
+    for (int i = 0; i < n; ++i) {
+        hue += golden_ratio_conjugate;
+        hue = fmod(hue, 1.0);
+        
+        double h = hue * 6.0;
+        double r, g, b;
+        
+        int sector = static_cast<int>(h);
+        double frac = h - sector;
+        double q = 1.0 - frac;
+        
+        switch (sector % 6) {
+            case 0: r = 1.0; g = frac; b = 0.0; break;
+            case 1: r = q; g = 1.0; b = 0.0; break;
+            case 2: r = 0.0; g = 1.0; b = frac; break;
+            case 3: r = 0.0; g = q; b = 1.0; break;
+            case 4: r = frac; g = 0.0; b = 1.0; break;
+            case 5: r = 1.0; g = 0.0; b = q; break;
+        }
+        
+        uint8_t red = static_cast<uint8_t>(r * 255);
+        uint8_t green = static_cast<uint8_t>(g * 255);
+        uint8_t blue = static_cast<uint8_t>(b * 255);
+        
+        uint32_t color = 0xff000000 | (red << 16) | (green << 8) | blue;
+        colors.push_back(color);
+    }
+    
+    return colors;
+}
 
 void MapRenderer::drawLine(std::vector<uint32_t>& pixels, int width, int height, 
                           const DoublePoint2& start, const DoublePoint2& end, uint32_t color) {

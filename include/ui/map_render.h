@@ -12,6 +12,7 @@
 #include "plane.h"
 #include "graph.h"
 #include "spot.h"
+#include "grid.h"
 
 class MapRenderer {
 public:
@@ -23,6 +24,23 @@ public:
     ~MapRenderer();
 
     const uint32_t mapTile(const Tile tile);
+
+    template <typename T>
+    const std::vector<uint32_t> convertGrid(const Grid<T>& grid){
+        int width = grid.getWidth();
+        int height = grid.getHeight();
+        std::vector<uint32_t> result(width * height, 0xff000000);
+
+        for (int y = 0; y < height; y++){
+            for (int x = 0; x < width; x++){
+                result[y * width + x] = zoneColors.at(grid.getTileID(x, y));
+            }
+        }
+        return result;
+    }
+
+    template <typename T>
+    void setDistinctColors(const Graph<T>& graph);
 
     template <typename T>
     const std::vector<uint32_t> convertPlane(const Plane<T>& plane, const Graph<T>& graph){
@@ -64,9 +82,24 @@ public:
     int getOptimalMapSize(int availableWidth);
     void render();
 
+    
 private:
+    std::vector<uint32_t> generateDistinctColors(int n);
     GLuint textureID;
     int mapWidth;
     int mapHeight;
     Palette* palette;
+    std::unordered_map<Identifiable, uint32_t, IDHash> zoneColors;
 };
+
+template <typename T>
+void MapRenderer::setDistinctColors(const Graph<T> &graph){
+    std::vector<uint32_t> colors = generateDistinctColors(graph.getSize());
+    zoneColors.clear();
+    int i = 0;
+    for (Identifiable id : graph.getIDs()){
+        zoneColors[id] = colors[i];
+        i++;
+    }
+    zoneColors[Identifiable::nullID] = 0xFF000000;
+}
