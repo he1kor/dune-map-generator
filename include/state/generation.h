@@ -1,5 +1,15 @@
 #pragma once
 #include "embedding.h"
+#include <memory>
+
+#include "grid.h"
+#include <zone_bloater.h>
+
+enum class GenerationStage{
+    NONE,
+    EMBED,
+    ZONE_BLOAT
+};
 
 class Generation{
     public:
@@ -19,7 +29,8 @@ class Generation{
         //        {0, 2, 4},   // 3
         //        {1, 3}       // 4
         //    });
-        const Graph<Identifiable> defaultGraph = Graph<Identifiable>(std::vector<std::pair<Identifiable, std::vector<Identifiable>>>
+        std::shared_ptr<const EdgeGraph<Identifiable, Identifiable>> defaultGraph = std::make_shared<const EdgeGraph<Identifiable, Identifiable>>(
+            EdgeGraph<Identifiable, Identifiable>(std::vector<std::pair<Identifiable, std::vector<Identifiable>>>
             {
                 {0, {1, 2, 3, 4}},       // 0
                 {1, {0, 2, 5, 6}},       // 1
@@ -38,5 +49,8 @@ class Generation{
                 {14, {11, 13, 15}},      // 14
                 {15, {12, 13, 14}}       // 15
             }
-        );
+        ));
+        std::shared_ptr<Grid<Identifiable>> grid = nullptr;
+        ZoneBloater<Identifiable, Identifiable> zoneBloater;
+        GenerationStage generationStage = GenerationStage::NONE;
 };

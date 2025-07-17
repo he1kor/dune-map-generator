@@ -4,7 +4,7 @@ include(FetchContent)
 
 project(MapGeneratorApp)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 
 set(GLAD_SRC "${CMAKE_SOURCE_DIR}/libs/glad/src/glad.c")
 set(GLAD_INCLUDE "${CMAKE_SOURCE_DIR}/libs/glad/include")

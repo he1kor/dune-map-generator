@@ -116,24 +116,25 @@ int main(){
     TilesetProperties tilesetProperties = load("tileset.json");
 
     MapRenderer mapRenderer(&tilesetProperties.palette);
-
+    
     QuickSettings quickSettings;
     QuickSettingsUI quickSettingsUI(&quickSettings);
-
+    
     TemplatePicker templatePicker;
     Generation generation;
     TemplatePickerUI templatePickerUI(&templatePicker, &generation);
 
+    mapRenderer.setDistinctColors(*generation.defaultGraph);
+
     GenerationUI generationUI(&generation, &mapRenderer);
     
-
 
 
     int width = 128;
     int height = 128;
 
     //mapRenderer.updateMap(mapRenderer.convertMap(map), map.width(), map.height());
-    mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, generation.defaultGraph), generation.plane.getWidth(), generation.plane.getHeight());
+    mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, *(generation.defaultGraph)), generation.plane.getWidth(), generation.plane.getHeight());
 
     while (!glfwWindowShouldClose(window))
     {
@@ -143,9 +144,14 @@ int main(){
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        if (generation.iterateNext){
+        if (generation.generationStage != GenerationStage::NONE){
+            
             generation.runIteration();
-            mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, generation.defaultGraph), generation.plane.getWidth(), generation.plane.getHeight());
+
+            if (generation.generationStage == GenerationStage::EMBED)
+                mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, *(generation.defaultGraph)), generation.plane.getWidth(), generation.plane.getHeight());
+            else if (generation.generationStage == GenerationStage::ZONE_BLOAT)
+                mapRenderer.updateMap(mapRenderer.convertGrid(*(generation.grid)), generation.plane.getWidth(), generation.plane.getHeight());
         }
 
 
