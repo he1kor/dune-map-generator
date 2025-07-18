@@ -5,10 +5,9 @@
 Generation::Generation() : plane(128.0, 128.0){};
 void Generation::generate(){
     plane.clear();
-    std::cout << "init\n";
     plane.initEmbed(defaultGraph);
-    iterateNext = true;
     generationStage = GenerationStage::EMBED;
+    zoneBloater.finishAndReset();
 }
 
 void Generation::runIteration(){
@@ -23,6 +22,7 @@ void Generation::runIteration(){
         case GenerationStage::ZONE_BLOAT:
             if (zoneBloater.isInitialized()){
                 zoneBloater.initVoronoi(defaultGraph, grid);
+                zoneBloater.setMode(BloatMode::RANDOM_DIAGONAL);
                 zoneBloater.start();
             }
             else if (zoneBloater.isRunning()){

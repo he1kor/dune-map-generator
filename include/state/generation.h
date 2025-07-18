@@ -20,7 +20,6 @@ class Generation{
         long long seed = 12419;
         bool is_seed_random = true;
         EmbeddablePlane<Identifiable> plane;
-        bool iterateNext = false;
         //const Graph defaultGraph = Graph(
         //    {
         //        {1, 2, 3},  // 0
