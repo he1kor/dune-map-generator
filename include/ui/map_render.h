@@ -72,7 +72,7 @@ public:
         return result;
     }
 
-    void drawLine(std::vector<uint32_t> &pixels, int width, int height, const DoublePoint2 &start, const DoublePoint2 &end, uint32_t color);
+    void drawLine(std::vector<uint32_t> &pixels, int width, int height, const DoubleVector2 &start, const DoubleVector2 &end, uint32_t color);
 
     void drawCircle(std::vector<uint32_t> &pixels, int width, int height, int centerX, int centerY, int radius, uint32_t color);
 

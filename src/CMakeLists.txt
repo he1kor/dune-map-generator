@@ -2,7 +2,7 @@ file(GLOB_RECURSE SOURCES
     "*.cpp"
 )
 
-option(BUILD_WITH_CONSOLE "Build as a console application (for debugging output)" TRUE)
+option(BUILD_WITH_CONSOLE "Build as a console application (for debugging output)" ON)
 
 if(WIN32 AND NOT BUILD_WITH_CONSOLE)
     set(APP_ICON "${CMAKE_SOURCE_DIR}/assets/icons/app_icon.ico")

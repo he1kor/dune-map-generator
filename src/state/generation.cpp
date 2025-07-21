@@ -5,6 +5,7 @@
 Generation::Generation() : plane(128.0, 128.0){};
 void Generation::generate(){
     plane.clear();
+    plane.applyMagnetGrid(cornerMagnets);
     plane.initEmbed(defaultGraph);
     generationStage = GenerationStage::EMBED;
     zoneBloater.finishAndReset();
@@ -14,7 +15,8 @@ void Generation::runIteration(){
     switch (generationStage){
         case GenerationStage::EMBED:
             if (!plane.stepForceDirected()){
-                grid = std::make_shared<Grid<Identifiable>>(safeRasterizePlane(plane));
+                grid = std::make_shared<Grid<MagneticNode>>(safeRasterizePlane(plane));
+                // grid = std::make_shared<Grid<Identifiable>>(safeRasterizePlane(plane));
                 generationStage = GenerationStage::ZONE_BLOAT;
             }
             break;
