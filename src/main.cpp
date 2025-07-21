@@ -150,8 +150,14 @@ int main(){
 
             if (generation.generationStage == GenerationStage::EMBED)
                 mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, *(generation.defaultGraph)), generation.plane.getWidth(), generation.plane.getHeight());
-            else if (generation.generationStage == GenerationStage::ZONE_BLOAT)
+            else if (generation.generationStage == GenerationStage::ZONE_BLOAT){
                 mapRenderer.updateMap(mapRenderer.convertGrid(*(generation.grid)), generation.plane.getWidth(), generation.plane.getHeight());
+            }
+        }
+        if (generation.is_done){
+            generation.is_done = false;
+            mapRenderer.updateMap(mapRenderer.convertGrid(*(generation.grid)), generation.plane.getWidth(), generation.plane.getHeight());
+
         }
 
 
