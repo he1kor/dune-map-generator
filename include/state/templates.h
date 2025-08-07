@@ -8,6 +8,43 @@
 
 namespace templates{
 
+    namespace radial{
+        static std::shared_ptr<const EdgeGraph<RadialNode>> grid3x3 = std::make_shared<const EdgeGraph<RadialNode>>(
+        EdgeGraph<RadialNode>(std::vector<std::pair<RadialNode, std::vector<Identifiable>>>
+        {
+            {{0, 1, 0}, {1, 3}},       // Top-left (connects right and down)
+            {{1, 1, 0}, {0, 2, 4}},    // Top-middle (connects left, right, down)
+            {{2, 1, 0}, {1, 5}},       // Top-right (connects left and down)
+            {{3, 1, 0}, {0, 4, 6}},    // Middle-left (connects up, right, down)
+            {{4, 2, 0}, {1, 3, 5, 7}}, // Center (connects all 4 directions)
+            {{5, 1, 0}, {2, 4, 8}},    // Middle-right (connects left, up, down)
+            {{6, 1, 0}, {3, 7}},       // Bottom-left (connects up and right)
+            {{7, 1, 0}, {4, 6, 8}},    // Bottom-middle (connects left, up, right)
+            {{8, 1, 0}, {5, 7}}        // Bottom-right (connects left and up)
+        }
+        ));
+
+        static std::shared_ptr<const EdgeGraph<RadialNode>> habbanyaErgSymmetry = std::make_shared<const EdgeGraph<RadialNode>>(
+        EdgeGraph<RadialNode>(std::vector<std::pair<RadialNode, std::vector<Identifiable>>>
+        {
+            {{1, 1, 0}, {2, 4, 6}},
+            {{2, 1, 0}, {1, 3, 4, 5}},
+            {{3, 1, 0}, {2, 5, 8}},
+            {{4, 3, 0}, {1, 2, 5, 6, 7, 9}},
+            {{5, 3, 0}, {2, 3, 4, 7, 8, 10}},
+            {{6, 1, 0}, {1, 4, 9, 11}},
+            {{7, 5, 0}, {4, 5, 9, 10}},
+            {{8, 1, 0}, {3, 5, 10, 13}},
+            {{9, 3, 0}, {4, 6, 7, 10, 11, 12}},
+            {{10, 3, 0}, {5, 7, 8, 9, 12, 13}},
+            {{11, 1, 0}, {6, 9, 12}},
+            {{12, 1, 0}, {9, 10, 11, 13}},
+            {{13, 1, 0}, {8, 10, 12}}
+        }
+        ));
+    }
+
+
     static std::shared_ptr<const EdgeGraph<BasicNode, Identifiable>> grid3x3 = std::make_shared<const EdgeGraph<BasicNode, Identifiable>>(
     EdgeGraph<BasicNode, Identifiable>(std::vector<std::pair<BasicNode, std::vector<Identifiable>>>
     {

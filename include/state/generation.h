@@ -15,7 +15,7 @@ enum class GenerationStage{
 
 class Generation{
     public:
-        std::shared_ptr<Grid<BasicNode>> generateMap();
+        std::shared_ptr<Grid<RadialNode>> generateMap();
         Generation();
         void generate();
         void runIteration();
@@ -25,16 +25,16 @@ class Generation{
         bool is_done = false;
         
         // EmbeddablePlane<Identifiable> plane;
-        EmbeddablePlane<BasicNode> plane;
+        EmbeddablePlane<RadialNode> plane;
         
         // std::shared_ptr<const EdgeGraph<Identifiable, Identifiable>> defaultGraph = habbanyaErgSymmetry;
-        std::shared_ptr<const EdgeGraph<BasicNode, Identifiable>> defaultGraph = templates::grid3x3;
+        std::shared_ptr<const EdgeGraph<RadialNode>> defaultGraph = templates::radial::habbanyaErgSymmetry;
             
         // std::shared_ptr<Grid<Identifiable>> grid = nullptr;
-        std::shared_ptr<Grid<BasicNode>> grid = nullptr;
+        std::shared_ptr<Grid<RadialNode>> grid = nullptr;
         GenerationStage generationStage = GenerationStage::NONE;
     private:
         // ZoneBloater<Identifiable, Identifiable> zoneBloater;
-        ZoneBloater<BasicNode, Identifiable> zoneBloater;
+        ZoneBloater<RadialNode> zoneBloater;
         
 };
