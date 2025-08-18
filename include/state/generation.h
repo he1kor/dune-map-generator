@@ -28,7 +28,7 @@ class Generation{
         EmbeddablePlane<RadialNode> plane;
         
         // std::shared_ptr<const EdgeGraph<Identifiable, Identifiable>> defaultGraph = habbanyaErgSymmetry;
-        std::shared_ptr<const EdgeGraph<RadialNode>> defaultGraph = templates::radial::habbanyaErgSymmetry;
+        std::shared_ptr<const EdgeGraph<RadialNode>> defaultGraph = templates::radial::habbanyaErg;
             
         // std::shared_ptr<Grid<Identifiable>> grid = nullptr;
         std::shared_ptr<Grid<RadialNode>> grid = nullptr;

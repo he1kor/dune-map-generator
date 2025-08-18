@@ -6,8 +6,8 @@
 #include <grid.h>
 #include <zone_bloater.h>
 
-std::shared_ptr<Grid<RadialNode>> Generation::generateMap(){
-        // --- Phase 1: Graph Embedding ---
+std::shared_ptr<Grid<RadialNode>> Generation::generateMap() {
+    // --- Phase 1: Graph Embedding ---
     EmbeddablePlane<RadialNode> embedding(128, 128);
     embedding.initEmbed(templates::radial::grid3x3);  // Predefined 3x3 grid
 
@@ -19,17 +19,16 @@ std::shared_ptr<Grid<RadialNode>> Generation::generateMap(){
 
     // --- Phase 2: Rasterization ---
     auto map = std::make_shared<Grid<RadialNode>>(safeRasterizePlane(embedding));
+
     // --- Phase 3: Zone Expansion ---
     ZoneBloater<RadialNode> zoneBloater;
     zoneBloater.initVoronoi(templates::radial::grid3x3, map);
-    zoneBloater.setStartFromEdges(true);
     zoneBloater.start();
-    zoneBloater.step();
-    //while (zoneBloater.step()) {  // Progressively expands zones
+    while (zoneBloater.step()) {  // Progressively expands zones
         #if 0  // Debug: Uncomment to inspect tiles
         std::cout << "Progress: " << zoneBloater.getProgress() << "%\n";
         #endif
-    //}
+    }
 
     return map;  // Final generated map
 }
@@ -61,7 +60,7 @@ void Generation::runIteration(){
             if (zoneBloater.isInitialized()){
                 zoneBloater.initVoronoi(defaultGraph, grid);
                 zoneBloater.setStartFromEdges(true);
-                zoneBloater.setMode(BloatMode::RANDOM_DIAGONAL);
+                zoneBloater.setBloatMode(bloatStrategies::DiagonalRandomBloatStrategy());
                 zoneBloater.start();
             }
             else if (zoneBloater.isRunning()){
