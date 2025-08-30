@@ -24,7 +24,7 @@ std::shared_ptr<Grid<RadialNode>> Generation::generateMap() {
 
     // --- Phase 3: Zone Expansion ---
     ZoneBloater<RadialNode> zoneBloater;
-    zoneBloater.initVoronoi(templates::radial::grid3x3, map);
+    zoneBloater.initVoronoi(map);
     zoneBloater.start();
     while (zoneBloater.step()) {  // Progressively expands zones
         #if 0  // Debug: Uncomment to inspect tiles
@@ -39,6 +39,8 @@ Generation::Generation() : plane(128.0, 128.0) {};
 void Generation::generate(){
     //this->grid = generateMap();
     //return;
+    //RandomGenerator::instance().reset();
+    deduceSeed();
     plane.clear();
     plane.applyMagnetGrid(cornerMagnets);
     plane.initEmbed(defaultGraph);
@@ -47,51 +49,83 @@ void Generation::generate(){
 }
 
 void Generation::runIteration(){
+    while (generationStage != GenerationStage::NONE)
     switch (generationStage){
         case GenerationStage::NONE:
             break;
         case GenerationStage::EMBED:
-            if (!plane.stepForceDirected()){
-                grid = std::make_shared<Grid<RadialNode>>(safeRasterizePlane(plane));
-                generationStage = GenerationStage::ZONE_BLOAT;
-            }
+            embedTemplate();
             break;
-
         case GenerationStage::ZONE_BLOAT:
-            if (zoneBloater.isInitialized()){
-                zoneBloater.initVoronoi(defaultGraph, grid);
-                zoneBloater.setStartFromEdges(true);
-                zoneBloater.setBloatMode(bloatStrategies::DiagonalRandomBloatStrategy());
-                zoneBloater.start();
-            }
-            else if (zoneBloater.isRunning()){
-                zoneBloater.step();
-            }
-            else {
-                generationStage = GenerationStage::FINISH;
-                zoneBloater.reset();
-                
-                morphology::closeForAll(*grid, defaultGraph->getIDs(),
-                    {
-                        {true, true, true},
-                        {true, true, true},
-                        {true, true, true}
-                    }
-                );
-                morphology::openForAll(*grid, defaultGraph->getIDs(),
-                    {
-                        {true, true, true},
-                        {true, true, true},
-                        {true, true, true}
-                    }
-                );
-            }
+            bloatZones();
+            break;
+        case GenerationStage::POST_PROCESS:
+            postProcess();
             break;
         case GenerationStage::FINISH:
-            generationStage = GenerationStage::NONE;
             is_done = true;
+            generationStage = GenerationStage::NONE;
             break;
         default:
             break;
+    }
+}
+
+void Generation::deduceSeed(){
+    if (isSeedRandom){
+        seed = RandomGenerator::instance().generateSeed();
+    } else{
+        RandomGenerator::instance().setSeed(seed);
+    }
+}
+
+void Generation::embedTemplate()
+{
+    if (!plane.stepForceDirected()){
+        grid = std::make_shared<Grid<RadialNode>>(safeRasterizePlane(plane));
+        generationStage = GenerationStage::ZONE_BLOAT;
+    }
+}
+
+void Generation::bloatZones(){
+    if (zoneBloater.isInitialized()){
+        zoneBloater.initEdgeVoronoi(*defaultGraph, grid);
+        zoneBloater.setBloatMode(bloatStrategies::DiagonalRandomBloat());
+        zoneBloater.start();
+    }
+    else if (zoneBloater.isRunning()){
+        zoneBloater.step();
+    }
+    else {
+        zoneBloater.reset();
+        generationStage = GenerationStage::POST_PROCESS;
+    }
+}
+
+void Generation::postProcess(){
+    if (zoneBloater.isInitialized()){
+        morphology::closeForAll(*grid, defaultGraph->getIDs(),
+            {
+                {1, 1, 1},
+                {1, 1, 1},
+                {1, 1, 1}
+            }
+        );
+        morphology::openForAll(*grid, defaultGraph->getIDs(),
+            {
+                {1, 1, 1},
+                {1, 1, 1},
+                {1, 1, 1}
+            }
+        );
+        zoneBloater.initAdjacentCornerFill(grid);
+        zoneBloater.start();
+    }
+    else if (zoneBloater.isRunning()){
+        zoneBloater.step();
+    }
+    else {
+        zoneBloater.reset();
+        generationStage = GenerationStage::FINISH;
     }
 }
