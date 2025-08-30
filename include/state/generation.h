@@ -10,6 +10,7 @@ enum class GenerationStage{
     NONE,
     EMBED,
     ZONE_BLOAT,
+    POST_PROCESS,
     FINISH
 };
 
@@ -21,7 +22,7 @@ class Generation{
         void runIteration();
         float generationProgress = 0.0f;
         long long seed = 12419;
-        bool is_seed_random = true;
+        bool isSeedRandom = true;
         bool is_done = false;
         
         // EmbeddablePlane<Identifiable> plane;
@@ -36,5 +37,11 @@ class Generation{
     private:
         // ZoneBloater<Identifiable, Identifiable> zoneBloater;
         ZoneBloater<RadialNode> zoneBloater;
+
+        void deduceSeed();
+
+        void embedTemplate();
+        void bloatZones();
+        void postProcess();
         
 };

@@ -21,7 +21,7 @@ void GenerationUI::build(){
     ImGui::SetNextItemWidth(-1);
     
     
-    if (generationPtr->is_seed_random) {
+    if (generationPtr->isSeedRandom) {
         ImGui::BeginDisabled();
         ImGui::InputScalar("##Seed", ImGuiDataType_S64, &(generationPtr->seed), NULL, NULL, NULL, ImGuiInputTextFlags_ReadOnly);   
         ImGui::EndDisabled();
@@ -32,7 +32,7 @@ void GenerationUI::build(){
     } else {
         ImGui::InputScalar("##Seed", ImGuiDataType_S64, &(generationPtr->seed));
     }
-    ImGui::Checkbox("Use random##use random seed", &(generationPtr->is_seed_random));
+    ImGui::Checkbox("Use random##use random seed", &(generationPtr->isSeedRandom));
 
     float available_space = ImGui::GetContentRegionAvail().y - 30.0f - ImGui::GetStyle().ItemSpacing.y;
     ImGui::Dummy(ImVec2(0, available_space));
