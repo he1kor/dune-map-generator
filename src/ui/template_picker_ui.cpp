@@ -1,6 +1,5 @@
 #include "imgui.h"
 #include "template_picker_ui.h"
-#include "file_pick_button.h"
 #include "colors.h"
 #include <string>
 
@@ -19,6 +18,17 @@ void TemplatePickerUI::buildGenerateButton(){
     else ImGui::Button("Generation...", ImVec2(-1, 30));
 }
 
+void TemplatePickerUI::buildTemplatePickButton(){
+    if (buildFilePickButton("Template:", "Select file...", "template")){
+
+    }
+}
+
+bool TemplatePickerUI::buildFilePickButton(std::string name, std::string default_value, std::string id){
+    ImGui::Text(name.c_str());
+    return ImGui::Button((default_value + "##" + id).c_str(), ImVec2(-1, 30));
+}
+
 void TemplatePickerUI::build(){
     ImGui::Text("Files");
     ImGui::Separator();
@@ -26,7 +36,7 @@ void TemplatePickerUI::build(){
 
 
 
-    buildFilePickButton("Template:", "Select file...", "template");
+    buildTemplatePickButton();
 
 
     ImGui::Dummy(ImVec2(0, 10));
