@@ -4,3 +4,6 @@
 [submodule "libs/GenCore"]
 	path = libs/GenCore
 	url = https://github.com/he1kor/GenCore.git
+[submodule "libs/NativeFileDialogExtended/libs/NativeFileDialogExtended"]
+	path = libs/NativeFileDialogExtended
+	url = https://github.com/btzy/nativefiledialog-extended.git

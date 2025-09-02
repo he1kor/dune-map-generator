@@ -122,9 +122,8 @@ int main(){
     
     TemplatePicker templatePicker;
     Generation generation;
-    TemplatePickerUI templatePickerUI(&templatePicker, &generation);
+    TemplatePickerUI templatePickerUI(&templatePicker, &generation, mapRenderer);
 
-    mapRenderer.setDistinctColors(*generation.defaultGraph);
 
     GenerationUI generationUI(&generation, &mapRenderer);
     
@@ -134,7 +133,7 @@ int main(){
     int height = 128;
 
     //mapRenderer.updateMap(mapRenderer.convertMap(map), map.width(), map.height());
-    mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, *(generation.defaultGraph)), generation.plane.getWidth(), generation.plane.getHeight());
+    mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, {}), generation.plane.getWidth(), generation.plane.getHeight());
 
     while (!glfwWindowShouldClose(window))
     {
@@ -149,7 +148,7 @@ int main(){
             generation.runIteration();
 
             if (generation.generationStage == GenerationStage::EMBED)
-                mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, *(generation.defaultGraph)), generation.plane.getWidth(), generation.plane.getHeight());
+                mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, *(generation.mapTemplate)), generation.plane.getWidth(), generation.plane.getHeight());
             else if (generation.generationStage == GenerationStage::ZONE_BLOAT){
                 mapRenderer.updateMap(mapRenderer.convertGrid(*(generation.grid)), generation.plane.getWidth(), generation.plane.getHeight());
             }

@@ -81,6 +81,11 @@
         "valarray": "cpp",
         "codecvt": "cpp",
         "unordered_set": "cpp",
-        "print": "cpp"
+        "print": "cpp",
+        "expected": "cpp",
+        "csignal": "cpp",
+        "cstdarg": "cpp",
+        "regex": "cpp",
+        "variant": "cpp"
     }
 }

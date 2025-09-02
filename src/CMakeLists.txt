@@ -37,14 +37,26 @@ target_link_libraries(${PROJECT_NAME}
     gdi32
     Dune2kMapApi
     GenCore
+    nfd
+    nlohmann_json::nlohmann_json
 )
-
 
 FetchContent_Declare(
   dune2000-map-api
   GIT_REPOSITORY https://github.com/he1kor/dune-map-api
   GIT_TAG        0c5c454145f0c86a06e7d0b125fed4243bd90b6a
 )
+
+if(NOT TARGET nlohmann_json::nlohmann_json)
+    include(FetchContent)
+    FetchContent_Declare(
+        nlohmann_json
+        URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+    )
+    FetchContent_MakeAvailable(nlohmann_json)
+endif()
+
+
 FetchContent_MakeAvailable(dune2000-map-api)
 
 if(MINGW)

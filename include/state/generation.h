@@ -18,7 +18,7 @@ class Generation{
     public:
         std::shared_ptr<Grid<RadialNode>> generateMap();
         Generation();
-        void generate();
+        void generate(std::shared_ptr<const EdgeGraph<RadialNode>> mapTemplate);
         void runIteration();
         float generationProgress = 0.0f;
         long long seed = 12419;
@@ -29,7 +29,7 @@ class Generation{
         EmbeddablePlane<RadialNode> plane;
         
         // std::shared_ptr<const EdgeGraph<Identifiable, Identifiable>> defaultGraph = habbanyaErgSymmetry;
-        std::shared_ptr<const EdgeGraph<RadialNode>> defaultGraph = templates::radial::habbanyaErg;
+        std::shared_ptr<const EdgeGraph<RadialNode>> mapTemplate;
             
         // std::shared_ptr<Grid<Identifiable>> grid = nullptr;
         std::shared_ptr<Grid<RadialNode>> grid = nullptr;

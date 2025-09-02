@@ -36,14 +36,16 @@ std::shared_ptr<Grid<RadialNode>> Generation::generateMap() {
 }
 
 Generation::Generation() : plane(128.0, 128.0) {};
-void Generation::generate(){
+void Generation::generate(std::shared_ptr<const EdgeGraph<RadialNode>> mapTemplate){
     //this->grid = generateMap();
     //return;
     //RandomGenerator::instance().reset();
+    this->mapTemplate = mapTemplate;
+
     deduceSeed();
     plane.clear();
     plane.applyMagnetGrid(cornerMagnets);
-    plane.initEmbed(defaultGraph);
+    plane.initEmbed(mapTemplate);
     generationStage = GenerationStage::EMBED;
     zoneBloater.finishAndReset();
 }
@@ -89,7 +91,7 @@ void Generation::embedTemplate()
 
 void Generation::bloatZones(){
     if (zoneBloater.isInitialized()){
-        zoneBloater.initEdgeVoronoi(*defaultGraph, grid);
+        zoneBloater.initEdgeVoronoi(*mapTemplate, grid);
         zoneBloater.setBloatMode(bloatStrategies::DiagonalRandomBloat());
         zoneBloater.start();
     }
@@ -104,14 +106,14 @@ void Generation::bloatZones(){
 
 void Generation::postProcess(){
     if (zoneBloater.isInitialized()){
-        morphology::closeForAll(*grid, defaultGraph->getIDs(),
+        morphology::closeForAll(*grid, mapTemplate->getIDs(),
             {
                 {1, 1, 1},
                 {1, 1, 1},
                 {1, 1, 1}
             }
         );
-        morphology::openForAll(*grid, defaultGraph->getIDs(),
+        morphology::openForAll(*grid, mapTemplate->getIDs(),
             {
                 {1, 1, 1},
                 {1, 1, 1},
