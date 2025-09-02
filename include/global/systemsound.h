@@ -9,6 +9,7 @@ namespace syssound {
     
     inline void playError() {
         MessageBeep(MB_ICONERROR);
+        
     }
     
     inline void playWarning() {
@@ -18,6 +19,11 @@ namespace syssound {
     inline void playInfo() {
         MessageBeep(MB_ICONINFORMATION);
     }
+#else
+    inline void playError() {}
+    
+    inline void playWarning() {}
+    
+    inline void playInfo() {}
 #endif
-
 }
