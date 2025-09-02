@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include "systemsound.h"
 
 
 std::optional<RadialNode> TemplatePicker::tryReadNodeData(const nlohmann::json& node, int id){
@@ -79,6 +80,7 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
         graph.push_back({*optionalRadialNode, ids});
     }
     mapTemplate = std::make_shared<EdgeGraph<RadialNode, Identifiable>>(graph);
+    syssound::playInfo();
     return true;
 }
 
