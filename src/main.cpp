@@ -156,6 +156,14 @@ int main(){
         if (generation.is_done){
             generation.is_done = false;
             mapRenderer.updateMap(mapRenderer.convertGrid(*(generation.grid)), generation.plane.getWidth(), generation.plane.getHeight());
+            // mapRenderer.updateMap(
+            //     mapRenderer.convertBorders(
+            //         generation.edgeToborderMap,
+            //         static_cast<size_t>(generation.plane.getWidth()),
+            //         static_cast<size_t>(generation.plane.getHeight())
+            //     ),
+            //     generation.plane.getWidth(),
+            //     generation.plane.getHeight());
 
         }
 

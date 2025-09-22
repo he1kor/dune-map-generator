@@ -7,6 +7,7 @@
 #include <zone_bloater.h>
 
 #include <morphology.h>
+#include <border.h>
 
 std::shared_ptr<Grid<RadialNode>> Generation::generateMap() {
     // --- Phase 1: Graph Embedding ---
@@ -81,8 +82,7 @@ void Generation::deduceSeed(){
     }
 }
 
-void Generation::embedTemplate()
-{
+void Generation::embedTemplate(){
     if (!plane.stepForceDirected()){
         grid = std::make_shared<Grid<RadialNode>>(safeRasterizePlane(plane));
         generationStage = GenerationStage::ZONE_BLOAT;
@@ -128,6 +128,20 @@ void Generation::postProcess(){
     }
     else {
         zoneBloater.reset();
+        edgeToborderMap = tiles::Border::getAllBorders<RadialNode>(*grid);
+        
+        for (auto& [pair, border] : edgeToborderMap){
+            for (auto sameBorders : border){
+                // sameBorders.initPassData(tiles::PassParams{.minPassWidth = 4, .maxPassWidth = 8, .minWallLength = 2, .maxWallLength = 10});
+                sameBorders.initPassData(tiles::PassParams{.minPassWidth = 12, .maxPassWidth = 18, .minWallLength = 4, .maxWallLength = 10});
+                sameBorders.generatePasses();
+                for (const tiles::Border::Segment& segment : sameBorders.getSegments()){
+                    if (segment.isDisabled()) continue;
+                    grid->setTile(segment.getLeftPos(), Identifiable::nullID);
+                    grid->setTile(segment.getRightPos(), Identifiable::nullID);
+                }
+            }
+        }
         generationStage = GenerationStage::FINISH;
     }
 }

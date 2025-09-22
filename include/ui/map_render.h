@@ -14,6 +14,8 @@
 #include "spot.h"
 #include "grid.h"
 
+#include "border.h"
+
 class MapRenderer {
 public:
     const int maxMapSize = 128;
@@ -34,6 +36,46 @@ public:
         for (int y = 0; y < height; y++){
             for (int x = 0; x < width; x++){
                 result[y * width + x] = zoneColors.at(grid.getTileID(x, y));
+            }
+        }
+        return result;
+    }
+    const std::vector<uint32_t> convertBorders(std::unordered_map<std::pair<Identifiable, Identifiable>, std::vector<tiles::Border>, PairIDHash> borders, size_t width, size_t height){
+
+        size_t size = 0;
+
+        for (const auto& [ids, sameIDBorders] : borders){
+            for (const auto& border : sameIDBorders){
+                size++;
+            }
+        }
+
+        std::vector<uint32_t> colors = generateDistinctColors(size);
+
+        std::vector<uint32_t> result(width * height, 0xff000000);
+
+        constexpr bool markIntersections = false;
+
+        size_t i = 0;
+        for (const auto& [ids, sameIDBorders] : borders){
+            for (const auto& border : sameIDBorders){
+                for (const auto& segment : border.getSegments()){
+                    auto pos1 = segment.getLeftPos();
+                    auto pos2 = segment.getRightPos();
+                    if (markIntersections && result[pos1.y * width + pos1.x] != 0xff000000){
+                        result[pos1.y * width + pos1.x] = 0xff00a0ff;
+                    } else {
+                        result[pos1.y * width + pos1.x] = colors[i];
+                    }
+
+
+                    if (markIntersections && result[pos2.y * width + pos2.x] != 0xff000000){
+                        result[pos2.y * width + pos2.x] = 0xff00a0ff;
+                    } else {
+                        result[pos2.y * width + pos2.x] = colors[i];
+                    }
+                }
+                i++;
             }
         }
         return result;

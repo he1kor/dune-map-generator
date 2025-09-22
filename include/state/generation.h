@@ -6,6 +6,8 @@
 #include <zone_bloater.h>
 #include "templates.h"
 
+#include "border.h"
+
 enum class GenerationStage{
     NONE,
     EMBED,
@@ -33,6 +35,7 @@ class Generation{
             
         // std::shared_ptr<Grid<Identifiable>> grid = nullptr;
         std::shared_ptr<Grid<RadialNode>> grid = nullptr;
+        std::unordered_map<std::pair<Identifiable, Identifiable>, std::vector<tiles::Border>, PairIDHash> edgeToborderMap;
         GenerationStage generationStage = GenerationStage::NONE;
     private:
         // ZoneBloater<Identifiable, Identifiable> zoneBloater;
