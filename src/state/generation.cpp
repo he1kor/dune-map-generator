@@ -132,8 +132,9 @@ void Generation::postProcess(){
         
         for (auto& [pair, border] : edgeToborderMap){
             for (auto sameBorders : border){
-                // sameBorders.initPassData(tiles::PassParams{.minPassWidth = 4, .maxPassWidth = 8, .minWallLength = 2, .maxWallLength = 10});
-                sameBorders.initPassData(tiles::PassParams{.minPassWidth = 12, .maxPassWidth = 18, .minWallLength = 4, .maxWallLength = 10});
+                //seed 801119385
+                sameBorders.initPassData(tiles::PassParams{.minPassWidth = 9, .maxPassWidth = 16, .minWallLength = 5, .maxWallLength = 25});
+                //sameBorders.initPassData(tiles::PassParams{.minPassWidth = 3, .maxPassWidth = 100, .minWallLength = 0, .maxWallLength = 0});
                 sameBorders.generatePasses();
                 for (const tiles::Border::Segment& segment : sameBorders.getSegments()){
                     if (segment.isDisabled()) continue;
