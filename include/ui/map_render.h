@@ -15,6 +15,7 @@
 #include "grid.h"
 
 #include "border.h"
+#include <matrix.h>
 
 class MapRenderer {
 public:
@@ -119,7 +120,8 @@ public:
     void drawCircle(std::vector<uint32_t> &pixels, int width, int height, int centerX, int centerY, int radius, uint32_t color);
 
     const std::vector<uint32_t> convertMap(SmartMap map);
-    //RGBA format updating
+    const std::vector<uint32_t> convertMatrix(Matrix<double> matrix);
+    // RGBA format updating
     void updateMap(const std::vector<uint32_t>& pixels, int width, int height);
     int getOptimalMapSize(int availableWidth);
     void render();

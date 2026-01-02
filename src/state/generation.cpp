@@ -6,6 +6,8 @@
 #include <grid.h>
 #include <zone_bloater.h>
 
+#include <noise.h>
+
 #include <morphology.h>
 #include <border.h>
 
@@ -36,12 +38,20 @@ std::shared_ptr<Grid<RadialNode>> Generation::generateMap() {
     return map;  // Final generated map
 }
 
-Generation::Generation() : plane(128.0, 128.0) {};
+Generation::Generation() : plane(128.0, 128.0), noiseMap(128, 128) {};
 void Generation::generate(std::shared_ptr<const EdgeGraph<RadialNode>> mapTemplate){
     //this->grid = generateMap();
     //return;
     //RandomGenerator::instance().reset();
     this->mapTemplate = mapTemplate;
+    auto noise1 = EllipticalBlobNoise(128, 128, 2, 3);
+    auto noise2 = EllipticalBlobNoise(128, 128, 3.5, 4.5);
+
+    Matrix<double> noiseMap1 = noise1.generate();
+    Matrix<double> noiseMap2 = noise2.generate();
+
+    std::vector<Matrix<double>> maps = {noiseMap1, noiseMap2};
+    noiseMap = Matrix<double>::normalizedAverage(maps, std::vector<double>{5, 2});
 
     deduceSeed();
     plane.clear();

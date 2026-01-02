@@ -7,6 +7,7 @@
 #include "templates.h"
 
 #include "border.h"
+#include <matrix.h>
 
 enum class GenerationStage{
     NONE,
@@ -29,6 +30,8 @@ class Generation{
         
         // EmbeddablePlane<Identifiable> plane;
         EmbeddablePlane<RadialNode> plane;
+
+        Matrix<double> noiseMap;
         
         // std::shared_ptr<const EdgeGraph<Identifiable, Identifiable>> defaultGraph = habbanyaErgSymmetry;
         std::shared_ptr<const EdgeGraph<RadialNode>> mapTemplate;

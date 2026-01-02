@@ -155,7 +155,8 @@ int main(){
         }
         if (generation.is_done){
             generation.is_done = false;
-            mapRenderer.updateMap(mapRenderer.convertGrid(*(generation.grid)), generation.plane.getWidth(), generation.plane.getHeight());
+            // mapRenderer.updateMap(mapRenderer.convertGrid(*(generation.grid)), generation.plane.getWidth(), generation.plane.getHeight());
+            mapRenderer.updateMap(mapRenderer.convertMatrix(generation.noiseMap), generation.noiseMap.getWidth(), generation.noiseMap.getHeight());
             // mapRenderer.updateMap(
             //     mapRenderer.convertBorders(
             //         generation.edgeToborderMap,
