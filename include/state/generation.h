@@ -21,7 +21,7 @@ class Generation{
     public:
         std::shared_ptr<Grid<RadialNode>> generateMap();
         Generation();
-        void generate(std::shared_ptr<const EdgeGraph<RadialNode>> mapTemplate);
+        void generate(std::shared_ptr<const EdgeGraph<RadialNode, int, int>> mapTemplate);
         void runIteration();
         float generationProgress = 0.0f;
         long long seed = 12419;
@@ -32,9 +32,10 @@ class Generation{
         EmbeddablePlane<RadialNode> plane;
 
         Matrix<double> noiseMap;
+        Matrix<bool> spiceMap;
         
         // std::shared_ptr<const EdgeGraph<Identifiable, Identifiable>> defaultGraph = habbanyaErgSymmetry;
-        std::shared_ptr<const EdgeGraph<RadialNode>> mapTemplate;
+        std::shared_ptr<const EdgeGraph<RadialNode, int, int>> mapTemplate;
             
         // std::shared_ptr<Grid<Identifiable>> grid = nullptr;
         std::shared_ptr<Grid<RadialNode>> grid = nullptr;
@@ -42,7 +43,7 @@ class Generation{
         GenerationStage generationStage = GenerationStage::NONE;
     private:
         // ZoneBloater<Identifiable, Identifiable> zoneBloater;
-        ZoneBloater<RadialNode> zoneBloater;
+        ZoneBloater<RadialNode, int, int> zoneBloater;
 
         void deduceSeed();
 

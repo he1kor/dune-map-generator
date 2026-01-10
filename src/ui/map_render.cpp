@@ -129,27 +129,7 @@ const std::vector<uint32_t> MapRenderer::convertMap(SmartMap map){
     }   
     return result;
 }
-const std::vector<uint32_t> MapRenderer::convertMatrix(Matrix<double> matrix){
-    std::vector<uint32_t> result(matrix.getHeight() * matrix.getWidth());
-    
-    for (int y = 0; y < matrix.getHeight(); y++){
-        for (int x = 0; x < matrix.getWidth(); x++){
-            double value = matrix.get(x, y);
-            
-            value = std::clamp(value, 0.0, 1.0);
-            
-            uint8_t brightness = static_cast<uint8_t>(value * 255.0);
-            uint32_t color = 
-                (255u << 24) |          // Alpha = 255
-                (brightness << 16) |    // Red
-                (brightness << 8) |     // Green
-                (brightness);           // Blue
-            
-            result[y * matrix.getWidth() + x] = color;
-        }
-    }   
-    return result;
-}
+
 
 void MapRenderer::updateMap(const std::vector<uint32_t> &pixels, int width, int height) {
     mapWidth = width;

@@ -37,6 +37,6 @@ public:
     std::optional<RadialNode> tryReadNodeData(const nlohmann::json &node, int id);
     bool tryReadEdgeGraph(const nlohmann::json &json);
     void tryReadTemplate(const std::filesystem::path& path);
-    std::shared_ptr<EdgeGraph<RadialNode, Identifiable>> mapTemplate = nullptr;
+    std::shared_ptr<EdgeGraph<RadialNode, int, int>> mapTemplate = nullptr;
 private:
 };

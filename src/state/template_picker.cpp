@@ -79,7 +79,7 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
         
         graph.push_back({*optionalRadialNode, ids});
     }
-    mapTemplate = std::make_shared<EdgeGraph<RadialNode, Identifiable>>(graph);
+    mapTemplate = std::make_shared<EdgeGraph<RadialNode, int, int>>(graph);
     syssound::playInfo();
     return true;
 }
