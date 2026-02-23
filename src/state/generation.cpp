@@ -10,6 +10,7 @@
 
 #include <morphology.h>
 #include <border.h>
+#include <blender.h>
 /*
 std::shared_ptr<Grid<RadialNode>> Generation::generateMap() {
     // --- Phase 1: Graph Embedding ---
@@ -40,7 +41,7 @@ std::shared_ptr<Grid<RadialNode>> Generation::generateMap() {
     */
 
 Generation::Generation() : plane(128.0, 128.0), noiseMap(128, 128), spiceMap(128, 128) {};
-void Generation::generate(std::shared_ptr<const EdgeGraph<RadialNode, int, int>> mapTemplate){
+void Generation::generate(std::shared_ptr<const EdgeGraph<RadialNode, int, BasicConnection>> mapTemplate){
     //this->grid = generateMap();
     //return;
     //RandomGenerator::instance().reset();
@@ -155,6 +156,7 @@ void Generation::postProcess(){
                 }
             }
         }
+        zoneMasks = blendConnections(*grid, *mapTemplate);
         generationStage = GenerationStage::FINISH;
     }
 }

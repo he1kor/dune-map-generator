@@ -26,6 +26,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/include/global
     ${CMAKE_SOURCE_DIR}/include/ui
     ${CMAKE_SOURCE_DIR}/include/state
+    ${CMAKE_SOURCE_DIR}/include/generation
     ${CMAKE_SOURCE_DIR}/libs/imgui
 )
 

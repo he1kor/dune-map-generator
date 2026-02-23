@@ -5,10 +5,12 @@
 
 #include <nodes.h>
 #include <edge_graph.h>
+#include <connection.h>
 
 #include <filesystem>
 
 #include <nlohmann/json.hpp>
+
 
 struct JSON_SyntaxError{
     bool ocurred = false;
@@ -37,6 +39,6 @@ public:
     std::optional<RadialNode> tryReadNodeData(const nlohmann::json &node, int id);
     bool tryReadEdgeGraph(const nlohmann::json &json);
     void tryReadTemplate(const std::filesystem::path& path);
-    std::shared_ptr<EdgeGraph<RadialNode, int, int>> mapTemplate = nullptr;
+    std::shared_ptr<EdgeGraph<RadialNode, int, BasicConnection>> mapTemplate = nullptr;
 private:
 };

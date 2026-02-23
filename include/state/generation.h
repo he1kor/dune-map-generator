@@ -8,6 +8,7 @@
 
 #include "border.h"
 #include <matrix.h>
+#include <connection.h>
 
 enum class GenerationStage{
     NONE,
@@ -21,7 +22,7 @@ class Generation{
     public:
         std::shared_ptr<Grid<RadialNode>> generateMap();
         Generation();
-        void generate(std::shared_ptr<const EdgeGraph<RadialNode, int, int>> mapTemplate);
+        void generate(std::shared_ptr<const EdgeGraph<RadialNode, int, BasicConnection>> mapTemplate);
         void runIteration();
         float generationProgress = 0.0f;
         long long seed = 12419;
@@ -35,15 +36,16 @@ class Generation{
         Matrix<bool> spiceMap;
         
         // std::shared_ptr<const EdgeGraph<Identifiable, Identifiable>> defaultGraph = habbanyaErgSymmetry;
-        std::shared_ptr<const EdgeGraph<RadialNode, int, int>> mapTemplate;
+        std::shared_ptr<const EdgeGraph<RadialNode, int, BasicConnection>> mapTemplate;
             
         // std::shared_ptr<Grid<Identifiable>> grid = nullptr;
         std::shared_ptr<Grid<RadialNode>> grid = nullptr;
         std::unordered_map<std::pair<Identifiable, Identifiable>, std::vector<tiles::Border>, PairIDHash> edgeToborderMap;
         GenerationStage generationStage = GenerationStage::NONE;
+        std::unordered_map<Identifiable, Matrix<double>, IDHash> zoneMasks;
     private:
         // ZoneBloater<Identifiable, Identifiable> zoneBloater;
-        ZoneBloater<RadialNode, int, int> zoneBloater;
+        ZoneBloater<RadialNode, int, BasicConnection> zoneBloater;
 
         void deduceSeed();
 

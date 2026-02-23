@@ -3,6 +3,7 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include "systemsound.h"
+#include <connection.h>
 
 
 std::optional<RadialNode> TemplatePicker::tryReadNodeData(const nlohmann::json& node, int id){
@@ -46,7 +47,8 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
         return false;
     }
 
-    std::vector<std::pair<RadialNode, std::vector<Identifiable>>> graph;
+    std::vector<std::pair<RadialNode, std::vector<Identifiable>>> rawGraph;
+    std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash> asymEdges;
     for (const auto& node : *graphIt){
         auto idIt = node.find("id");
         if (idIt == node.end()){
@@ -57,29 +59,67 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
             badValueError = {true, "graph/[]/id", "int"};
             return false;
         }
+        int id = idIt->get<int>();
 
-        auto neighbourIDsIt = node.find("neighbors");
-        if (neighbourIDsIt == node.end()){
+        auto neighboursIt = node.find("neighbors");
+        if (neighboursIt == node.end()){
             noKeyError = {true, "graph/[]/neighbors"};
             return false;
         }
         std::vector<Identifiable> ids;
-        try{
-            auto rawIds = neighbourIDsIt->get<std::vector<int>>();
-            ids = std::vector<Identifiable>(rawIds.begin(), rawIds.end());
-        } catch (const nlohmann::json::type_error&){
-            badValueError = {true, "graph/[]/neighbors", "int array"};
-            return false;
+        for (const auto& neighbour : *neighboursIt){
+            auto neighbourIdIt = neighbour.find("id");
+            if (neighbourIdIt == neighbour.end()){
+                noKeyError = {true, "graph/[]/neighbors/id"};
+                return false;
+            }
+            if (!neighbourIdIt->is_number_integer()){
+                badValueError = {true, "graph/[]/neighbors/id", "int"};
+                return false;
+            }
+            int neighbourId = neighbourIdIt->get<int>();
+            
+            auto resourceBlendDistanceIt = neighbour.find("resourceBlendDistance");
+            if (resourceBlendDistanceIt == neighbour.end()){
+                noKeyError = {true, "graph/[]/neighbors/resourceBlendDistance"};
+                return false;
+            }
+            int resourceBlendDistance = resourceBlendDistanceIt->get<int>();
+
+            auto intakeDistanceIt = neighbour.find("intakeDistance");
+            if (intakeDistanceIt == neighbour.end()){
+                noKeyError = {true, "graph/[]/neighbors/intakeDistance"};
+                return false;
+            }
+            int intakeDistance = intakeDistanceIt->get<int>();
+
+            auto areaGuaranteedIt = neighbour.find("areaGuaranteed");
+            if (areaGuaranteedIt == neighbour.end()){
+                noKeyError = {true, "graph/[]/neighbors/areaGuaranteed"};
+                return false;
+            }
+            int areaGuaranteed = areaGuaranteedIt->get<int>();
+
+            auto bonusValueIt = neighbour.find("bonusValue");
+            if (bonusValueIt == neighbour.end()){
+                noKeyError = {true, "graph/[]/neighbors/bonusValue"};
+                return false;
+            }
+            int bonusValue = bonusValueIt->get<double>();
+            
+            ids.push_back(neighbourId);
+            asymEdges[{id, neighbourId}] = BasicConnection(resourceBlendDistance, intakeDistance, areaGuaranteed, bonusValue);
         }
 
-        auto optionalRadialNode = tryReadNodeData(node, idIt->get<int>());
+        auto optionalRadialNode = tryReadNodeData(node, id);
         if (!optionalRadialNode){
             return false;
         }
         
-        graph.push_back({*optionalRadialNode, ids});
+        rawGraph.push_back({*optionalRadialNode, ids});
     }
-    mapTemplate = std::make_shared<EdgeGraph<RadialNode, int, int>>(graph);
+    mapTemplate = std::make_shared<EdgeGraph<RadialNode, int, BasicConnection>>(rawGraph);
+    mapTemplate->initializeAsymEdges(asymEdges);
     syssound::playInfo();
     return true;
 }
