@@ -11,10 +11,11 @@
 #include <morphology.h>
 #include <border.h>
 #include <blender.h>
+#include <resource_generator.h>
 /*
-std::shared_ptr<Grid<RadialNode>> Generation::generateMap() {
+std::shared_ptr<Grid<ResourceRadialNode<Resource>>> Generation::generateMap() {
     // --- Phase 1: Graph Embedding ---
-    EmbeddablePlane<RadialNode> embedding(128, 128);
+    EmbeddablePlane<ResourceRadialNode<Resource>> embedding(128, 128);
     embedding.initEmbed(templates::radial::grid3x3);  // Predefined 3x3 grid
 
     while (embedding.stepForceDirected()) {  // Runs until layout stabilizes
@@ -24,10 +25,10 @@ std::shared_ptr<Grid<RadialNode>> Generation::generateMap() {
     }
 
     // --- Phase 2: Rasterization ---
-    auto map = std::make_shared<Grid<RadialNode>>(safeRasterizePlane(embedding));
+    auto map = std::make_shared<Grid<ResourceRadialNode<Resource>>>(safeRasterizePlane(embedding));
 
     // --- Phase 3: Zone Expansion ---
-    ZoneBloater<RadialNode> zoneBloater;
+    ZoneBloater<ResourceRadialNode<Resource>> zoneBloater;
     zoneBloater.initVoronoi(map);
     zoneBloater.start();
     while (zoneBloater.step()) {  // Progressively expands zones
@@ -41,20 +42,20 @@ std::shared_ptr<Grid<RadialNode>> Generation::generateMap() {
     */
 
 Generation::Generation() : plane(128.0, 128.0), noiseMap(128, 128), spiceMap(128, 128) {};
-void Generation::generate(std::shared_ptr<const EdgeGraph<RadialNode, int, BasicConnection>> mapTemplate){
+void Generation::generate(std::shared_ptr<const EdgeGraph<ResourceRadialNode<Resource>, int, BasicConnection>> mapTemplate){
     //this->grid = generateMap();
     //return;
     //RandomGenerator::instance().reset();
     this->mapTemplate = mapTemplate;
-    auto noise1 = EllipticalBlobNoise(128, 128, 2, 3);
-    auto noise2 = EllipticalBlobNoise(128, 128, 4.5, 5.5);
+    // auto noise1 = EllipticalBlobNoise(128, 128, 2, 3); 
+    // auto noise2 = EllipticalBlobNoise(128, 128, 4.5, 5.5);
 
-    Matrix<double> noiseMap1 = noise1.generate();
-    Matrix<double> noiseMap2 = noise2.generate();
+    // Matrix<double> noiseMap1 = noise1.generate();
+    // Matrix<double> noiseMap2 = noise2.generate();
 
-    std::vector<Matrix<double>> maps = {noiseMap1, noiseMap2};
-    noiseMap = Matrix<double>::normalizedAverage(maps, std::vector<double>{4, 3});
-    spiceMap = Matrix<double>::mapToBinary(noiseMap, [](double h) { return h >= 0.66;});
+    // std::vector<Matrix<double>> maps = {noiseMap1, noiseMap2};
+    // noiseMap = Matrix<double>::normalizedAverage(maps, std::vector<double>{4, 3});
+    // spiceMap = Matrix<double>::mapToBinary(noiseMap, [](double h) { return h >= 0.66;});
 
     deduceSeed();
     plane.clear();
@@ -97,7 +98,7 @@ void Generation::deduceSeed(){
 
 void Generation::embedTemplate(){
     if (!plane.stepForceDirected()){
-        grid = std::make_shared<Grid<RadialNode>>(safeRasterizePlane(plane));
+        grid = std::make_shared<Grid<ResourceRadialNode<Resource>>>(safeRasterizePlane(plane));
         generationStage = GenerationStage::ZONE_BLOAT;
     }
 }
@@ -141,7 +142,7 @@ void Generation::postProcess(){
     }
     else {
         zoneBloater.reset();
-        edgeToborderMap = tiles::Border::getAllBorders<RadialNode>(*grid);
+        edgeToborderMap = tiles::Border::getAllBorders<ResourceRadialNode<Resource>>(*grid);
         
         for (auto& [pair, border] : edgeToborderMap){
             for (auto sameBorders : border){
@@ -157,6 +158,24 @@ void Generation::postProcess(){
             }
         }
         zoneMasks = blendConnections(*grid, *mapTemplate);
+
+        ResourceGenerator<Resource> resourceGenerator;
+
+        resourceGenerator.setup(
+            {
+                NoiseOctaveParam{.weight = 4, .minimalBlob = 2, .maximalBlob = 3},
+                NoiseOctaveParam{.weight = 3, .minimalBlob = 4.5, .maximalBlob = 5.5}
+            },
+            {
+                ResourceMapping{.minimalThreshold = 0.0, .maximalThreshold = 0.05, .resource = Resource::DUNES},
+                ResourceMapping{.minimalThreshold = 0.05, .maximalThreshold = 0.5, .resource = Resource::SAND},
+                ResourceMapping{.minimalThreshold = 0.5, .maximalThreshold = 0.85, .resource = Resource::BASIC_SPICE},
+                ResourceMapping{.minimalThreshold = 0.85, .maximalThreshold = 1.0, .resource = Resource::THICK_SPICE}
+            },
+            IntVector2(128, 128),
+            zoneMasks.at(Identifiable(5))
+        );
+        spiceMap = resourceGenerator.generateResourcesMap();
         generationStage = GenerationStage::FINISH;
     }
 }

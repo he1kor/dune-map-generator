@@ -26,6 +26,21 @@ const uint32_t MapRenderer::mapTile(const Tile tile){
     return 0xff091f30;
 }
 
+const uint32_t MapRenderer::mapResource(const Resource spice){
+    switch (spice){
+        case Resource::SAND:
+            return 0xffb2d7e3;
+        case Resource::DUNES:
+            return 0xff7ab1c9;
+        case Resource::BASIC_SPICE:
+            return 0xff0499ff;
+        case Resource::THICK_SPICE:
+            return 0xff0766bb;
+        default:
+            return 0xff000000;
+    };
+}
+
 std::vector<uint32_t> MapRenderer::generateDistinctColors(int n){
     std::vector<uint32_t> colors;
     if (n <= 0) return colors;
@@ -125,6 +140,18 @@ const std::vector<uint32_t> MapRenderer::convertMap(SmartMap map){
     for (int y = 0; y < map.height(); y++){
         for (int x = 0; x < map.width(); x++){
             result[y * map.width() + x] = mapTile(map.getTile(x, y));
+        }
+    }   
+    return result;
+}
+
+const std::vector<uint32_t> MapRenderer::convertResourceMatrix(const Matrix<Resource>& matrix){
+    std::vector<uint32_t> result(matrix.getHeight() * matrix.getWidth());
+    
+    for (int y = 0; y < matrix.getHeight(); y++){
+        for (int x = 0; x < matrix.getWidth(); x++){
+            double color = mapResource(matrix.get(x, y));
+            result[y * matrix.getWidth() + x] = color;
         }
     }   
     return result;

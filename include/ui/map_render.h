@@ -16,6 +16,7 @@
 
 #include "border.h"
 #include <matrix.h>
+#include "resources.h"
 
 class MapRenderer {
 public:
@@ -27,6 +28,8 @@ public:
     ~MapRenderer();
 
     const uint32_t mapTile(const Tile tile);
+
+    const uint32_t mapResource(const Resource resource);
 
     template <typename T>
     const std::vector<uint32_t> convertGrid(const Grid<T>& grid){
@@ -120,6 +123,8 @@ public:
     void drawCircle(std::vector<uint32_t> &pixels, int width, int height, int centerX, int centerY, int radius, uint32_t color);
 
     const std::vector<uint32_t> convertMap(SmartMap map);
+    const std::vector<uint32_t> convertResourceMatrix(const Matrix<Resource> &matrix);
+
 
     template <typename T>
     const std::vector<uint32_t> convertMatrix(const Matrix<T>& matrix);

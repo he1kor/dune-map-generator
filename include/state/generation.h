@@ -9,6 +9,7 @@
 #include "border.h"
 #include <matrix.h>
 #include <connection.h>
+#include <resources.h>
 
 enum class GenerationStage{
     NONE,
@@ -20,9 +21,9 @@ enum class GenerationStage{
 
 class Generation{
     public:
-        std::shared_ptr<Grid<RadialNode>> generateMap();
+        std::shared_ptr<Grid<ResourceRadialNode<Resource>>> generateMap();
         Generation();
-        void generate(std::shared_ptr<const EdgeGraph<RadialNode, int, BasicConnection>> mapTemplate);
+        void generate(std::shared_ptr<const EdgeGraph<ResourceRadialNode<Resource>, int, BasicConnection>> mapTemplate);
         void runIteration();
         float generationProgress = 0.0f;
         long long seed = 12419;
@@ -30,22 +31,22 @@ class Generation{
         bool is_done = false;
         
         // EmbeddablePlane<Identifiable> plane;
-        EmbeddablePlane<RadialNode> plane;
+        EmbeddablePlane<ResourceRadialNode<Resource>> plane;
 
         Matrix<double> noiseMap;
-        Matrix<bool> spiceMap;
+        Matrix<Resource> spiceMap;
         
         // std::shared_ptr<const EdgeGraph<Identifiable, Identifiable>> defaultGraph = habbanyaErgSymmetry;
-        std::shared_ptr<const EdgeGraph<RadialNode, int, BasicConnection>> mapTemplate;
+        std::shared_ptr<const EdgeGraph<ResourceRadialNode<Resource>, int, BasicConnection>> mapTemplate;
             
         // std::shared_ptr<Grid<Identifiable>> grid = nullptr;
-        std::shared_ptr<Grid<RadialNode>> grid = nullptr;
+        std::shared_ptr<Grid<ResourceRadialNode<Resource>>> grid = nullptr;
         std::unordered_map<std::pair<Identifiable, Identifiable>, std::vector<tiles::Border>, PairIDHash> edgeToborderMap;
         GenerationStage generationStage = GenerationStage::NONE;
         std::unordered_map<Identifiable, Matrix<double>, IDHash> zoneMasks;
     private:
         // ZoneBloater<Identifiable, Identifiable> zoneBloater;
-        ZoneBloater<RadialNode, int, BasicConnection> zoneBloater;
+        ZoneBloater<ResourceRadialNode<Resource>, int, BasicConnection> zoneBloater;
 
         void deduceSeed();
 

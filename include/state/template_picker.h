@@ -10,6 +10,7 @@
 #include <filesystem>
 
 #include <nlohmann/json.hpp>
+#include <resources.h>
 
 
 struct JSON_SyntaxError{
@@ -36,9 +37,12 @@ public:
 
     std::string templateName = "Select...";
     std::string configFileName = "test";
-    std::optional<RadialNode> tryReadNodeData(const nlohmann::json &node, int id);
+    std::optional<ResourceRadialNode<Resource>> tryReadNodeData(const nlohmann::json &node, int id);
+    std::optional<std::pair<std::vector<NoiseOctaveParam>, std::vector<ResourceMapping<Resource>>>> tryReadResourceData(const nlohmann::json &nodeJSON);
+    std::optional<NoiseOctaveParam> tryReadOctave(const nlohmann::json &octaveJSON);
+    std::optional<ResourceMapping<Resource>> tryReadContentData(const nlohmann::json &contentJSON);
     bool tryReadEdgeGraph(const nlohmann::json &json);
     void tryReadTemplate(const std::filesystem::path& path);
-    std::shared_ptr<EdgeGraph<RadialNode, int, BasicConnection>> mapTemplate = nullptr;
+    std::shared_ptr<EdgeGraph<ResourceRadialNode<Resource>, int, BasicConnection>> mapTemplate = nullptr;
 private:
 };
