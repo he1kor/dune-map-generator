@@ -193,6 +193,7 @@ std::optional<
         if (content == std::nullopt){
             return std::nullopt;
         }
+        contents.push_back(content.value());
     }
     
     return std::make_pair(octaves, contents);

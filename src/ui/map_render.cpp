@@ -28,6 +28,8 @@ const uint32_t MapRenderer::mapTile(const Tile tile){
 
 const uint32_t MapRenderer::mapResource(const Resource spice){
     switch (spice){
+        case Resource::ROCK:
+            return 0xff254d74;
         case Resource::SAND:
             return 0xffb2d7e3;
         case Resource::DUNES:

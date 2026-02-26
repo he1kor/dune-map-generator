@@ -12,6 +12,7 @@
 #include <border.h>
 #include <blender.h>
 #include <resource_generator.h>
+#include <multizone_resource_generator.h>
 /*
 std::shared_ptr<Grid<ResourceRadialNode<Resource>>> Generation::generateMap() {
     // --- Phase 1: Graph Embedding ---
@@ -159,23 +160,21 @@ void Generation::postProcess(){
         }
         zoneMasks = blendConnections(*grid, *mapTemplate);
 
-        ResourceGenerator<Resource> resourceGenerator;
-
-        resourceGenerator.setup(
-            {
-                NoiseOctaveParam{.weight = 4, .minimalBlob = 2, .maximalBlob = 3},
-                NoiseOctaveParam{.weight = 3, .minimalBlob = 4.5, .maximalBlob = 5.5}
-            },
-            {
-                ResourceMapping{.minimalThreshold = 0.0, .maximalThreshold = 0.05, .resource = Resource::DUNES},
-                ResourceMapping{.minimalThreshold = 0.05, .maximalThreshold = 0.5, .resource = Resource::SAND},
-                ResourceMapping{.minimalThreshold = 0.5, .maximalThreshold = 0.85, .resource = Resource::BASIC_SPICE},
-                ResourceMapping{.minimalThreshold = 0.85, .maximalThreshold = 1.0, .resource = Resource::THICK_SPICE}
-            },
-            IntVector2(128, 128),
-            zoneMasks.at(Identifiable(5))
-        );
-        spiceMap = resourceGenerator.generateResourcesMap();
+        std::unordered_map<Identifiable, ResourceGenerator<Resource>, IDHash> resourceGenerators;
+        resourceGenerators.reserve(mapTemplate->size());
+        for (Identifiable zoneID : mapTemplate->getIDs()){
+            ResourceGenerator<Resource> resourceGenerator;
+            resourceGenerator.setup(
+                mapTemplate->getValue(zoneID).octaves,
+                mapTemplate->getValue(zoneID).resources,
+                noiseMap.getDimension(),
+                zoneMasks.at(zoneID)
+            );
+            resourceGenerators[zoneID] = resourceGenerator;
+        }
+        MultizoneResourceGenerator<Resource> multizoneGenerator;
+        multizoneGenerator.setup(resourceGenerators, zoneMasks);
+        spiceMap = multizoneGenerator.generateResourcesMap();
         generationStage = GenerationStage::FINISH;
     }
 }
