@@ -43,7 +43,7 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
         return false;
     }
     
-    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash>> symEdges = tryReadSymEdges(*symmetricalEdgesIt);
+    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash>> symEdges = tryReadSymEdges(*symmetricalEdgesIt);
     
     if (!symEdges){
         return false;
@@ -87,7 +87,7 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
 
 
 
-    mapTemplate = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, int, BasicConnection>>(
+    mapTemplate = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, SymConnection, BasicConnection>>(
         rawGraph,
         symEdges.value(),
         asymEdges.value()
@@ -163,8 +163,8 @@ std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicCon
 }
 
 
-std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash>> TemplatePicker::tryReadSymEdges(const nlohmann::json& symEdges){
-    std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash> result;
+std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash>> TemplatePicker::tryReadSymEdges(const nlohmann::json& symEdges){
+    std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash> result;
     for (const auto& symEdgePair : symEdges){
         auto ID_firstIt = symEdgePair.find("ID_first");
         if (ID_firstIt == symEdgePair.end()){
@@ -195,13 +195,65 @@ std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, int, Pai
             noKeyError = {true, "symmetrical_edges/[]/data"};
             return std::nullopt;
         }
+
+            auto passesIt = dataIt->find("passes");
+            if (passesIt == dataIt->end()){
+                noKeyError = {true, "symmetrical_edges/[]/data/passes"};
+                return std::nullopt;
+            }
+
+                auto minPassWidthIt = passesIt->find("minPassWidth");
+                if (minPassWidthIt == passesIt->end()){
+                    noKeyError = {true, "symmetrical_edges/[]/data/passes/minPassWidth"};
+                    return std::nullopt;
+                }
+                if (!minPassWidthIt->is_number_integer()){
+                    badValueError = {true, "symmetrical_edges/[]/data/passes/minPassWidth", "int"};
+                    return std::nullopt;
+                }
+
+                auto maxPassWidthIt = passesIt->find("maxPassWidth");
+                if (maxPassWidthIt == passesIt->end()){
+                    noKeyError = {true, "symmetrical_edges/[]/data/passes/maxPassWidth"};
+                    return std::nullopt;
+                }
+                if (!maxPassWidthIt->is_number_integer()){
+                    badValueError = {true, "symmetrical_edges/[]/data/passes/maxPassWidth", "int"};
+                    return std::nullopt;
+                }
+
+                auto minWallLengthIt = passesIt->find("minWallLength");
+                if (minWallLengthIt == passesIt->end()){
+                    noKeyError = {true, "symmetrical_edges/[]/data/passes/minWallLength"};
+                    return std::nullopt;
+                }
+                if (!minWallLengthIt->is_number_integer()){
+                    badValueError = {true, "symmetrical_edges/[]/data/passes/minWallLength", "int"};
+                    return std::nullopt;
+                }
+                
+                auto maxWallLengthIt = passesIt->find("maxWallLength");
+                if (maxWallLengthIt == passesIt->end()){
+                    noKeyError = {true, "symmetrical_edges/[]/data/passes/maxWallLength"};
+                    return std::nullopt;
+                }
+                if (!maxWallLengthIt->is_number_integer()){
+                    badValueError = {true, "symmetrical_edges/[]/data/passes/maxWallLength", "int"};
+                    return std::nullopt;
+                }
         
-        result[std::make_pair(ID_first, ID_second)] = 0;
+        result[std::make_pair(ID_first, ID_second)] = SymConnection(tiles::PassParams{
+            .minPassWidth = minPassWidthIt->get<size_t>(),
+            .maxPassWidth = maxPassWidthIt->get<size_t>(),
+            .minWallLength = minWallLengthIt->get<size_t>(),
+            .maxWallLength = maxWallLengthIt->get<size_t>()
+        });
     }
+    
     return result;
 }
 
-std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> TemplatePicker::getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash>& symEdges){
+std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> TemplatePicker::getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash>& symEdges){
     std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> result;
     for (auto& [ids, _] : symEdges){
         result[ids.first].push_back(ids.second);

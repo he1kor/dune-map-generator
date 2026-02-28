@@ -43,7 +43,7 @@ std::shared_ptr<Grid<ResourceRadialNode<Resource>>> Generation::generateMap() {
     */
 
 Generation::Generation() : plane(128.0, 128.0), noiseMap(128, 128), spiceMap(128, 128) {};
-void Generation::generate(std::shared_ptr<const EdgeGraph<ResourceRadialNode<Resource>, int, BasicConnection>> mapTemplate){
+void Generation::generate(std::shared_ptr<const EdgeGraph<ResourceRadialNode<Resource>, SymConnection, BasicConnection>> mapTemplate){
     //this->grid = generateMap();
     //return;
     //RandomGenerator::instance().reset();
@@ -146,10 +146,18 @@ void Generation::postProcess(){
         edgeToborderMap = tiles::Border::getAllBorders<ResourceRadialNode<Resource>>(*grid);
         
         for (auto& [pair, border] : edgeToborderMap){
+            auto passParams = mapTemplate->tryGetSymEdge(pair.first, pair.second);
+            if (!passParams.has_value()){
+                passParams = tiles::PassParams{
+                    .minPassWidth = 0,
+                    .maxPassWidth = 0,
+                    .minWallLength = 0,
+                    .maxWallLength = 200
+                }; // No pass if no connection
+            }
             for (auto sameBorders : border){
                 //seed 801119385
-                sameBorders.initPassData(tiles::PassParams{.minPassWidth = 9, .maxPassWidth = 16, .minWallLength = 5, .maxWallLength = 25});
-                //sameBorders.initPassData(tiles::PassParams{.minPassWidth = 3, .maxPassWidth = 100, .minWallLength = 0, .maxWallLength = 0});
+                sameBorders.initPassData(passParams.value());
                 sameBorders.generatePasses();
                 for (const tiles::Border::Segment& segment : sameBorders.getSegments()){
                     if (segment.isDisabled()) continue;

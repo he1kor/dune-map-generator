@@ -43,9 +43,9 @@ public:
     std::optional<ResourceMapping<Resource>> tryReadContentData(const nlohmann::json &contentJSON);
     bool tryReadEdgeGraph(const nlohmann::json &json);
     std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash>> tryReadAsymEdges(const nlohmann::json &node);
-    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash>> tryReadSymEdges(const nlohmann::json &symEdges);
-    std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash> &symEdges);
+    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash>> tryReadSymEdges(const nlohmann::json &symEdges);
+    std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash> &symEdges);
     void tryReadTemplate(const std::filesystem::path &path);
-    std::shared_ptr<EdgeGraph<ResourceRadialNode<Resource>, int, BasicConnection>> mapTemplate = nullptr;
+    std::shared_ptr<EdgeGraph<ResourceRadialNode<Resource>, SymConnection, BasicConnection>> mapTemplate = nullptr;
 private:
 };
