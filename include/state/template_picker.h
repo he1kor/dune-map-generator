@@ -42,7 +42,10 @@ public:
     std::optional<NoiseOctaveParam> tryReadOctave(const nlohmann::json &octaveJSON);
     std::optional<ResourceMapping<Resource>> tryReadContentData(const nlohmann::json &contentJSON);
     bool tryReadEdgeGraph(const nlohmann::json &json);
-    void tryReadTemplate(const std::filesystem::path& path);
+    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash>> tryReadAsymEdges(const nlohmann::json &node);
+    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash>> tryReadSymEdges(const nlohmann::json &symEdges);
+    std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash> &symEdges);
+    void tryReadTemplate(const std::filesystem::path &path);
     std::shared_ptr<EdgeGraph<ResourceRadialNode<Resource>, int, BasicConnection>> mapTemplate = nullptr;
 private:
 };

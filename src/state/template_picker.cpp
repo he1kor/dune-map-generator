@@ -7,118 +7,234 @@
 
 
 bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
-    auto graphIt = json.find("graph");
-    if (graphIt == json.end()){
-        noKeyError = {true, "graph"};
+    auto nodesIt = json.find("nodes");
+    if (nodesIt == json.end()){
+        noKeyError = {true, "nodes"};
         return false;
     }
-    if (!graphIt->is_array()){
-        badValueError = {true, "graph/[]", "array"};
+    if (!nodesIt->is_array()){
+        badValueError = {true, "nodes/[]", "array"};
         return false;
     }
 
+    auto symmetricalEdgesIt = json.find("symmetrical_edges");
+    if (symmetricalEdgesIt == json.end()){
+        noKeyError = {true, "symmetrical_edges"};
+        return false;
+    }
+    if (!symmetricalEdgesIt->is_array()){
+        badValueError = {true, "symmetrical_edges/[]", "array"};
+        return false;
+    }
+
+    auto asymmetricalEdgesIt = json.find("asymmetrical_edges");
+    if (asymmetricalEdgesIt == json.end()){
+        noKeyError = {true, "asymmetrical_edges"};
+        return false;
+    }
+    if (!asymmetricalEdgesIt->is_array()){
+        badValueError = {true, "asymmetrical_edges/[]", "array"};
+        return false;
+    }
+
+    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash>> asymEdges = tryReadAsymEdges(*asymmetricalEdgesIt);
+    
+    if (!asymEdges){
+        return false;
+    }
+    
+    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash>> symEdges = tryReadSymEdges(*symmetricalEdgesIt);
+    
+    if (!symEdges){
+        return false;
+    }
+    
+    std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> nodeNeighbours = getNodeNeighbours(symEdges.value());
     std::vector<std::pair<ResourceRadialNode<Resource>, std::vector<Identifiable>>> rawGraph;
-    std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash> asymEdges;
-    for (const auto& node : *graphIt){
+    
+    
+    auto asymEdgesIt = json.find("asymmetrical_edges");
+    if (asymEdgesIt == json.end()){
+        noKeyError = {true, "asymmetrical_edges"};
+        return false;
+    }
+    if (!asymEdgesIt->is_array()){
+    badValueError = {true, "asymmetrical_edges/[]", "array"};
+    return false;
+    }
+
+    
+    
+    for (const auto& node : *nodesIt){
         auto idIt = node.find("id");
         if (idIt == node.end()){
-            noKeyError = {true, "graph/[]/id"};
+            noKeyError = {true, "nodes/[]/id"};
             return false;
         }
         if (!idIt->is_number_integer()){
-            badValueError = {true, "graph/[]/id", "int"};
+            badValueError = {true, "nodes/[]/id", "int"};
             return false;
         }
         int id = idIt->get<int>();
-
-        auto neighboursIt = node.find("neighbors");
-        if (neighboursIt == node.end()){
-            noKeyError = {true, "graph/[]/neighbors"};
-            return false;
-        }
-        std::vector<Identifiable> ids;
-        for (const auto& neighbour : *neighboursIt){
-            auto neighbourIdIt = neighbour.find("id");
-            if (neighbourIdIt == neighbour.end()){
-                noKeyError = {true, "graph/[]/neighbors/id"};
-                return false;
-            }
-            if (!neighbourIdIt->is_number_integer()){
-                badValueError = {true, "graph/[]/neighbors/id", "int"};
-                return false;
-            }
-            int neighbourId = neighbourIdIt->get<int>();
-            
-            auto resourceBlendDistanceIt = neighbour.find("resourceBlendDistance");
-            if (resourceBlendDistanceIt == neighbour.end()){
-                noKeyError = {true, "graph/[]/neighbors/resourceBlendDistance"};
-                return false;
-            }
-            int resourceBlendDistance = resourceBlendDistanceIt->get<int>();
-
-            auto intakeDistanceIt = neighbour.find("intakeDistance");
-            if (intakeDistanceIt == neighbour.end()){
-                noKeyError = {true, "graph/[]/neighbors/intakeDistance"};
-                return false;
-            }
-            int intakeDistance = intakeDistanceIt->get<int>();
-
-            auto areaGuaranteedIt = neighbour.find("areaGuaranteed");
-            if (areaGuaranteedIt == neighbour.end()){
-                noKeyError = {true, "graph/[]/neighbors/areaGuaranteed"};
-                return false;
-            }
-            int areaGuaranteed = areaGuaranteedIt->get<int>();
-
-            auto bonusValueIt = neighbour.find("bonusValue");
-            if (bonusValueIt == neighbour.end()){
-                noKeyError = {true, "graph/[]/neighbors/bonusValue"};
-                return false;
-            }
-            int bonusValue = bonusValueIt->get<double>();
-            
-            ids.push_back(neighbourId);
-            asymEdges[{id, neighbourId}] = BasicConnection(resourceBlendDistance, intakeDistance, areaGuaranteed, bonusValue);
-        }
 
         auto optionalRadialNode = tryReadNodeData(node, id);
         if (!optionalRadialNode){
             return false;
         }
         
-        rawGraph.push_back({*optionalRadialNode, ids});
+        rawGraph.push_back({*optionalRadialNode, nodeNeighbours[id]});
     }
-    mapTemplate = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, int, BasicConnection>>(rawGraph);
-    mapTemplate->initializeAsymEdges(asymEdges);
+
+
+
+    mapTemplate = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, int, BasicConnection>>(
+        rawGraph,
+        symEdges.value(),
+        asymEdges.value()
+    );
     syssound::playInfo();
     return true;
+}
+
+std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash>> TemplatePicker::tryReadAsymEdges(const nlohmann::json& asymEdges){
+    std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash> result;
+    for (const auto& asymEdgePair : asymEdges){
+        auto ID_fromIt = asymEdgePair.find("ID_from");
+        if (ID_fromIt == asymEdgePair.end()){
+            noKeyError = {true, "asymmetrical_edges/[]/ID_from"};
+            return std::nullopt;
+        }
+        if (!ID_fromIt->is_number_integer()){
+            badValueError = {true, "asymmetrical_edges/[]/ID_from", "int"};
+            return std::nullopt;
+        }
+        int ID_from = ID_fromIt->get<int>();
+
+        auto ID_toIt = asymEdgePair.find("ID_to");
+        if (ID_toIt == asymEdgePair.end()){
+            noKeyError = {true, "asymmetrical_edges/[]/ID_to"};
+            return std::nullopt;
+        }
+        if (!ID_toIt->is_number_integer()){
+            badValueError = {true, "asymmetrical_edges/[]/ID_to", "int"};
+            return std::nullopt;
+        }
+        int ID_to = ID_toIt->get<int>();
+
+
+
+        auto dataIt = asymEdgePair.find("data");
+        if (dataIt == asymEdgePair.end()){
+            noKeyError = {true, "asymmetrical_edges/[]/data"};
+            return std::nullopt;
+        }
+        
+            auto resourceBlendDistanceIt = dataIt->find("resourceBlendDistance");
+            if (resourceBlendDistanceIt == dataIt->end()){
+                noKeyError = {true, "asymmetrical_edges/resourceBlendDistance"};
+                return std::nullopt;
+            }
+            int resourceBlendDistance = resourceBlendDistanceIt->get<int>();
+
+            auto intakeDistanceIt = dataIt->find("intakeDistance");
+            if (intakeDistanceIt == dataIt->end()){
+                noKeyError = {true, "asymmetrical_edges/intakeDistance"};
+                return std::nullopt;
+            }
+            int intakeDistance = intakeDistanceIt->get<int>();
+
+            auto areaGuaranteedIt = dataIt->find("areaGuaranteed");
+            if (areaGuaranteedIt == dataIt->end()){
+                noKeyError = {true, "asymmetrical_edges/areaGuaranteed"};
+                return std::nullopt;
+            }
+            int areaGuaranteed = areaGuaranteedIt->get<int>();
+
+            auto bonusValueIt = dataIt->find("bonusValue");
+            if (bonusValueIt == dataIt->end()){
+                noKeyError = {true, "asymmetrical_edges/bonusValue"};
+                return std::nullopt;
+            }
+            int bonusValue = bonusValueIt->get<double>();
+        
+        result[std::make_pair(ID_from, ID_to)] = BasicConnection(resourceBlendDistance, intakeDistance, areaGuaranteed, bonusValue);
+    }
+    return result;
+}
+
+
+std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash>> TemplatePicker::tryReadSymEdges(const nlohmann::json& symEdges){
+    std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash> result;
+    for (const auto& symEdgePair : symEdges){
+        auto ID_firstIt = symEdgePair.find("ID_first");
+        if (ID_firstIt == symEdgePair.end()){
+            noKeyError = {true, "symmetrical_edges/[]/ID_first"};
+            return std::nullopt;
+        }
+        if (!ID_firstIt->is_number_integer()){
+            badValueError = {true, "symmetrical_edges/[]/ID_first", "int"};
+            return std::nullopt;
+        }
+        int ID_first = ID_firstIt->get<int>();
+
+        auto ID_secondIt = symEdgePair.find("ID_second");
+        if (ID_secondIt == symEdgePair.end()){
+            noKeyError = {true, "symmetrical_edges/[]/ID_second"};
+            return std::nullopt;
+        }
+        if (!ID_secondIt->is_number_integer()){
+            badValueError = {true, "symmetrical_edges/[]/ID_second", "int"};
+            return std::nullopt;
+        }
+        int ID_second = ID_secondIt->get<int>();
+
+
+
+        auto dataIt = symEdgePair.find("data");
+        if (dataIt == symEdgePair.end()){
+            noKeyError = {true, "symmetrical_edges/[]/data"};
+            return std::nullopt;
+        }
+        
+        result[std::make_pair(ID_first, ID_second)] = 0;
+    }
+    return result;
+}
+
+std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> TemplatePicker::getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, int, PairIDHash>& symEdges){
+    std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> result;
+    for (auto& [ids, _] : symEdges){
+        result[ids.first].push_back(ids.second);
+        result[ids.second].push_back(ids.first);
+    }
+    return result;
 }
 
 
 std::optional<ResourceRadialNode<Resource>> TemplatePicker::tryReadNodeData(const nlohmann::json& node, int id){
     auto dataIt = node.find("data");
     if (dataIt == node.end()){
-        noKeyError = {true, "graph/[]/data"};
+        noKeyError = {true, "nodes/[]/data"};
         return std::nullopt;
     }
 
     auto radiusIt = dataIt->find("radius");
     if (radiusIt == dataIt->end()){
-        noKeyError = {true, "graph/[]/data/radius"};
+        noKeyError = {true, "nodes/[]/data/radius"};
         return std::nullopt;
     }
     if (!radiusIt->is_number_float()){
-        badValueError = {true, "graph/[]/data/radius", "float"};
+        badValueError = {true, "nodes/[]/data/radius", "float"};
         return std::nullopt;
     }
 
     auto susceptibilityIt = dataIt->find("susceptibility");
     if (susceptibilityIt == dataIt->end()){
-        noKeyError = {true, "graph/[]/data/susceptibility"};
+        noKeyError = {true, "nodes/[]/data/susceptibility"};
         return std::nullopt;
     }
     if (!susceptibilityIt->is_number_float()){
-        badValueError = {true, "graph/[]/data/susceptibility", "float"};
+        badValueError = {true, "nodes/[]/data/susceptibility", "float"};
         return std::nullopt;
     }
 
@@ -144,7 +260,7 @@ std::optional<
 > TemplatePicker::tryReadResourceData(const nlohmann::json& nodeJSON){
     auto resourcesIt = nodeJSON.find("resources");
     if (resourcesIt == nodeJSON.end()){
-        noKeyError = {true, "graph/[]/data/resources"};
+        noKeyError = {true, "nodes/[]/data/resources"};
         return std::nullopt;
     }
     auto octave1It = resourcesIt->find("octave1");
@@ -178,12 +294,12 @@ std::optional<
 
     auto contentIt = resourcesIt->find("content");
     if (contentIt == resourcesIt->end()){
-        noKeyError = {true, "graph/[]/data/resources/content"};
+        noKeyError = {true, "nodes/[]/data/resources/content"};
         return std::nullopt;
     }
 
     if (!contentIt->is_array()){
-        badValueError = {true, "graph/[]/data/resources/content/[]", "array"};
+        badValueError = {true, "nodes/[]/data/resources/content/[]", "array"};
         return std::nullopt;
     }
 
@@ -206,32 +322,32 @@ std::optional<NoiseOctaveParam> TemplatePicker::tryReadOctave(const nlohmann::js
 
     auto weightIt = octaveJSON.find("weight");
     if (weightIt == octaveJSON.end()){
-        noKeyError = {true, "graph/[]/data/resources/octave{*}/weight"};
+        noKeyError = {true, "nodes/[]/data/resources/octave{*}/weight"};
         return std::nullopt;
     }
     if (!weightIt->is_number_float()){
-        badValueError = {true, "graph/[]/data/resources/octave{*}/weight", "float"};
+        badValueError = {true, "nodes/[]/data/resources/octave{*}/weight", "float"};
         return std::nullopt;
     }
 
     auto minRadiusIt = octaveJSON.find("minRadius");
     if (minRadiusIt == octaveJSON.end()){
-        noKeyError = {true, "graph/[]/data/resources/octave{*}/minRadius"};
+        noKeyError = {true, "nodes/[]/data/resources/octave{*}/minRadius"};
         return std::nullopt;
     }
     if (!minRadiusIt->is_number_float()){
-        badValueError = {true, "graph/[]/data/resources/octave{*}/minRadius", "float"};
+        badValueError = {true, "nodes/[]/data/resources/octave{*}/minRadius", "float"};
         return std::nullopt;
     }
 
 
     auto maxRadiusIt = octaveJSON.find("maxRadius");
     if (maxRadiusIt == octaveJSON.end()){
-        noKeyError = {true, "graph/[]/data/resources/octave{*}/maxRadius"};
+        noKeyError = {true, "nodes/[]/data/resources/octave{*}/maxRadius"};
         return std::nullopt;
     }
     if (!maxRadiusIt->is_number_float()){
-        badValueError = {true, "graph/[]/data/resources/octave{*}/maxRadius", "float"};
+        badValueError = {true, "nodes/[]/data/resources/octave{*}/maxRadius", "float"};
         return std::nullopt;
     }
 
@@ -250,37 +366,37 @@ std::optional<ResourceMapping<Resource>> TemplatePicker::tryReadContentData(cons
 
     auto resourceNameIt = contentJSON.find("name");
     if (resourceNameIt == contentJSON.end()){
-        noKeyError = {true, "graph/[]/data/resources/content/[]/name"};
+        noKeyError = {true, "nodes/[]/data/resources/content/[]/name"};
         return std::nullopt;
     }
     if (!resourceNameIt->is_string()){
-        badValueError = {true, "graph/[]/data/resources/content/[]/name", "string"};
+        badValueError = {true, "nodes/[]/data/resources/content/[]/name", "string"};
         return std::nullopt;
     }
     resource = resourceFromString(resourceNameIt->get<std::string>());
     if (resource == std::nullopt){
-        badValueError = {true, "graph/[]/data/resources/content/[]/name", std::format("Unknown resource: {}", resourceNameIt->get<std::string>())};
+        badValueError = {true, "nodes/[]/data/resources/content/[]/name", std::format("Unknown resource: {}", resourceNameIt->get<std::string>())};
     }
 
 
     auto startThresholdIt = contentJSON.find("startThreshold");
     if (startThresholdIt == contentJSON.end()){
-        noKeyError = {true, "graph/[]/data/resources/octave{*}/startThreshold"};
+        noKeyError = {true, "nodes/[]/data/resources/octave{*}/startThreshold"};
         return std::nullopt;
     }
     if (!startThresholdIt->is_number_float()){
-        badValueError = {true, "graph/[]/data/resources/octave{*}/startThreshold", "float"};
+        badValueError = {true, "nodes/[]/data/resources/octave{*}/startThreshold", "float"};
         return std::nullopt;
     }
 
 
     auto endThresholdIt = contentJSON.find("endThreshold");
     if (endThresholdIt == contentJSON.end()){
-        noKeyError = {true, "graph/[]/data/resources/octave{*}/endThreshold"};
+        noKeyError = {true, "nodes/[]/data/resources/octave{*}/endThreshold"};
         return std::nullopt;
     }
     if (!endThresholdIt->is_number_float()){
-        badValueError = {true, "graph/[]/data/resources/octave{*}/endThreshold", "float"};
+        badValueError = {true, "nodes/[]/data/resources/octave{*}/endThreshold", "float"};
         return std::nullopt;
     }
 
