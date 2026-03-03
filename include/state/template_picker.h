@@ -11,6 +11,7 @@
 
 #include <nlohmann/json.hpp>
 #include <resources.h>
+#include "map_template.h"
 
 
 struct JSON_SyntaxError{
@@ -38,14 +39,16 @@ public:
     std::string templateName = "Select...";
     std::string configFileName = "test";
     std::optional<ResourceRadialNode<Resource>> tryReadNodeData(const nlohmann::json &node, int id);
-    std::optional<std::pair<std::vector<NoiseOctaveParam>, std::vector<ResourceMapping<Resource>>>> tryReadResourceData(const nlohmann::json &nodeJSON);
+    std::optional<std::pair<std::vector<double>, std::vector<ResourceMapping<Resource>>>> tryReadResourceData(const nlohmann::json &nodeJSON);
     std::optional<NoiseOctaveParam> tryReadOctave(const nlohmann::json &octaveJSON);
     std::optional<ResourceMapping<Resource>> tryReadContentData(const nlohmann::json &contentJSON);
     bool tryReadEdgeGraph(const nlohmann::json &json);
+    std::optional<std::vector<NoiseOctaveParam>> tryReadOctaves(const nlohmann::json &octavesJson);
     std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash>> tryReadAsymEdges(const nlohmann::json &node);
     std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash>> tryReadSymEdges(const nlohmann::json &symEdges);
     std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash> &symEdges);
     void tryReadTemplate(const std::filesystem::path &path);
-    std::shared_ptr<EdgeGraph<ResourceRadialNode<Resource>, SymConnection, BasicConnection>> mapTemplate = nullptr;
+    std::shared_ptr<MapTemplate> mapTemplate = nullptr;
+
 private:
 };

@@ -58,7 +58,7 @@ void TemplatePickerUI::buildGenerateButton(){
         ImGui::BeginDisabled(disabled);
         if (ImGui::Button("Generate", ImVec2(-1, 30))){
             generationPtr->generate(templatePickerPtr->mapTemplate);
-            mapRenderer.setDistinctColors(*templatePickerPtr->mapTemplate);
+            mapRenderer.setDistinctColors(*(templatePickerPtr->mapTemplate->zoneGraph));
         }
         if (disabled && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
             ImGui::SetTooltip("No template is set!");

@@ -10,6 +10,7 @@
 #include <matrix.h>
 #include <connection.h>
 #include <resources.h>
+#include "map_template.h"
 
 enum class GenerationStage{
     NONE,
@@ -23,7 +24,7 @@ class Generation{
     public:
         std::shared_ptr<Grid<ResourceRadialNode<Resource>>> generateMap();
         Generation();
-        void generate(std::shared_ptr<const EdgeGraph<ResourceRadialNode<Resource>, SymConnection, BasicConnection>> mapTemplate);
+        void generate(std::shared_ptr<MapTemplate> mapTemplate);
         void runIteration();
         float generationProgress = 0.0f;
         long long seed = 12419;
@@ -37,7 +38,7 @@ class Generation{
         Matrix<Resource> spiceMap;
         
         // std::shared_ptr<const EdgeGraph<Identifiable, Identifiable>> defaultGraph = habbanyaErgSymmetry;
-        std::shared_ptr<const EdgeGraph<ResourceRadialNode<Resource>, SymConnection, BasicConnection>> mapTemplate;
+        std::shared_ptr<MapTemplate> mapTemplate;
             
         // std::shared_ptr<Grid<Identifiable>> grid = nullptr;
         std::shared_ptr<Grid<ResourceRadialNode<Resource>>> grid = nullptr;

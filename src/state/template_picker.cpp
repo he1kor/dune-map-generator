@@ -17,6 +17,16 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
         return false;
     }
 
+    auto octavesIt = json.find("octaves");
+    if (octavesIt == json.end()){
+        noKeyError = {true, "octaves"};
+        return false;
+    }
+    auto octaves = tryReadOctaves(*octavesIt);
+    if (!octaves.has_value()){
+        return false;
+    }
+
     auto symmetricalEdgesIt = json.find("symmetrical_edges");
     if (symmetricalEdgesIt == json.end()){
         noKeyError = {true, "symmetrical_edges"};
@@ -59,8 +69,8 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
         return false;
     }
     if (!asymEdgesIt->is_array()){
-    badValueError = {true, "asymmetrical_edges/[]", "array"};
-    return false;
+        badValueError = {true, "asymmetrical_edges/[]", "array"};
+        return false;
     }
 
     
@@ -87,13 +97,48 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
 
 
 
-    mapTemplate = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, SymConnection, BasicConnection>>(
+    mapTemplate = std::make_shared<MapTemplate>();
+    mapTemplate->zoneGraph = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, SymConnection, BasicConnection>>(
         rawGraph,
         symEdges.value(),
         asymEdges.value()
     );
+    mapTemplate->octaves = octaves.value();
     syssound::playInfo();
     return true;
+}
+
+std::optional<std::vector<NoiseOctaveParam>> TemplatePicker::tryReadOctaves(const nlohmann::json& octavesJson){
+
+    auto octave1It = octavesJson.find("octave1");
+    std::optional<NoiseOctaveParam> octave1 = std::nullopt;
+    std::optional<NoiseOctaveParam> octave2 = std::nullopt;
+    std::optional<NoiseOctaveParam> octave3 = std::nullopt;
+    std::vector<NoiseOctaveParam> octaves;
+    if (octave1It != octavesJson.end()){
+        octave1 = tryReadOctave(*octave1It);
+        if (octave1 == std::nullopt){
+            return std::nullopt;
+        }
+        octaves.push_back(octave1.value());
+        auto octave2It = octavesJson.find("octave2");
+        if (octave2It != octavesJson.end()){
+            octave2 = tryReadOctave(*octave2It);
+            if (octave2 == std::nullopt){
+                return std::nullopt;
+            }   
+            octaves.push_back(octave2.value());
+            auto octave3It = octavesJson.find("octave3");
+            if (octave3It != octavesJson.end()){
+                octave3 = tryReadOctave(*octave3It);
+                if (octave3 == std::nullopt){
+                    return std::nullopt;
+                }
+                octaves.push_back(octave3.value());
+            }
+        }
+    }
+    return octaves;
 }
 
 std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash>> TemplatePicker::tryReadAsymEdges(const nlohmann::json& asymEdges){
@@ -306,7 +351,7 @@ std::optional<ResourceRadialNode<Resource>> TemplatePicker::tryReadNodeData(cons
 
 std::optional<
     std::pair<
-        std::vector<NoiseOctaveParam>,
+        std::vector<double>,
         std::vector<ResourceMapping<Resource>>
     >
 > TemplatePicker::tryReadResourceData(const nlohmann::json& nodeJSON){
@@ -315,34 +360,40 @@ std::optional<
         noKeyError = {true, "nodes/[]/data/resources"};
         return std::nullopt;
     }
-    auto octave1It = resourcesIt->find("octave1");
-    std::optional<NoiseOctaveParam> octave1 = std::nullopt;
-    std::optional<NoiseOctaveParam> octave2 = std::nullopt;
-    std::optional<NoiseOctaveParam> octave3 = std::nullopt;
-    std::vector<NoiseOctaveParam> octaves;
-    if (octave1It != resourcesIt->end()){
-        octave1 = tryReadOctave(*octave1It);
-        if (octave1 == std::nullopt){
+
+    double octave1_weight = 0.0;
+    double octave2_weight = 0.0;
+    double octave3_weight = 0.0;
+
+    auto weight1It = resourcesIt->find("octave1_weight");
+    if (weight1It != resourcesIt->end()){
+        if (!weight1It->is_number_float()){
+            badValueError = {true, "nodes/[]/data/resources/octave1_weight", "float"};
             return std::nullopt;
         }
-        octaves.push_back(octave1.value());
-        auto octave2It = resourcesIt->find("octave2");
-        if (octave2It != resourcesIt->end()){
-            octave2 = tryReadOctave(*octave2It);
-            if (octave2 == std::nullopt){
-                return std::nullopt;
-            }   
-            octaves.push_back(octave2.value());
-            auto octave3It = resourcesIt->find("octave3");
-            if (octave3It != resourcesIt->end()){
-                octave3 = tryReadOctave(*octave3It);
-                if (octave3 == std::nullopt){
-                    return std::nullopt;
-                }
-                octaves.push_back(octave3.value());
-            }
-        }
+        octave1_weight = weight1It->get<double>();
     }
+
+    auto weight2It = resourcesIt->find("octave2_weight");
+    if (weight2It != resourcesIt->end()){
+        if (!weight2It->is_number_float()){
+            badValueError = {true, "nodes/[]/data/resources/octave2_weight", "float"};
+            return std::nullopt;
+        }
+        octave2_weight = weight2It->get<double>();
+    }
+
+    auto weight3It = resourcesIt->find("octave3_weight");
+    if (weight3It != resourcesIt->end()){
+        if (!weight3It->is_number_float()){
+            badValueError = {true, "nodes/[]/data/resources/octave3_weight", "float"};
+            return std::nullopt;
+        }
+        octave3_weight = weight3It->get<double>();
+    }
+
+    std::vector<double> octaveWeights;
+    octaveWeights = {octave1_weight, octave2_weight, octave3_weight};
 
     auto contentIt = resourcesIt->find("content");
     if (contentIt == resourcesIt->end()){
@@ -364,47 +415,36 @@ std::optional<
         contents.push_back(content.value());
     }
     
-    return std::make_pair(octaves, contents);
+    return std::make_pair(octaveWeights, contents);
 }
 
 std::optional<NoiseOctaveParam> TemplatePicker::tryReadOctave(const nlohmann::json& octaveJSON){
-    double weight;
     double minRadius;
     double maxRadius;
 
-    auto weightIt = octaveJSON.find("weight");
-    if (weightIt == octaveJSON.end()){
-        noKeyError = {true, "nodes/[]/data/resources/octave{*}/weight"};
-        return std::nullopt;
-    }
-    if (!weightIt->is_number_float()){
-        badValueError = {true, "nodes/[]/data/resources/octave{*}/weight", "float"};
-        return std::nullopt;
-    }
-
     auto minRadiusIt = octaveJSON.find("minRadius");
     if (minRadiusIt == octaveJSON.end()){
-        noKeyError = {true, "nodes/[]/data/resources/octave{*}/minRadius"};
+        noKeyError = {true, "octaves/octave{*}/minRadius"};
         return std::nullopt;
     }
     if (!minRadiusIt->is_number_float()){
-        badValueError = {true, "nodes/[]/data/resources/octave{*}/minRadius", "float"};
+        badValueError = {true, "octaves/octave{*}/minRadius", "float"};
         return std::nullopt;
     }
 
 
     auto maxRadiusIt = octaveJSON.find("maxRadius");
     if (maxRadiusIt == octaveJSON.end()){
-        noKeyError = {true, "nodes/[]/data/resources/octave{*}/maxRadius"};
+        noKeyError = {true, "octaves/octave{*}/maxRadius"};
         return std::nullopt;
     }
     if (!maxRadiusIt->is_number_float()){
-        badValueError = {true, "nodes/[]/data/resources/octave{*}/maxRadius", "float"};
+        badValueError = {true, "octaves/octave{*}/maxRadius", "float"};
         return std::nullopt;
     }
 
     return NoiseOctaveParam{
-        .weight = weightIt->get<double>(),
+        .weight = 1.0,
         .minimalBlob = minRadiusIt->get<double>(),
         .maximalBlob = maxRadiusIt->get<double>()
     };

@@ -43,7 +43,7 @@ std::shared_ptr<Grid<ResourceRadialNode<Resource>>> Generation::generateMap() {
     */
 
 Generation::Generation() : plane(128.0, 128.0), noiseMap(128, 128), spiceMap(128, 128) {};
-void Generation::generate(std::shared_ptr<const EdgeGraph<ResourceRadialNode<Resource>, SymConnection, BasicConnection>> mapTemplate){
+void Generation::generate(std::shared_ptr<MapTemplate> mapTemplate){
     //this->grid = generateMap();
     //return;
     //RandomGenerator::instance().reset();
@@ -61,7 +61,7 @@ void Generation::generate(std::shared_ptr<const EdgeGraph<ResourceRadialNode<Res
     deduceSeed();
     plane.clear();
     plane.applyMagnetGrid(cornerMagnets);
-    plane.initEmbed(mapTemplate);
+    plane.initEmbed(mapTemplate->zoneGraph);
     generationStage = GenerationStage::EMBED;
     zoneBloater.finishAndReset();
 }
@@ -106,7 +106,7 @@ void Generation::embedTemplate(){
 
 void Generation::bloatZones(){
     if (zoneBloater.isInitialized()){
-        zoneBloater.initEdgeVoronoi(*mapTemplate, grid);
+        zoneBloater.initEdgeVoronoi(*(mapTemplate->zoneGraph), grid);
         zoneBloater.setBloatMode(bloatStrategies::DiagonalRandomBloat());
         zoneBloater.start();
     }
@@ -121,14 +121,14 @@ void Generation::bloatZones(){
 
 void Generation::postProcess(){
     if (zoneBloater.isInitialized()){
-        morphology::closeForAll(*grid, mapTemplate->getIDs(),
+        morphology::closeForAll(*grid, mapTemplate->zoneGraph->getIDs(),
             {
                 {1, 1, 1},
                 {1, 1, 1},
                 {1, 1, 1}
             }
         );
-        morphology::openForAll(*grid, mapTemplate->getIDs(),
+        morphology::openForAll(*grid, mapTemplate->zoneGraph->getIDs(),
             {
                 {1, 1, 1},
                 {1, 1, 1},
@@ -146,7 +146,7 @@ void Generation::postProcess(){
         edgeToborderMap = tiles::Border::getAllBorders<ResourceRadialNode<Resource>>(*grid);
         
         for (auto& [pair, border] : edgeToborderMap){
-            auto passParams = mapTemplate->tryGetSymEdge(pair.first, pair.second);
+            auto passParams = mapTemplate->zoneGraph->tryGetSymEdge(pair.first, pair.second);
             if (!passParams.has_value()){
                 passParams = tiles::PassParams{
                     .minPassWidth = 0,
@@ -166,15 +166,20 @@ void Generation::postProcess(){
                 }
             }
         }
-        zoneMasks = blendConnections(*grid, *mapTemplate);
-
+        std::vector<Matrix<double>> resourceOctaves;
+        resourceOctaves.reserve(mapTemplate->octaves.size());
+        for (auto& octave : mapTemplate->octaves){
+            resourceOctaves.push_back(EllipticalBlobNoise(noiseMap.getDimension().x, noiseMap.getDimension().y, octave.minimalBlob, octave.maximalBlob).generate());
+        }
+        zoneMasks = blendConnections(*grid, *(mapTemplate->zoneGraph));
         std::unordered_map<Identifiable, ResourceGenerator<Resource>, IDHash> resourceGenerators;
-        resourceGenerators.reserve(mapTemplate->size());
-        for (Identifiable zoneID : mapTemplate->getIDs()){
+        resourceGenerators.reserve(mapTemplate->zoneGraph->size());
+        for (Identifiable zoneID : mapTemplate->zoneGraph->getIDs()){
             ResourceGenerator<Resource> resourceGenerator;
             resourceGenerator.setup(
-                mapTemplate->getValue(zoneID).octaves,
-                mapTemplate->getValue(zoneID).resources,
+                resourceOctaves,
+                mapTemplate->zoneGraph->getValue(zoneID).octaveWeights,
+                mapTemplate->zoneGraph->getValue(zoneID).resources,
                 noiseMap.getDimension(),
                 zoneMasks.at(zoneID)
             );

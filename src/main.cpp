@@ -148,7 +148,7 @@ int main(){
             generation.runIteration();
 
             if (generation.generationStage == GenerationStage::EMBED)
-                mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, *(generation.mapTemplate)), generation.plane.getWidth(), generation.plane.getHeight());
+                mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, *(generation.mapTemplate->zoneGraph)), generation.plane.getWidth(), generation.plane.getHeight());
             else if (generation.generationStage == GenerationStage::ZONE_BLOAT){
                 mapRenderer.updateMap(mapRenderer.convertGrid(*(generation.grid)), generation.plane.getWidth(), generation.plane.getHeight());
             }
