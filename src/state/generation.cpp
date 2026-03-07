@@ -181,7 +181,7 @@ void Generation::postProcess(){
             return resource == Resource::BASIC_SPICE || resource == Resource::THICK_SPICE;
         });
         morphology::erode(spiceMask, morphology::fullKernel3x3);
-        spiceMap.applyByMaskRef(spiceMask, [](Resource& resource, bool isMasked){
+        spiceMap.applyByMask(spiceMask, [](Resource& resource, bool isMasked){
             if (!isMasked && resource == Resource::THICK_SPICE){
                 resource = Resource::BASIC_SPICE;
             }
