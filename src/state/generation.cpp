@@ -121,20 +121,8 @@ void Generation::bloatZones(){
 
 void Generation::postProcess(){
     if (zoneBloater.isInitialized()){
-        morphology::closeForAll(*grid, mapTemplate->zoneGraph->getIDs(),
-            {
-                {1, 1, 1},
-                {1, 1, 1},
-                {1, 1, 1}
-            }
-        );
-        morphology::openForAll(*grid, mapTemplate->zoneGraph->getIDs(),
-            {
-                {1, 1, 1},
-                {1, 1, 1},
-                {1, 1, 1}
-            }
-        );
+        morphology::closeForAll(*grid, mapTemplate->zoneGraph->getIDs(), morphology::fullKernel3x3);
+        morphology::openForAll(*grid, mapTemplate->zoneGraph->getIDs(), morphology::fullKernel3x3);
         zoneBloater.initAdjacentCornerFill(grid);
         zoneBloater.start();
     }
@@ -188,6 +176,16 @@ void Generation::postProcess(){
         MultizoneResourceGenerator<Resource> multizoneGenerator;
         multizoneGenerator.setup(resourceGenerators, zoneMasks);
         spiceMap = multizoneGenerator.generateResourcesMap();
+
+        auto spiceMask = spiceMap.mapToBinary([](Resource resource) { 
+            return resource == Resource::BASIC_SPICE || resource == Resource::THICK_SPICE;
+        });
+        morphology::erode(spiceMask, morphology::fullKernel3x3);
+        spiceMap.applyByMaskRef(spiceMask, [](Resource& resource, bool isMasked){
+            if (!isMasked && resource == Resource::THICK_SPICE){
+                resource = Resource::BASIC_SPICE;
+            }
+        });
         generationStage = GenerationStage::FINISH;
     }
 }
