@@ -160,8 +160,15 @@ void Generation::postProcess(){
             resourceOctaves.push_back(EllipticalBlobNoise(noiseMap.getDimension().x, noiseMap.getDimension().y, octave.minimalBlob, octave.maximalBlob).generate());
         }
         zoneMasks = blendConnections(*grid, *(mapTemplate->zoneGraph));
-        std::unordered_map<Identifiable, ResourceGenerator<Resource>, IDHash> resourceGenerators;
+        resourceGenerators = {};
         resourceGenerators.reserve(mapTemplate->zoneGraph->size());
+        double maxBonus = -100;
+        for (int x = 0; x < 128; x++){
+            for (int y = 0; y < 128; y++){
+                maxBonus = std::max(maxBonus, zoneMasks.bonusMask.at(Identifiable(10)).get(x, y));
+            }
+        }
+        std::cout << "GENERATION max bonus: " << maxBonus << '\n';
         for (Identifiable zoneID : mapTemplate->zoneGraph->getIDs()){
             ResourceGenerator<Resource> resourceGenerator;
             resourceGenerator.setup(
@@ -169,12 +176,13 @@ void Generation::postProcess(){
                 mapTemplate->zoneGraph->getValue(zoneID).octaveWeights,
                 mapTemplate->zoneGraph->getValue(zoneID).resources,
                 noiseMap.getDimension(),
-                zoneMasks.at(zoneID)
+                zoneMasks.influenceMask.at(zoneID),
+                zoneMasks.bonusMask.at(zoneID)
             );
             resourceGenerators[zoneID] = resourceGenerator;
         }
         MultizoneResourceGenerator<Resource> multizoneGenerator;
-        multizoneGenerator.setup(resourceGenerators, zoneMasks);
+        multizoneGenerator.setup(resourceGenerators, zoneMasks.influenceMask);
         spiceMap = multizoneGenerator.generateResourcesMap();
 
         auto spiceMask = spiceMap.mapToBinary([](Resource resource) { 

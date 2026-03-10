@@ -200,8 +200,7 @@ std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicCon
                 noKeyError = {true, "asymmetrical_edges/bonusValue"};
                 return std::nullopt;
             }
-            int bonusValue = bonusValueIt->get<double>();
-        
+            double bonusValue = bonusValueIt->get<double>();
         result[std::make_pair(ID_from, ID_to)] = BasicConnection(resourceBlendDistance, intakeDistance, areaGuaranteed, bonusValue);
     }
     return result;

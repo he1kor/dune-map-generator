@@ -128,6 +128,8 @@ public:
 
     template <typename T>
     const std::vector<uint32_t> convertMatrix(const Matrix<T>& matrix);
+    template <typename T>
+    const std::vector<uint32_t> convertMatrixWeighted(const Matrix<T> &matrix);
     // RGBA format updating
     void updateMap(const std::vector<uint32_t>& pixels, int width, int height);
     int getOptimalMapSize(int availableWidth);

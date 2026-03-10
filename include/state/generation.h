@@ -6,8 +6,9 @@
 #include <zone_bloater.h>
 #include "templates.h"
 
-#include "border.h"
+#include <border.h>
 #include <matrix.h>
+#include <blender.h>
 #include <connection.h>
 #include <resources.h>
 #include "map_template.h"
@@ -44,7 +45,8 @@ class Generation{
         std::shared_ptr<Grid<ResourceRadialNode<Resource>>> grid = nullptr;
         std::unordered_map<std::pair<Identifiable, Identifiable>, std::vector<tiles::Border>, PairIDHash> edgeToborderMap;
         GenerationStage generationStage = GenerationStage::NONE;
-        std::unordered_map<Identifiable, Matrix<double>, IDHash> zoneMasks;
+        ZoneMasks zoneMasks;
+        std::unordered_map<Identifiable, ResourceGenerator<Resource>, IDHash> resourceGenerators;
     private:
         // ZoneBloater<Identifiable, Identifiable> zoneBloater;
         ZoneBloater<ResourceRadialNode<Resource>, SymConnection, BasicConnection> zoneBloater;

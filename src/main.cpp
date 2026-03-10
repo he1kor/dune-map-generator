@@ -24,6 +24,7 @@
 #include "graph.h"
 #include "embedding.h"
 #include "edge_graph.h"
+#include <dev_panel_ui.h>
 
 constexpr float left_column_width = 200.0f;
 constexpr float min_map_size = 128.0f;
@@ -127,7 +128,7 @@ int main(){
 
     GenerationUI generationUI(&generation, &mapRenderer);
     
-
+    DevPanelUI devPanelUI;
 
     int width = 128;
     int height = 128;
@@ -143,6 +144,8 @@ int main(){
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        devPanelUI.handleInput();
+
         if (generation.generationStage != GenerationStage::NONE){
             
             generation.runIteration();
@@ -155,21 +158,21 @@ int main(){
         }
         if (generation.is_done){
             generation.is_done = false;
-            // mapRenderer.updateMap(mapRenderer.convertGrid(*(generation.grid)), generation.plane.getWidth(), generation.plane.getHeight());
-            // mapRenderer.updateMap(mapRenderer.convertMatrix(generation.zoneMasks[Identifiable(4)]), generation.plane.getWidth(), generation.plane.getHeight());
-            mapRenderer.updateMap(mapRenderer.convertResourceMatrix(generation.spiceMap), generation.noiseMap.getWidth(), generation.noiseMap.getHeight());
-            // mapRenderer.updateMap(
-            //     mapRenderer.convertBorders(
-            //         generation.edgeToborderMap,
-            //         static_cast<size_t>(generation.plane.getWidth()),
-            //         static_cast<size_t>(generation.plane.getHeight())
-            //     ),
-            //     generation.plane.getWidth(),
-            //     generation.plane.getHeight());
+
+            if (devPanelUI.shouldOverrideRender()) {
+                devPanelUI.onGenerationComplete(generation, mapRenderer);
+            } else {
+                mapRenderer.updateMap(
+                    mapRenderer.convertResourceMatrix(generation.spiceMap), 
+                    generation.noiseMap.getWidth(), 
+                    generation.noiseMap.getHeight()
+                );
+            }
         }
 
 
         buildLayout(quickSettingsUI, templatePickerUI, generationUI);
+        devPanelUI.render(generation, mapRenderer, templatePicker);
 
         // Рендеринг
         //ImGui::ShowStyleEditor();
