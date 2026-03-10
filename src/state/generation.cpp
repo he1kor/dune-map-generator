@@ -162,13 +162,7 @@ void Generation::postProcess(){
         zoneMasks = blendConnections(*grid, *(mapTemplate->zoneGraph));
         resourceGenerators = {};
         resourceGenerators.reserve(mapTemplate->zoneGraph->size());
-        double maxBonus = -100;
-        for (int x = 0; x < 128; x++){
-            for (int y = 0; y < 128; y++){
-                maxBonus = std::max(maxBonus, zoneMasks.bonusMask.at(Identifiable(10)).get(x, y));
-            }
-        }
-        std::cout << "GENERATION max bonus: " << maxBonus << '\n';
+
         for (Identifiable zoneID : mapTemplate->zoneGraph->getIDs()){
             ResourceGenerator<Resource> resourceGenerator;
             resourceGenerator.setup(
