@@ -47,13 +47,13 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
         return false;
     }
 
-    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash>> asymEdges = tryReadAsymEdges(*asymmetricalEdgesIt);
+    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicAsymConnection, AsymPairIDHash>> asymEdges = tryReadAsymEdges(*asymmetricalEdgesIt);
     
     if (!asymEdges){
         return false;
     }
     
-    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash>> symEdges = tryReadSymEdges(*symmetricalEdgesIt);
+    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicSymConnection, PairIDHash>> symEdges = tryReadSymEdges(*symmetricalEdgesIt);
     
     if (!symEdges){
         return false;
@@ -98,7 +98,7 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
 
 
     mapTemplate = std::make_shared<MapTemplate>();
-    mapTemplate->zoneGraph = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, SymConnection, BasicConnection>>(
+    mapTemplate->zoneGraph = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection>>(
         rawGraph,
         symEdges.value(),
         asymEdges.value()
@@ -141,8 +141,8 @@ std::optional<std::vector<NoiseOctaveParam>> TemplatePicker::tryReadOctaves(cons
     return octaves;
 }
 
-std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash>> TemplatePicker::tryReadAsymEdges(const nlohmann::json& asymEdges){
-    std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash> result;
+std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicAsymConnection, AsymPairIDHash>> TemplatePicker::tryReadAsymEdges(const nlohmann::json& asymEdges){
+    std::unordered_map<std::pair<Identifiable, Identifiable>, BasicAsymConnection, AsymPairIDHash> result;
     for (const auto& asymEdgePair : asymEdges){
         auto ID_fromIt = asymEdgePair.find("ID_from");
         if (ID_fromIt == asymEdgePair.end()){
@@ -174,13 +174,6 @@ std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicCon
             return std::nullopt;
         }
         
-            auto resourceBlendDistanceIt = dataIt->find("resourceBlendDistance");
-            if (resourceBlendDistanceIt == dataIt->end()){
-                noKeyError = {true, "asymmetrical_edges/resourceBlendDistance"};
-                return std::nullopt;
-            }
-            int resourceBlendDistance = resourceBlendDistanceIt->get<int>();
-
             auto intakeDistanceIt = dataIt->find("intakeDistance");
             if (intakeDistanceIt == dataIt->end()){
                 noKeyError = {true, "asymmetrical_edges/intakeDistance"};
@@ -201,14 +194,14 @@ std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicCon
                 return std::nullopt;
             }
             double bonusValue = bonusValueIt->get<double>();
-        result[std::make_pair(ID_from, ID_to)] = BasicConnection(resourceBlendDistance, intakeDistance, areaGuaranteed, bonusValue);
+        result[std::make_pair(ID_from, ID_to)] = BasicAsymConnection(intakeDistance, areaGuaranteed, bonusValue);
     }
     return result;
 }
 
 
-std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash>> TemplatePicker::tryReadSymEdges(const nlohmann::json& symEdges){
-    std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash> result;
+std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicSymConnection, PairIDHash>> TemplatePicker::tryReadSymEdges(const nlohmann::json& symEdges){
+    std::unordered_map<std::pair<Identifiable, Identifiable>, BasicSymConnection, PairIDHash> result;
     for (const auto& symEdgePair : symEdges){
         auto ID_firstIt = symEdgePair.find("ID_first");
         if (ID_firstIt == symEdgePair.end()){
@@ -285,8 +278,25 @@ std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, SymConne
                     badValueError = {true, "symmetrical_edges/[]/data/passes/maxWallLength", "int"};
                     return std::nullopt;
                 }
+
+            auto resourceIt = dataIt->find("resourceBlend");
+            int blendDistance = 0;
+            if (resourceIt != dataIt->end()){
+                auto resourceBlendDistanceIt = resourceIt->find("distance");
+                if (resourceBlendDistanceIt == resourceIt->end()){
+                    noKeyError = {true, "symmetrical_edges/[]/data/resourceBlend/distance"};
+                    return std::nullopt;
+                }
+                if (!resourceBlendDistanceIt->is_number_integer()){
+                    badValueError = {true, "symmetrical_edges/[]/data/resourceBlend/distance", "int"};
+                    return std::nullopt;
+                }
+                blendDistance = resourceBlendDistanceIt->get<int>();
+            }
         
-        result[std::make_pair(ID_first, ID_second)] = SymConnection(tiles::PassParams{
+        result[std::make_pair(ID_first, ID_second)] = BasicSymConnection(
+            blendDistance,
+            tiles::PassParams{
             .minPassWidth = minPassWidthIt->get<size_t>(),
             .maxPassWidth = maxPassWidthIt->get<size_t>(),
             .minWallLength = minWallLengthIt->get<size_t>(),
@@ -297,7 +307,7 @@ std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, SymConne
     return result;
 }
 
-std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> TemplatePicker::getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash>& symEdges){
+std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> TemplatePicker::getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, BasicSymConnection, PairIDHash>& symEdges){
     std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> result;
     for (auto& [ids, _] : symEdges){
         result[ids.first].push_back(ids.second);

@@ -44,9 +44,9 @@ public:
     std::optional<ResourceMapping<Resource>> tryReadContentData(const nlohmann::json &contentJSON);
     bool tryReadEdgeGraph(const nlohmann::json &json);
     std::optional<std::vector<NoiseOctaveParam>> tryReadOctaves(const nlohmann::json &octavesJson);
-    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicConnection, AsymPairIDHash>> tryReadAsymEdges(const nlohmann::json &node);
-    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash>> tryReadSymEdges(const nlohmann::json &symEdges);
-    std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, SymConnection, PairIDHash> &symEdges);
+    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicAsymConnection, AsymPairIDHash>> tryReadAsymEdges(const nlohmann::json &node);
+    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicSymConnection, PairIDHash>> tryReadSymEdges(const nlohmann::json &symEdges);
+    std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, BasicSymConnection, PairIDHash> &symEdges);
     void tryReadTemplate(const std::filesystem::path &path);
     std::shared_ptr<MapTemplate> mapTemplate = nullptr;
 

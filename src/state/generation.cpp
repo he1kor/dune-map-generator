@@ -136,13 +136,16 @@ void Generation::postProcess(){
         for (auto& [pair, border] : edgeToborderMap){
             auto passParams = mapTemplate->zoneGraph->tryGetSymEdge(pair.first, pair.second);
             if (!passParams.has_value()){
-                passParams = tiles::PassParams{
-                    .minPassWidth = 0,
-                    .maxPassWidth = 0,
-                    .minWallLength = 0,
-                    .maxWallLength = 200
-                }; // No pass if no connection
-            }
+                passParams = BasicSymConnection(
+                    0,
+                    tiles::PassParams{
+                        .minPassWidth = 0,
+                        .maxPassWidth = 0,
+                        .minWallLength = 0,
+                        .maxWallLength = 200
+                    }
+                );
+            }; // No pass if no connection
             for (auto sameBorders : border){
                 //seed 801119385
                 sameBorders.initPassData(passParams.value());

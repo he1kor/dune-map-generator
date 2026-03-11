@@ -8,5 +8,5 @@ class MapTemplate{
 public:
     MapTemplate(){};
     std::vector<NoiseOctaveParam> octaves;
-    std::shared_ptr<EdgeGraph<ResourceRadialNode<Resource>, SymConnection, BasicConnection>> zoneGraph;
+    std::shared_ptr<EdgeGraph<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection>> zoneGraph;
 };

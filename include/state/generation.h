@@ -49,7 +49,7 @@ class Generation{
         std::unordered_map<Identifiable, ResourceGenerator<Resource>, IDHash> resourceGenerators;
     private:
         // ZoneBloater<Identifiable, Identifiable> zoneBloater;
-        ZoneBloater<ResourceRadialNode<Resource>, SymConnection, BasicConnection> zoneBloater;
+        ZoneBloater<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection> zoneBloater;
 
         void deduceSeed();
 
