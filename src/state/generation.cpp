@@ -147,7 +147,6 @@ void Generation::postProcess(){
                 );
             }; // No pass if no connection
             for (auto sameBorders : border){
-                //seed 801119385
                 sameBorders.initPassData(passParams.value());
                 sameBorders.generatePasses();
                 for (const tiles::Border::Segment& segment : sameBorders.getSegments()){
