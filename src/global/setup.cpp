@@ -41,11 +41,11 @@ void setColors(){
     //Not working?
     colors[ImGuiCol_TabSelectedOverline] = VARIANT_BASIC;
     colors[ImGuiCol_ModalWindowDimBg] = VARIANT_BASIC;
-    colors[ImGuiCol_TabUnfocusedActive] = VARIANT_EXTRA;
+    colors[ImGuiCol_TabDimmedSelected] = VARIANT_EXTRA;
     colors[ImGuiCol_Tab] = VARIANT_EXTRA;
     colors[ImGuiCol_TabHovered] = VARIANT_EXTRA;
-    colors[ImGuiCol_TabActive] = VARIANT_EXTRA;
-    colors[ImGuiCol_TabUnfocused] = VARIANT_BASIC;
+    colors[ImGuiCol_TabSelected] = VARIANT_EXTRA;
+    colors[ImGuiCol_TabDimmed] = VARIANT_BASIC;
     
     colors[ImGuiCol_ScrollbarGrab] = HARD_BROWN;
     colors[ImGuiCol_ScrollbarGrabHovered] = MEDIUM_BROWN;
