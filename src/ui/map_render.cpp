@@ -222,10 +222,17 @@ void MapRenderer::render(){
         cursorPos.y + offsetY
     ));
     
-    ImGui::Image(
+    // ImGui's OpenGL sampler overrides the texture's GL_NEAREST parameters.
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    draw_list->AddCallback(platform_io.DrawCallback_SetSamplerNearest);
+    ImVec2 imagePos = ImGui::GetCursorScreenPos();
+    draw_list->AddImage(
         (ImTextureID)(intptr_t)textureID,
-        ImVec2(renderWidth, renderHeight)
+        imagePos,
+        ImVec2(imagePos.x + renderWidth, imagePos.y + renderHeight)
     );
+    draw_list->AddCallback(platform_io.DrawCallback_SetSamplerLinear);
+    ImGui::Dummy(ImVec2(renderWidth, renderHeight));
     
     // Advance cursor position (important for column layout)
     ImGui::SetCursorScreenPos(ImVec2(
