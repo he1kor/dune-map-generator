@@ -99,4 +99,18 @@ if(MAPGENERATOR_BUILD_TESTS)
     target_link_libraries(magnetic_grid_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
     add_test(NAME magnetic_grid_regression COMMAND magnetic_grid_regression
         "${CMAKE_SOURCE_DIR}/assets/templates/grid3x3 magnetic.json")
+    add_executable(template_validation_regression
+        ../tests/template_validation_regression.cc
+        state/template_picker.cpp
+        state/generation.cpp
+    )
+    target_include_directories(template_validation_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(template_validation_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
+    add_test(NAME template_validation_regression COMMAND template_validation_regression
+        "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json"
+        "${CMAKE_SOURCE_DIR}/assets/templates/grid3x3 magnetic.json"
+        "${CMAKE_CURRENT_BINARY_DIR}/template-validation-regression.json")
 endif()

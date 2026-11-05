@@ -33,3 +33,26 @@ All generated boundary walls, including sand-to-sand walls, use the top-level ru
 Plain rock and cliff rock are separate materials. Resource arrays can be reordered
 independently and do not need zero-width placeholders for unused materials.
 Each zone's positive resource intervals must cover `[0, 1]` without gaps or overlaps.
+
+Validation happens before a template becomes active. Errors identify the exact
+field, for example `nodes/9/data/resources/octave3_weight`. A failed load retains
+the last valid template, and each new attempt clears the previous error.
+
+Numeric fields accept both integer and decimal JSON syntax (`3` and `3.0`).
+Radii must be positive; susceptibility may be negative. Noise weights and bonus
+values must be non-negative. IDs, distances, areas, and passage dimensions must
+be non-negative whole numbers within the C++ `int` range. Passage and wall
+minimums cannot exceed their maximums, and octave radii must have `minRadius <= maxRadius`.
+Numbers must be finite; strings and booleans are not converted to numbers.
+
+Declare one to three consecutive octaves starting with `octave1`. Each zone gets
+one weight per declared octave, defaulting to zero when omitted. A weight for an
+undeclared octave is an error. To remove an octave, also remove its weights from
+the zones. Different resource-list lengths and orders remain valid; each list
+must independently cover the full threshold range and use known material names.
+
+Node IDs must be unique. Connections must reference existing, distinct nodes;
+duplicate undirected connections and duplicate rules in the same direction are
+rejected. A directed rule requires a corresponding undirected connection. Each
+zone needs at least one undirected connection because the current generator
+starts zone expansion from graph edges.

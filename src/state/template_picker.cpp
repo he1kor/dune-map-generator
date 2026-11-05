@@ -1,559 +1,304 @@
 #include "template_picker.h"
 
+#include <cmath>
 #include <fstream>
+#include <limits>
+#include <set>
 #include <nlohmann/json.hpp>
 #include "systemsound.h"
-#include <connection.h>
 
+namespace {
+using Json = nlohmann::json;
+using SymEdges = std::unordered_map<std::pair<Identifiable, Identifiable>, BasicSymConnection, PairIDHash>;
+using AsymEdges = std::unordered_map<std::pair<Identifiable, Identifiable>, BasicAsymConnection, AsymPairIDHash>;
 
-bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
-    Resource wallResource = Resource::CLIFF_ROCK;
-    auto wallsIt = json.find("walls");
-    if (wallsIt != json.end()) {
-        if (!wallsIt->is_object() || !wallsIt->contains("resource") || !(*wallsIt)["resource"].is_string()) {
-            badValueError = {true, "walls/resource", "a resource name"};
-            return false;
+struct ValidationError {
+    bool missingKey;
+    std::string path;
+    std::string expected;
+};
+
+std::string child(const std::string& path, const std::string& key) {
+    return path.empty() ? key : path + "/" + key;
+}
+
+[[noreturn]] void invalid(const std::string& path, const std::string& expected) {
+    throw ValidationError{false, path.empty() ? "/" : path, expected};
+}
+
+void object(const Json& value, const std::string& path) {
+    if (!value.is_object()) invalid(path, "an object");
+}
+
+void array(const Json& value, const std::string& path) {
+    if (!value.is_array()) invalid(path, "an array");
+}
+
+const Json& member(const Json& value, const std::string& key, const std::string& path) {
+    object(value, path);
+    const auto it = value.find(key);
+    if (it == value.end()) throw ValidationError{true, child(path, key), {}};
+    return *it;
+}
+
+std::string text(const Json& value, const std::string& path) {
+    if (!value.is_string()) invalid(path, "a string");
+    return value.get<std::string>();
+}
+
+double number(const Json& value, const std::string& path) {
+    if (!value.is_number()) invalid(path, "a finite number");
+    const double result = value.get<double>();
+    if (!std::isfinite(result)) invalid(path, "a finite number");
+    return result;
+}
+
+double nonnegative(const Json& value, const std::string& path) {
+    const double result = number(value, path);
+    if (result < 0.0) invalid(path, "a non-negative number");
+    return result;
+}
+
+double positive(const Json& value, const std::string& path) {
+    const double result = number(value, path);
+    if (result <= 0.0) invalid(path, "a positive number");
+    return result;
+}
+
+int integer(const Json& value, const std::string& path) {
+    const double result = number(value, path);
+    if (result < 0.0 || result > std::numeric_limits<int>::max() || std::trunc(result) != result)
+        invalid(path, "a non-negative whole number within the int range");
+    return static_cast<int>(result);
+}
+
+Resource material(const Json& value, const std::string& path) {
+    const auto result = resourceFromString(text(value, path));
+    if (!result) invalid(path, "a known resource name (rock, dunes, sand, spice, thick_spice, cliff_rock)");
+    return *result;
+}
+
+void report(TemplatePicker& picker, const ValidationError& error) {
+    if (error.missingKey) picker.noKeyError = {true, error.path};
+    else picker.badValueError = {true, error.path, error.expected};
+}
+
+std::string name(const Json& json) {
+    const auto result = text(member(json, "name", ""), "name");
+    if (result.empty()) invalid("name", "a non-empty string");
+    return result;
+}
+
+std::vector<NoiseOctaveParam> readOctaves(const Json& json) {
+    const auto& data = member(json, "octaves", "");
+    object(data, "octaves");
+    for (const auto& [key, value] : data.items()) {
+        if (key != "octave1" && key != "octave2" && key != "octave3")
+            invalid(child("octaves", key), "octave1, octave2 or octave3");
+    }
+    if (!data.contains("octave1")) throw ValidationError{true, "octaves/octave1", {}};
+    std::vector<NoiseOctaveParam> result;
+    for (int i = 1; i <= 3; ++i) {
+        const auto key = "octave" + std::to_string(i);
+        const auto path = child("octaves", key);
+        const auto it = data.find(key);
+        if (it == data.end()) continue;
+        if (result.size() != static_cast<size_t>(i - 1))
+            invalid(path, "consecutive octaves starting at octave1");
+        const double minimum = positive(member(*it, "minRadius", path), child(path, "minRadius"));
+        const double maximum = positive(member(*it, "maxRadius", path), child(path, "maxRadius"));
+        if (maximum < minimum) invalid(child(path, "maxRadius"), "a value >= minRadius");
+        result.push_back({1.0, minimum, maximum});
+    }
+    return result;
+}
+
+ResourceRadialNode<Resource> readNode(const Json& node, const std::string& path, int id, size_t octaveCount) {
+    const auto dataPath = child(path, "data");
+    const auto& data = member(node, "data", path);
+    const double radius = positive(member(data, "radius", dataPath), child(dataPath, "radius"));
+    const double susceptibility = number(member(data, "susceptibility", dataPath), child(dataPath, "susceptibility"));
+    const auto resourcesPath = child(dataPath, "resources");
+    const auto& resources = member(data, "resources", dataPath);
+    object(resources, resourcesPath);
+    std::vector<double> weights(octaveCount, 0.0);
+    for (const auto& [key, value] : resources.items()) {
+        if (key.starts_with("octave") && key != "octave1_weight" && key != "octave2_weight" && key != "octave3_weight")
+            invalid(child(resourcesPath, key), "octave1_weight, octave2_weight or octave3_weight");
+    }
+    for (int i = 1; i <= 3; ++i) {
+        const auto key = "octave" + std::to_string(i) + "_weight";
+        const auto it = resources.find(key);
+        if (it == resources.end()) continue;
+        const auto weightPath = child(resourcesPath, key);
+        if (i > octaveCount) invalid(weightPath, "a weight for a declared octave");
+        weights[i - 1] = nonnegative(*it, weightPath);
+    }
+    const auto contentPath = child(resourcesPath, "content");
+    const auto& content = member(resources, "content", resourcesPath);
+    array(content, contentPath);
+    std::vector<ResourceMapping<Resource>> mappings;
+    for (size_t i = 0; i < content.size(); ++i) {
+        const auto entryPath = child(contentPath, std::to_string(i));
+        const auto& entry = content[i];
+        const auto resource = material(member(entry, "name", entryPath), child(entryPath, "name"));
+        const double start = number(member(entry, "startThreshold", entryPath), child(entryPath, "startThreshold"));
+        const double end = number(member(entry, "endThreshold", entryPath), child(entryPath, "endThreshold"));
+        if (start < 0.0 || start > 1.0) invalid(child(entryPath, "startThreshold"), "a number in [0, 1]");
+        if (end < start || end > 1.0) invalid(child(entryPath, "endThreshold"), "a number in [startThreshold, 1]");
+        mappings.push_back({start, end, resource});
+    }
+    try {
+        validateResourceMappings(mappings);
+    } catch (const std::invalid_argument& error) {
+        invalid(contentPath, error.what());
+    }
+    return ResourceRadialNode<Resource>(id, radius, susceptibility, weights, mappings);
+}
+
+int endpoint(const Json& edge, const std::string& key, const std::string& path, const std::set<int>& ids) {
+    const int id = integer(member(edge, key, path), child(path, key));
+    if (!ids.contains(id)) invalid(child(path, key), "an existing node ID");
+    return id;
+}
+
+SymEdges readSymEdges(const Json& json, const std::set<int>& ids) {
+    const std::string path = "symmetrical_edges";
+    const auto& edges = member(json, path, "");
+    array(edges, path);
+    SymEdges result;
+    for (size_t i = 0; i < edges.size(); ++i) {
+        const auto edgePath = child(path, std::to_string(i));
+        const auto& edge = edges[i];
+        const int first = endpoint(edge, "ID_first", edgePath, ids);
+        const int second = endpoint(edge, "ID_second", edgePath, ids);
+        if (first == second) invalid(child(edgePath, "ID_second"), "a different node ID");
+        if (result.contains({first, second}) || result.contains({second, first}))
+            invalid(edgePath, "a unique undirected connection");
+        const auto dataPath = child(edgePath, "data");
+        const auto& data = member(edge, "data", edgePath);
+        const auto passesPath = child(dataPath, "passes");
+        const auto& passes = member(data, "passes", dataPath);
+        const int minPass = integer(member(passes, "minPassWidth", passesPath), child(passesPath, "minPassWidth"));
+        const int maxPass = integer(member(passes, "maxPassWidth", passesPath), child(passesPath, "maxPassWidth"));
+        const int minWall = integer(member(passes, "minWallLength", passesPath), child(passesPath, "minWallLength"));
+        const int maxWall = integer(member(passes, "maxWallLength", passesPath), child(passesPath, "maxWallLength"));
+        if (maxPass < minPass) invalid(child(passesPath, "maxPassWidth"), "a value >= minPassWidth");
+        if (maxWall < minWall) invalid(child(passesPath, "maxWallLength"), "a value >= minWallLength");
+        int blendDistance = 0;
+        if (const auto it = data.find("resourceBlend"); it != data.end()) {
+            const auto blendPath = child(dataPath, "resourceBlend");
+            blendDistance = integer(member(*it, "distance", blendPath), child(blendPath, "distance"));
         }
-        auto material = resourceFromString((*wallsIt)["resource"].get<std::string>());
-        if (!material) {
-            badValueError = {true, "walls/resource", "a known resource name"};
-            return false;
-        }
-        wallResource = *material;
+        result.emplace(std::make_pair(first, second), BasicSymConnection(blendDistance, tiles::PassParams{
+            static_cast<size_t>(minPass), static_cast<size_t>(maxPass),
+            static_cast<size_t>(minWall), static_cast<size_t>(maxWall)
+        }));
     }
-    auto nodesIt = json.find("nodes");
-    if (nodesIt == json.end()){
-        noKeyError = {true, "nodes"};
-        return false;
-    }
-    if (!nodesIt->is_array()){
-        badValueError = {true, "nodes/[]", "array"};
-        return false;
-    }
+    return result;
+}
 
-    auto octavesIt = json.find("octaves");
-    if (octavesIt == json.end()){
-        noKeyError = {true, "octaves"};
-        return false;
+AsymEdges readAsymEdges(const Json& json, const std::set<int>& ids, const SymEdges& symEdges) {
+    const std::string path = "asymmetrical_edges";
+    const auto& edges = member(json, path, "");
+    array(edges, path);
+    AsymEdges result;
+    for (size_t i = 0; i < edges.size(); ++i) {
+        const auto edgePath = child(path, std::to_string(i));
+        const auto& edge = edges[i];
+        const int from = endpoint(edge, "ID_from", edgePath, ids);
+        const int to = endpoint(edge, "ID_to", edgePath, ids);
+        if (from == to) invalid(child(edgePath, "ID_to"), "a different node ID");
+        if (!symEdges.contains({from, to}) && !symEdges.contains({to, from}))
+            invalid(edgePath, "a directed rule on an existing symmetrical connection");
+        if (result.contains({from, to})) invalid(edgePath, "a unique directed connection");
+        const auto dataPath = child(edgePath, "data");
+        const auto& data = member(edge, "data", edgePath);
+        const int intake = integer(member(data, "intakeDistance", dataPath), child(dataPath, "intakeDistance"));
+        const int area = integer(member(data, "areaGuaranteed", dataPath), child(dataPath, "areaGuaranteed"));
+        const double bonus = nonnegative(member(data, "bonusValue", dataPath), child(dataPath, "bonusValue"));
+        result.emplace(std::make_pair(from, to), BasicAsymConnection(intake, area, bonus));
     }
-    auto octaves = tryReadOctaves(*octavesIt);
-    if (!octaves.has_value()){
-        return false;
-    }
+    return result;
+}
 
-    auto symmetricalEdgesIt = json.find("symmetrical_edges");
-    if (symmetricalEdgesIt == json.end()){
-        noKeyError = {true, "symmetrical_edges"};
-        return false;
-    }
-    if (!symmetricalEdgesIt->is_array()){
-        badValueError = {true, "symmetrical_edges/[]", "array"};
-        return false;
-    }
+std::shared_ptr<MapTemplate> readGraph(const Json& json) {
+    object(json, "");
+    if (json.contains("name")) name(json);
+    auto result = std::make_shared<MapTemplate>();
+    result->octaves = readOctaves(json);
+    if (const auto it = json.find("walls"); it != json.end())
+        result->wallResource = material(member(*it, "resource", "walls"), "walls/resource");
 
-    auto asymmetricalEdgesIt = json.find("asymmetrical_edges");
-    if (asymmetricalEdgesIt == json.end()){
-        noKeyError = {true, "asymmetrical_edges"};
-        return false;
-    }
-    if (!asymmetricalEdgesIt->is_array()){
-        badValueError = {true, "asymmetrical_edges/[]", "array"};
-        return false;
-    }
-
-    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicAsymConnection, AsymPairIDHash>> asymEdges = tryReadAsymEdges(*asymmetricalEdgesIt);
-    
-    if (!asymEdges){
-        return false;
-    }
-    
-    std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicSymConnection, PairIDHash>> symEdges = tryReadSymEdges(*symmetricalEdgesIt);
-    
-    if (!symEdges){
-        return false;
-    }
-    
-    std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> nodeNeighbours = getNodeNeighbours(symEdges.value());
+    const auto& nodes = member(json, "nodes", "");
+    array(nodes, "nodes");
+    if (nodes.empty()) invalid("nodes", "a non-empty array of zones");
+    std::set<int> ids;
     std::vector<std::pair<ResourceRadialNode<Resource>, std::vector<Identifiable>>> rawGraph;
-    
-    
-    auto asymEdgesIt = json.find("asymmetrical_edges");
-    if (asymEdgesIt == json.end()){
-        noKeyError = {true, "asymmetrical_edges"};
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        const auto path = child("nodes", std::to_string(i));
+        const int id = integer(member(nodes[i], "id", path), child(path, "id"));
+        if (!ids.insert(id).second) invalid(child(path, "id"), "a unique node ID");
+        rawGraph.push_back({readNode(nodes[i], path, id, result->octaves.size()), {}});
+    }
+    const auto symEdges = readSymEdges(json, ids);
+    const auto asymEdges = readAsymEdges(json, ids, symEdges);
+    std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> neighbours;
+    for (const auto& [pair, edge] : symEdges) {
+        neighbours[pair.first].push_back(pair.second);
+        neighbours[pair.second].push_back(pair.first);
+    }
+    for (size_t i = 0; i < rawGraph.size(); ++i) {
+        auto& [node, adjacent] = rawGraph[i];
+        adjacent = neighbours[node];
+        // The current bloater creates starting cells from connections.
+        if (adjacent.empty()) invalid(child(child("nodes", std::to_string(i)), "id"),
+            "a zone with at least one symmetrical connection");
+    }
+    result->zoneGraph = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection>>(
+        rawGraph, symEdges, asymEdges);
+    return result;
+}
+} // namespace
+
+void TemplatePicker::resetErrors() {
+    syntaxError = {};
+    noKeyError = {};
+    badValueError = {};
+    fileOpenErrorOccurred = false;
+}
+
+bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json) {
+    resetErrors();
+    try {
+        auto next = readGraph(json);
+        mapTemplate = std::move(next);
+    } catch (const ValidationError& error) {
+        report(*this, error);
         return false;
     }
-    if (!asymEdgesIt->is_array()){
-        badValueError = {true, "asymmetrical_edges/[]", "array"};
-        return false;
-    }
-
-    
-    
-    for (const auto& node : *nodesIt){
-        auto idIt = node.find("id");
-        if (idIt == node.end()){
-            noKeyError = {true, "nodes/[]/id"};
-            return false;
-        }
-        if (!idIt->is_number_integer()){
-            badValueError = {true, "nodes/[]/id", "int"};
-            return false;
-        }
-        int id = idIt->get<int>();
-
-        auto optionalRadialNode = tryReadNodeData(node, id);
-        if (!optionalRadialNode){
-            return false;
-        }
-        
-        rawGraph.push_back({*optionalRadialNode, nodeNeighbours[id]});
-    }
-
-
-
-    mapTemplate = std::make_shared<MapTemplate>();
-    mapTemplate->zoneGraph = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection>>(
-        rawGraph,
-        symEdges.value(),
-        asymEdges.value()
-    );
-    mapTemplate->octaves = octaves.value();
-    mapTemplate->wallResource = wallResource;
     syssound::playInfo();
     return true;
 }
 
-std::optional<std::vector<NoiseOctaveParam>> TemplatePicker::tryReadOctaves(const nlohmann::json& octavesJson){
-
-    auto octave1It = octavesJson.find("octave1");
-    std::optional<NoiseOctaveParam> octave1 = std::nullopt;
-    std::optional<NoiseOctaveParam> octave2 = std::nullopt;
-    std::optional<NoiseOctaveParam> octave3 = std::nullopt;
-    std::vector<NoiseOctaveParam> octaves;
-    if (octave1It != octavesJson.end()){
-        octave1 = tryReadOctave(*octave1It);
-        if (octave1 == std::nullopt){
-            return std::nullopt;
-        }
-        octaves.push_back(octave1.value());
-        auto octave2It = octavesJson.find("octave2");
-        if (octave2It != octavesJson.end()){
-            octave2 = tryReadOctave(*octave2It);
-            if (octave2 == std::nullopt){
-                return std::nullopt;
-            }   
-            octaves.push_back(octave2.value());
-            auto octave3It = octavesJson.find("octave3");
-            if (octave3It != octavesJson.end()){
-                octave3 = tryReadOctave(*octave3It);
-                if (octave3 == std::nullopt){
-                    return std::nullopt;
-                }
-                octaves.push_back(octave3.value());
-            }
-        }
-    }
-    return octaves;
-}
-
-std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicAsymConnection, AsymPairIDHash>> TemplatePicker::tryReadAsymEdges(const nlohmann::json& asymEdges){
-    std::unordered_map<std::pair<Identifiable, Identifiable>, BasicAsymConnection, AsymPairIDHash> result;
-    for (const auto& asymEdgePair : asymEdges){
-        auto ID_fromIt = asymEdgePair.find("ID_from");
-        if (ID_fromIt == asymEdgePair.end()){
-            noKeyError = {true, "asymmetrical_edges/[]/ID_from"};
-            return std::nullopt;
-        }
-        if (!ID_fromIt->is_number_integer()){
-            badValueError = {true, "asymmetrical_edges/[]/ID_from", "int"};
-            return std::nullopt;
-        }
-        int ID_from = ID_fromIt->get<int>();
-
-        auto ID_toIt = asymEdgePair.find("ID_to");
-        if (ID_toIt == asymEdgePair.end()){
-            noKeyError = {true, "asymmetrical_edges/[]/ID_to"};
-            return std::nullopt;
-        }
-        if (!ID_toIt->is_number_integer()){
-            badValueError = {true, "asymmetrical_edges/[]/ID_to", "int"};
-            return std::nullopt;
-        }
-        int ID_to = ID_toIt->get<int>();
-
-
-
-        auto dataIt = asymEdgePair.find("data");
-        if (dataIt == asymEdgePair.end()){
-            noKeyError = {true, "asymmetrical_edges/[]/data"};
-            return std::nullopt;
-        }
-        
-            auto intakeDistanceIt = dataIt->find("intakeDistance");
-            if (intakeDistanceIt == dataIt->end()){
-                noKeyError = {true, "asymmetrical_edges/intakeDistance"};
-                return std::nullopt;
-            }
-            int intakeDistance = intakeDistanceIt->get<int>();
-
-            auto areaGuaranteedIt = dataIt->find("areaGuaranteed");
-            if (areaGuaranteedIt == dataIt->end()){
-                noKeyError = {true, "asymmetrical_edges/areaGuaranteed"};
-                return std::nullopt;
-            }
-            int areaGuaranteed = areaGuaranteedIt->get<int>();
-
-            auto bonusValueIt = dataIt->find("bonusValue");
-            if (bonusValueIt == dataIt->end()){
-                noKeyError = {true, "asymmetrical_edges/bonusValue"};
-                return std::nullopt;
-            }
-            double bonusValue = bonusValueIt->get<double>();
-        result[std::make_pair(ID_from, ID_to)] = BasicAsymConnection(intakeDistance, areaGuaranteed, bonusValue);
-    }
-    return result;
-}
-
-
-std::optional<std::unordered_map<std::pair<Identifiable, Identifiable>, BasicSymConnection, PairIDHash>> TemplatePicker::tryReadSymEdges(const nlohmann::json& symEdges){
-    std::unordered_map<std::pair<Identifiable, Identifiable>, BasicSymConnection, PairIDHash> result;
-    for (const auto& symEdgePair : symEdges){
-        auto ID_firstIt = symEdgePair.find("ID_first");
-        if (ID_firstIt == symEdgePair.end()){
-            noKeyError = {true, "symmetrical_edges/[]/ID_first"};
-            return std::nullopt;
-        }
-        if (!ID_firstIt->is_number_integer()){
-            badValueError = {true, "symmetrical_edges/[]/ID_first", "int"};
-            return std::nullopt;
-        }
-        int ID_first = ID_firstIt->get<int>();
-
-        auto ID_secondIt = symEdgePair.find("ID_second");
-        if (ID_secondIt == symEdgePair.end()){
-            noKeyError = {true, "symmetrical_edges/[]/ID_second"};
-            return std::nullopt;
-        }
-        if (!ID_secondIt->is_number_integer()){
-            badValueError = {true, "symmetrical_edges/[]/ID_second", "int"};
-            return std::nullopt;
-        }
-        int ID_second = ID_secondIt->get<int>();
-
-
-
-        auto dataIt = symEdgePair.find("data");
-        if (dataIt == symEdgePair.end()){
-            noKeyError = {true, "symmetrical_edges/[]/data"};
-            return std::nullopt;
-        }
-
-            auto passesIt = dataIt->find("passes");
-            if (passesIt == dataIt->end()){
-                noKeyError = {true, "symmetrical_edges/[]/data/passes"};
-                return std::nullopt;
-            }
-
-                auto minPassWidthIt = passesIt->find("minPassWidth");
-                if (minPassWidthIt == passesIt->end()){
-                    noKeyError = {true, "symmetrical_edges/[]/data/passes/minPassWidth"};
-                    return std::nullopt;
-                }
-                if (!minPassWidthIt->is_number_integer()){
-                    badValueError = {true, "symmetrical_edges/[]/data/passes/minPassWidth", "int"};
-                    return std::nullopt;
-                }
-
-                auto maxPassWidthIt = passesIt->find("maxPassWidth");
-                if (maxPassWidthIt == passesIt->end()){
-                    noKeyError = {true, "symmetrical_edges/[]/data/passes/maxPassWidth"};
-                    return std::nullopt;
-                }
-                if (!maxPassWidthIt->is_number_integer()){
-                    badValueError = {true, "symmetrical_edges/[]/data/passes/maxPassWidth", "int"};
-                    return std::nullopt;
-                }
-
-                auto minWallLengthIt = passesIt->find("minWallLength");
-                if (minWallLengthIt == passesIt->end()){
-                    noKeyError = {true, "symmetrical_edges/[]/data/passes/minWallLength"};
-                    return std::nullopt;
-                }
-                if (!minWallLengthIt->is_number_integer()){
-                    badValueError = {true, "symmetrical_edges/[]/data/passes/minWallLength", "int"};
-                    return std::nullopt;
-                }
-                
-                auto maxWallLengthIt = passesIt->find("maxWallLength");
-                if (maxWallLengthIt == passesIt->end()){
-                    noKeyError = {true, "symmetrical_edges/[]/data/passes/maxWallLength"};
-                    return std::nullopt;
-                }
-                if (!maxWallLengthIt->is_number_integer()){
-                    badValueError = {true, "symmetrical_edges/[]/data/passes/maxWallLength", "int"};
-                    return std::nullopt;
-                }
-
-            auto resourceIt = dataIt->find("resourceBlend");
-            int blendDistance = 0;
-            if (resourceIt != dataIt->end()){
-                auto resourceBlendDistanceIt = resourceIt->find("distance");
-                if (resourceBlendDistanceIt == resourceIt->end()){
-                    noKeyError = {true, "symmetrical_edges/[]/data/resourceBlend/distance"};
-                    return std::nullopt;
-                }
-                if (!resourceBlendDistanceIt->is_number_integer()){
-                    badValueError = {true, "symmetrical_edges/[]/data/resourceBlend/distance", "int"};
-                    return std::nullopt;
-                }
-                blendDistance = resourceBlendDistanceIt->get<int>();
-            }
-        
-        result[std::make_pair(ID_first, ID_second)] = BasicSymConnection(
-            blendDistance,
-            tiles::PassParams{
-            .minPassWidth = minPassWidthIt->get<size_t>(),
-            .maxPassWidth = maxPassWidthIt->get<size_t>(),
-            .minWallLength = minWallLengthIt->get<size_t>(),
-            .maxWallLength = maxWallLengthIt->get<size_t>()
-        });
-    }
-    
-    return result;
-}
-
-std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> TemplatePicker::getNodeNeighbours(std::unordered_map<std::pair<Identifiable, Identifiable>, BasicSymConnection, PairIDHash>& symEdges){
-    std::unordered_map<Identifiable, std::vector<Identifiable>, IDHash> result;
-    for (auto& [ids, _] : symEdges){
-        result[ids.first].push_back(ids.second);
-        result[ids.second].push_back(ids.first);
-    }
-    return result;
-}
-
-
-std::optional<ResourceRadialNode<Resource>> TemplatePicker::tryReadNodeData(const nlohmann::json& node, int id){
-    auto dataIt = node.find("data");
-    if (dataIt == node.end()){
-        noKeyError = {true, "nodes/[]/data"};
-        return std::nullopt;
-    }
-
-    auto radiusIt = dataIt->find("radius");
-    if (radiusIt == dataIt->end()){
-        noKeyError = {true, "nodes/[]/data/radius"};
-        return std::nullopt;
-    }
-    if (!radiusIt->is_number_float()){
-        badValueError = {true, "nodes/[]/data/radius", "float"};
-        return std::nullopt;
-    }
-
-    auto susceptibilityIt = dataIt->find("susceptibility");
-    if (susceptibilityIt == dataIt->end()){
-        noKeyError = {true, "nodes/[]/data/susceptibility"};
-        return std::nullopt;
-    }
-    if (!susceptibilityIt->is_number_float()){
-        badValueError = {true, "nodes/[]/data/susceptibility", "float"};
-        return std::nullopt;
-    }
-
-    auto resources = tryReadResourceData(*dataIt);
-    if (resources == std::nullopt){
-        return std::nullopt;
-    }
-
-    return ResourceRadialNode<Resource>(
-        id,
-        radiusIt->get<double>(),
-        susceptibilityIt->get<double>(),
-        resources.value().first,
-        resources.value().second
-    );
-}
-
-std::optional<
-    std::pair<
-        std::vector<double>,
-        std::vector<ResourceMapping<Resource>>
-    >
-> TemplatePicker::tryReadResourceData(const nlohmann::json& nodeJSON){
-    auto resourcesIt = nodeJSON.find("resources");
-    if (resourcesIt == nodeJSON.end()){
-        noKeyError = {true, "nodes/[]/data/resources"};
-        return std::nullopt;
-    }
-
-    double octave1_weight = 0.0;
-    double octave2_weight = 0.0;
-    double octave3_weight = 0.0;
-
-    auto weight1It = resourcesIt->find("octave1_weight");
-    if (weight1It != resourcesIt->end()){
-        if (!weight1It->is_number_float()){
-            badValueError = {true, "nodes/[]/data/resources/octave1_weight", "float"};
-            return std::nullopt;
-        }
-        octave1_weight = weight1It->get<double>();
-    }
-
-    auto weight2It = resourcesIt->find("octave2_weight");
-    if (weight2It != resourcesIt->end()){
-        if (!weight2It->is_number_float()){
-            badValueError = {true, "nodes/[]/data/resources/octave2_weight", "float"};
-            return std::nullopt;
-        }
-        octave2_weight = weight2It->get<double>();
-    }
-
-    auto weight3It = resourcesIt->find("octave3_weight");
-    if (weight3It != resourcesIt->end()){
-        if (!weight3It->is_number_float()){
-            badValueError = {true, "nodes/[]/data/resources/octave3_weight", "float"};
-            return std::nullopt;
-        }
-        octave3_weight = weight3It->get<double>();
-    }
-
-    std::vector<double> octaveWeights;
-    octaveWeights = {octave1_weight, octave2_weight, octave3_weight};
-
-    auto contentIt = resourcesIt->find("content");
-    if (contentIt == resourcesIt->end()){
-        noKeyError = {true, "nodes/[]/data/resources/content"};
-        return std::nullopt;
-    }
-
-    if (!contentIt->is_array()){
-        badValueError = {true, "nodes/[]/data/resources/content/[]", "array"};
-        return std::nullopt;
-    }
-
-    std::vector<ResourceMapping<Resource>> contents;
-    for (const auto& node : *contentIt){
-        std::optional<ResourceMapping<Resource>> content = tryReadContentData(node);
-        if (content == std::nullopt){
-            return std::nullopt;
-        }
-        contents.push_back(content.value());
-    }
-    
-    try {
-        validateResourceMappings(contents);
-    } catch (const std::invalid_argument& error) {
-        badValueError = {true, "nodes/[]/data/resources/content", error.what()};
-        return std::nullopt;
-    }
-    return std::make_pair(octaveWeights, contents);
-}
-
-std::optional<NoiseOctaveParam> TemplatePicker::tryReadOctave(const nlohmann::json& octaveJSON){
-    double minRadius;
-    double maxRadius;
-
-    auto minRadiusIt = octaveJSON.find("minRadius");
-    if (minRadiusIt == octaveJSON.end()){
-        noKeyError = {true, "octaves/octave{*}/minRadius"};
-        return std::nullopt;
-    }
-    if (!minRadiusIt->is_number_float()){
-        badValueError = {true, "octaves/octave{*}/minRadius", "float"};
-        return std::nullopt;
-    }
-
-
-    auto maxRadiusIt = octaveJSON.find("maxRadius");
-    if (maxRadiusIt == octaveJSON.end()){
-        noKeyError = {true, "octaves/octave{*}/maxRadius"};
-        return std::nullopt;
-    }
-    if (!maxRadiusIt->is_number_float()){
-        badValueError = {true, "octaves/octave{*}/maxRadius", "float"};
-        return std::nullopt;
-    }
-
-    return NoiseOctaveParam{
-        .weight = 1.0,
-        .minimalBlob = minRadiusIt->get<double>(),
-        .maximalBlob = maxRadiusIt->get<double>()
-    };
-}
-
-std::optional<ResourceMapping<Resource>> TemplatePicker::tryReadContentData(const nlohmann::json &contentJSON)
-{
-    std::optional<Resource> resource;
-    double startThreshold;
-    double endThreshold;
-
-    auto resourceNameIt = contentJSON.find("name");
-    if (resourceNameIt == contentJSON.end()){
-        noKeyError = {true, "nodes/[]/data/resources/content/[]/name"};
-        return std::nullopt;
-    }
-    if (!resourceNameIt->is_string()){
-        badValueError = {true, "nodes/[]/data/resources/content/[]/name", "string"};
-        return std::nullopt;
-    }
-    resource = resourceFromString(resourceNameIt->get<std::string>());
-    if (resource == std::nullopt){
-        badValueError = {true, "nodes/[]/data/resources/content/[]/name", std::format("Unknown resource: {}", resourceNameIt->get<std::string>())};
-        return std::nullopt;
-    }
-
-
-    auto startThresholdIt = contentJSON.find("startThreshold");
-    if (startThresholdIt == contentJSON.end()){
-        noKeyError = {true, "nodes/[]/data/resources/octave{*}/startThreshold"};
-        return std::nullopt;
-    }
-    if (!startThresholdIt->is_number_float()){
-        badValueError = {true, "nodes/[]/data/resources/octave{*}/startThreshold", "float"};
-        return std::nullopt;
-    }
-
-
-    auto endThresholdIt = contentJSON.find("endThreshold");
-    if (endThresholdIt == contentJSON.end()){
-        noKeyError = {true, "nodes/[]/data/resources/octave{*}/endThreshold"};
-        return std::nullopt;
-    }
-    if (!endThresholdIt->is_number_float()){
-        badValueError = {true, "nodes/[]/data/resources/octave{*}/endThreshold", "float"};
-        return std::nullopt;
-    }
-
-    return ResourceMapping<Resource>{
-        .minimalThreshold = startThresholdIt->get<double>(),
-        .maximalThreshold = endThresholdIt->get<double>(),
-        .resource = resource.value(),
-    };
-}
-
-void TemplatePicker::tryReadTemplate(const std::filesystem::path &path){
+void TemplatePicker::tryReadTemplate(const std::filesystem::path& path) {
+    resetErrors();
     std::ifstream file(path);
-    if (!file){
+    if (!file) {
         fileOpenErrorOccurred = true;
         return;
     }
-    nlohmann::json json = nlohmann::json::parse(file, nullptr, false);
-
-    if (json.is_discarded()){
+    nlohmann::json json;
+    try {
+        json = nlohmann::json::parse(file);
+    } catch (const nlohmann::json::exception&) {
         syntaxError = {true};
         return;
     }
-
-    auto templateNameIt = json.find("name");
-    if (templateNameIt == json.end()){
-        noKeyError = {true, "name"};
-        return;
+    try {
+        const auto nextName = name(json);
+        if (tryReadEdgeGraph(json)) templateName = nextName;
+    } catch (const ValidationError& error) {
+        report(*this, error);
     }
-    if (!templateNameIt->is_string()){
-        badValueError = {true, "name", "string"};
-        return;
-    }
-    if (!tryReadEdgeGraph(json)){
-        return;
-    }
-    templateName = *templateNameIt;
 }

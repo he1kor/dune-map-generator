@@ -37,6 +37,10 @@ void TemplatePickerUI::initError(const std::string &text){
 
 void TemplatePickerUI::buildErrors()
 {
+    if (templatePickerPtr->fileOpenErrorOccurred){
+        templatePickerPtr->fileOpenErrorOccurred = false;
+        initError("Could not open the template file");
+    }
     if (templatePickerPtr->syntaxError.ocurred){
         templatePickerPtr->syntaxError.ocurred = false;
         initError("Invalid JSON syntax");
@@ -47,7 +51,7 @@ void TemplatePickerUI::buildErrors()
     }
     if (templatePickerPtr->badValueError.ocurred){
         templatePickerPtr->badValueError.ocurred = false;
-        initError("Invalid value by \"" + templatePickerPtr->badValueError.targetKey + "\" (expected " + templatePickerPtr->badValueError.expectedType + ")");
+        initError("Invalid value at \"" + templatePickerPtr->badValueError.targetKey + "\" (expected " + templatePickerPtr->badValueError.expectedType + ")");
     }
     buildError();
 }
