@@ -170,18 +170,19 @@ void MapRenderer::updateMap(const std::vector<uint32_t> &pixels, int width, int 
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-int MapRenderer::getOptimalMapSize(int availableWidth){
+int MapRenderer::getOptimalMapSize(int availableWidth, int availableHeight){
     return std::min(
-        (availableWidth / maxMapSize) * maxMapSize,
+        (std::max(0, std::min(availableWidth, availableHeight)) / maxMapSize) * maxMapSize,
         (maxScaleFactor * maxMapSize)
     );
 }
 
-void MapRenderer::render(){
+void MapRenderer::render(float availableHeight){
     if (textureID == 0 || mapWidth == 0 || mapHeight == 0) return;
     
     ImVec2 availableSize = ImGui::GetContentRegionAvail();
-    float squareSize = getOptimalMapSize(static_cast<int>(availableSize.x));
+    float squareSize = getOptimalMapSize(static_cast<int>(availableSize.x), static_cast<int>(availableHeight));
+    if (squareSize <= 0) return;
     
     float scale = squareSize / maxMapSize;
     
@@ -189,10 +190,8 @@ void MapRenderer::render(){
     float renderHeight = mapHeight * scale;
     
     float offsetX = (availableSize.x - squareSize) * 0.5f;
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
-    
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-    ImVec2 squarePos = cursorPos;
+    ImVec2 squarePos(cursorPos.x + offsetX, cursorPos.y);
     
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     draw_list->AddRectFilled(
@@ -204,26 +203,16 @@ void MapRenderer::render(){
     // Draw the map texture (centered)
     offsetX = (squareSize - renderWidth) * 0.5f;
     float offsetY = (squareSize - renderHeight) * 0.5f;
-    ImGui::SetCursorScreenPos(ImVec2(
-        cursorPos.x + offsetX,
-        cursorPos.y + offsetY
-    ));
     
     // ImGui's OpenGL sampler overrides the texture's GL_NEAREST parameters.
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     draw_list->AddCallback(platform_io.DrawCallback_SetSamplerNearest);
-    ImVec2 imagePos = ImGui::GetCursorScreenPos();
+    ImVec2 imagePos(squarePos.x + offsetX, squarePos.y + offsetY);
     draw_list->AddImage(
         (ImTextureID)(intptr_t)textureID,
         imagePos,
         ImVec2(imagePos.x + renderWidth, imagePos.y + renderHeight)
     );
     draw_list->AddCallback(platform_io.DrawCallback_SetSamplerLinear);
-    ImGui::Dummy(ImVec2(renderWidth, renderHeight));
-    
-    // Advance cursor position (important for column layout)
-    ImGui::SetCursorScreenPos(ImVec2(
-        cursorPos.x,
-        cursorPos.y + squareSize + ImGui::GetStyle().ItemSpacing.y
-    ));
+    ImGui::Dummy(ImVec2(availableSize.x, squareSize));
 }

@@ -58,6 +58,9 @@ void setColors(){
     colors[ImGuiCol_Button] = RED_BASIC;
     colors[ImGuiCol_ButtonHovered] = RED_EXTRA;
     colors[ImGuiCol_ButtonActive] = RED_ULTRA;
+    colors[ImGuiCol_Header] = RED_BASIC;
+    colors[ImGuiCol_HeaderHovered] = RED_EXTRA;
+    colors[ImGuiCol_HeaderActive] = RED_ULTRA;
     
     colors[ImGuiCol_CheckMark] = VARIANT_ULTRA;
 

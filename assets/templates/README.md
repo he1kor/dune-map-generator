@@ -56,3 +56,31 @@ duplicate undirected connections and duplicate rules in the same direction are
 rejected. A directed rule requires a corresponding undirected connection. Each
 zone needs at least one undirected connection because the current generator
 starts zone expansion from graph edges.
+
+Map width and height are selected in the application and passed to generation.
+Each side must be an even number from **32 to 128 cells**. Templates without
+dimension rules allow every size in that range, including rectangles.
+
+Add an optional top-level `dimensions` object to restrict a template. For example,
+this allows only square maps with sides from 64 to 128 cells:
+
+```json
+"dimensions": {
+    "width": {"min": 64, "max": 128},
+    "height": {"min": 64, "max": 128},
+    "aspectRatio": {"min": 1.0, "max": 1.0}
+}
+```
+
+Bounds are inclusive. Width and height bounds must themselves be even and within
+32-128. `aspectRatio` means **width divided by height**: `0.5` is twice as tall as
+it is wide, and `2.0` is twice as wide as it is tall. Use `min: 0.5, max: 2.0`
+to permit both orientations up to 2:1, or `min: 1.0, max: 1.0` for squares.
+Each range and each bound is optional; omitted values use the application limits
+(32-128 for each side, 0.25-4.0 for width/height). Invalid or impossible combinations
+are rejected when the template loads.
+
+The UI lists only permitted even values. Choosing a side preserves that choice
+and adjusts the other side only when the template's ratio requires it. Loading a
+template keeps the current size if possible; otherwise it selects the closest
+permitted size and shows a notice. Square-only templates link the two controls.

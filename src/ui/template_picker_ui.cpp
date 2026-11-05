@@ -1,15 +1,18 @@
 #include "imgui.h"
 #include "template_picker_ui.h"
 #include "colors.h"
+#include <algorithm>
 #include <string>
 
 #include "filedialog.h"
 #include "systemsound.h"
 
 
-TemplatePickerUI::TemplatePickerUI(TemplatePicker *templatePickerPtr, Generation *generationPtr, MapRenderer& mapRenderer) : mapRenderer{mapRenderer}{
+TemplatePickerUI::TemplatePickerUI(TemplatePicker *templatePickerPtr, Generation *generationPtr, MapRenderer& mapRenderer,
+    QuickSettings* quickSettingsPtr) : mapRenderer{mapRenderer}{
     this->templatePickerPtr = templatePickerPtr;
     this->generationPtr = generationPtr;
+    this->quickSettingsPtr = quickSettingsPtr;
 }
 
 void TemplatePickerUI::buildError(){
@@ -60,8 +63,9 @@ void TemplatePickerUI::buildGenerateButton(){
     if (generationPtr->generationProgress == 1.0f || generationPtr->generationProgress == 0.0f){
         bool disabled = templatePickerPtr->mapTemplate == nullptr;
         ImGui::BeginDisabled(disabled);
+        const auto size = quickSettingsPtr->dimensions();
         if (ImGui::Button("Generate", ImVec2(-1, 30))){
-            generationPtr->generate(templatePickerPtr->mapTemplate);
+            generationPtr->generate(templatePickerPtr->mapTemplate, size.width, size.height);
             mapRenderer.setDistinctColors(*(templatePickerPtr->mapTemplate->zoneGraph));
         }
         if (disabled && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
@@ -79,6 +83,8 @@ void TemplatePickerUI::buildTemplatePickButton(){
             templatePickerPtr->tryReadTemplate(*expectedPath);
         }
     }
+    if (templatePickerPtr->mapTemplate)
+        quickSettingsPtr->applyDimensionLimits(templatePickerPtr->mapTemplate->dimensionLimits);
 }
 
 bool TemplatePickerUI::buildFilePickButton(const std::string& name, const std::string& value, const std::string& id){
@@ -106,7 +112,7 @@ void TemplatePickerUI::build(){
 
     ImGui::PopStyleColor(3);
 
-    float available_space = ImGui::GetContentRegionAvail().y - 30.0f - ImGui::GetStyle().ItemSpacing.y;
+    float available_space = std::max(0.0f, ImGui::GetContentRegionAvail().y - 30.0f - ImGui::GetStyle().ItemSpacing.y);
     ImGui::Dummy(ImVec2(0, available_space));
 
     ImGui::PushStyleColor(ImGuiCol_Button, VARIANT2_BASIC);

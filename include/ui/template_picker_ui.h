@@ -1,12 +1,14 @@
 #pragma once
 #include "template_picker.h"
 #include "generation.h"
+#include "quick_settings.h"
 
 #include "map_render.h"
 
 class TemplatePickerUI{
     public:
-        TemplatePickerUI(TemplatePicker* templatePickerPtr, Generation* generationPtr, MapRenderer& mapRenderer);
+        TemplatePickerUI(TemplatePicker* templatePickerPtr, Generation* generationPtr, MapRenderer& mapRenderer,
+            QuickSettings* quickSettingsPtr);
         void buildError();
         void build();
 
@@ -20,6 +22,7 @@ class TemplatePickerUI{
         TemplatePicker* templatePickerPtr;
         MapRenderer& mapRenderer;
         Generation* generationPtr;
+        QuickSettings* quickSettingsPtr;
 
         std::string errorText = "";
 };

@@ -113,6 +113,63 @@ std::vector<NoiseOctaveParam> readOctaves(const Json& json) {
     return result;
 }
 
+MapDimensionLimits readDimensionLimits(const Json& json) {
+    MapDimensionLimits result;
+    const auto it = json.find("dimensions");
+    if (it == json.end()) return result;
+    const auto& data = *it;
+    object(data, "dimensions");
+    for (const auto& [key, value] : data.items()) {
+        if (key != "width" && key != "height" && key != "aspectRatio")
+            invalid(child("dimensions", key), "width, height or aspectRatio");
+    }
+    auto range = [&](const std::string& key) -> const Json* {
+        const auto entry = data.find(key);
+        if (entry == data.end()) return nullptr;
+        const auto path = child("dimensions", key);
+        object(*entry, path);
+        for (const auto& [bound, value] : entry->items()) {
+            if (bound != "min" && bound != "max") invalid(child(path, bound), "min or max");
+        }
+        return &*entry;
+    };
+    auto side = [&](const std::string& key, int& minimum, int& maximum) {
+        const auto entry = range(key);
+        if (!entry) return;
+        const auto path = child("dimensions", key);
+        auto bound = [&](const std::string& key, int fallback) {
+            const auto value = entry->find(key);
+            if (value == entry->end()) return fallback;
+            const int side = integer(*value, child(path, key));
+            if (side < MapDimensionLimits::minimumSide || side > MapDimensionLimits::maximumSide || side % 2 != 0)
+                invalid(child(path, key), "an even number from 32 to 128");
+            return side;
+        };
+        minimum = bound("min", minimum);
+        maximum = bound("max", maximum);
+        if (minimum > maximum) invalid(child(path, "max"), "a value >= min");
+    };
+    side("width", result.minWidth, result.maxWidth);
+    side("height", result.minHeight, result.maxHeight);
+    if (const auto entry = range("aspectRatio")) {
+        const auto path = "dimensions/aspectRatio";
+        auto bound = [&](const std::string& key, double fallback) {
+            const auto value = entry->find(key);
+            if (value == entry->end()) return fallback;
+            const double ratio = positive(*value, child(path, key));
+            if (ratio < 0.25 || ratio > 4.0) invalid(child(path, key), "a width/height ratio from 0.25 to 4");
+            return ratio;
+        };
+        result.minAspectRatio = bound("min", result.minAspectRatio);
+        result.maxAspectRatio = bound("max", result.maxAspectRatio);
+        if (result.minAspectRatio > result.maxAspectRatio)
+            invalid(child(path, "max"), "a value >= min");
+    }
+    if (!result.hasAllowedSize())
+        invalid("dimensions", "limits that allow at least one even width/height combination");
+    return result;
+}
+
 ResourceRadialNode<Resource> readNode(const Json& node, const std::string& path, int id, size_t octaveCount) {
     const auto dataPath = child(path, "data");
     const auto& data = member(node, "data", path);
@@ -226,6 +283,7 @@ std::shared_ptr<MapTemplate> readGraph(const Json& json) {
     object(json, "");
     if (json.contains("name")) name(json);
     auto result = std::make_shared<MapTemplate>();
+    result->dimensionLimits = readDimensionLimits(json);
     result->octaves = readOctaves(json);
     if (const auto it = json.find("walls"); it != json.end())
         result->wallResource = material(member(*it, "resource", "walls"), "walls/resource");

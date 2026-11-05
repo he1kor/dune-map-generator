@@ -132,8 +132,8 @@ public:
     const std::vector<uint32_t> convertMatrixWeighted(const Matrix<T> &matrix);
     // RGBA format updating
     void updateMap(const std::vector<uint32_t>& pixels, int width, int height);
-    int getOptimalMapSize(int availableWidth);
-    void render();
+    int getOptimalMapSize(int availableWidth, int availableHeight);
+    void render(float availableHeight);
 
     
 private:

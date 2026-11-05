@@ -7,6 +7,7 @@
 #include <iostream>
 #include "quick_settings.h"
 #include "quick_settings_ui.h"
+#include "app_layout.h"
 #include "setup.h"
 #include "template_picker_ui.h"
 #include "generation.h"
@@ -26,58 +27,14 @@
 #include "edge_graph.h"
 #include <dev_panel_ui.h>
 
-constexpr float left_column_width = 200.0f;
-constexpr float min_map_size = 128.0f;
-constexpr float min_middle_column_width = min_map_size + 16;
-constexpr float max_middle_column_width = min_map_size * 4 + 16;
-constexpr float right_column_width = 200.0f;
-
-constexpr float min_window_width = left_column_width + min_middle_column_width + right_column_width;
-constexpr float max_window_width = left_column_width + max_middle_column_width + right_column_width;
-
-constexpr float min_window_height = 500.0f;
-constexpr float max_window_height = 730.0f;
-
-void buildLayout(QuickSettingsUI& quickSettingsUI, TemplatePickerUI& templatePickerUI, GenerationUI& generationUI){
-
-
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::SetNextWindowSize(ImGui::GetMainViewport()->Size);
-    
-    ImGui::Begin("##Main Window", nullptr, 
-        ImGuiWindowFlags_AlwaysAutoResize | 
-        ImGuiWindowFlags_NoMove |
-        ImGuiWindowFlags_NoCollapse
-    );
-    ImGui::GetStyle().WindowRounding = 6.0f;
-
-    ImGui::Columns(3, "MyColumns", false);
-    
-    ImGui::SetColumnWidth(0, left_column_width);
-    
-    quickSettingsUI.build();
-    ImGui::NextColumn();
-    
-    ImGui::SetColumnWidth(1, ImGui::GetMainViewport()->Size.x - left_column_width - right_column_width);
-    generationUI.build();
-    
-    ImGui::NextColumn();
-
-    ImGui::SetColumnWidth(2, right_column_width);
-    templatePickerUI.build();
-    
-    ImGui::Columns(1);
-    ImGui::GetStyle().WindowRounding = 0.0f;
-    ImGui::End();
-}
-
 int main(){
 
     if (!glfwInit())
         return -1;
 
     GLFWwindow* window = glfwCreateWindow(672, 500, "Dune 2000 Map Generator", nullptr, nullptr);
-    glfwSetWindowSizeLimits(window, min_window_width, min_window_height, max_window_width, max_window_height);
+    glfwSetWindowSizeLimits(window, appLayout::minWindowWidth, appLayout::minWindowHeight,
+        appLayout::maxWindowWidth, appLayout::maxWindowHeight);
     if (!window){
         glfwTerminate();
         return -1;
@@ -123,15 +80,12 @@ int main(){
     
     TemplatePicker templatePicker;
     Generation generation;
-    TemplatePickerUI templatePickerUI(&templatePicker, &generation, mapRenderer);
+    TemplatePickerUI templatePickerUI(&templatePicker, &generation, mapRenderer, &quickSettings);
 
 
     GenerationUI generationUI(&generation, &mapRenderer);
     
     DevPanelUI devPanelUI;
-
-    int width = 128;
-    int height = 128;
 
     //mapRenderer.updateMap(mapRenderer.convertMap(map), map.width(), map.height());
     mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, {}), generation.plane.getWidth(), generation.plane.getHeight());
@@ -171,7 +125,7 @@ int main(){
         }
 
 
-        buildLayout(quickSettingsUI, templatePickerUI, generationUI);
+        appLayout::build(quickSettingsUI, templatePickerUI, generationUI);
         devPanelUI.render(generation, mapRenderer, templatePicker);
 
         // Рендеринг

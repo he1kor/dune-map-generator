@@ -113,4 +113,45 @@ if(MAPGENERATOR_BUILD_TESTS)
         "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json"
         "${CMAKE_SOURCE_DIR}/assets/templates/grid3x3 magnetic.json"
         "${CMAKE_CURRENT_BINARY_DIR}/template-validation-regression.json")
+    add_executable(map_dimensions_regression
+        ../tests/map_dimensions_regression.cc
+        state/template_picker.cpp
+        state/generation.cpp
+        state/quick_settings.cpp
+        state/limited_int.cpp
+        state/limited_setting.cpp
+    )
+    target_include_directories(map_dimensions_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(map_dimensions_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
+    add_test(NAME map_dimensions_regression COMMAND map_dimensions_regression
+        "${CMAKE_SOURCE_DIR}/assets/templates/grid3x3 magnetic.json"
+        "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json")
+    add_executable(ui_layout_regression
+        ../tests/ui_layout_regression.cc
+        ui/app_layout.cpp
+        ui/quick_settings_ui.cpp
+        ui/generation_ui.cpp
+        ui/template_picker_ui.cpp
+        ui/map_render.cpp
+        ui/slider.cpp
+        ui/int_field.cpp
+        state/quick_settings.cpp
+        state/limited_int.cpp
+        state/limited_setting.cpp
+        state/generation.cpp
+        state/template_picker.cpp
+        global/setup.cpp
+        global/filedialog.cpp
+    )
+    target_include_directories(ui_layout_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/ui
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(ui_layout_regression PRIVATE
+        imgui glad Dune2kMapApi GenCore nfd nlohmann_json::nlohmann_json)
+    add_test(NAME ui_layout_regression COMMAND ui_layout_regression)
 endif()

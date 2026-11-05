@@ -25,7 +25,7 @@ class Generation{
     public:
         std::shared_ptr<Grid<ResourceRadialNode<Resource>>> generateMap();
         Generation();
-        void generate(std::shared_ptr<MapTemplate> mapTemplate);
+        void generate(std::shared_ptr<MapTemplate> mapTemplate, int width = 128, int height = 128);
         void runIteration();
         float generationProgress = 0.0f;
         long long seed = 12419;

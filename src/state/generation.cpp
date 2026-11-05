@@ -43,27 +43,30 @@ std::shared_ptr<Grid<ResourceRadialNode<Resource>>> Generation::generateMap() {
     */
 
 Generation::Generation() : plane(128.0, 128.0), noiseMap(128, 128), spiceMap(128, 128) {};
-void Generation::generate(std::shared_ptr<MapTemplate> mapTemplate){
-    //this->grid = generateMap();
-    //return;
-    //RandomGenerator::instance().reset();
+void Generation::generate(std::shared_ptr<MapTemplate> mapTemplate, int width, int height){
+    if (!mapTemplate || !mapTemplate->zoneGraph)
+        throw std::invalid_argument("Select a template before generating a map");
+    if (!MapDimensionLimits{}.allows({width, height}))
+        throw std::invalid_argument("Map width and height must be even numbers from 32 to 128");
+    if (!mapTemplate->dimensionLimits.allows({width, height}))
+        throw std::invalid_argument("The selected map size does not satisfy the template limits");
+
+    zoneBloater.finishAndReset();
     this->mapTemplate = mapTemplate;
-    // auto noise1 = EllipticalBlobNoise(128, 128, 2, 3); 
-    // auto noise2 = EllipticalBlobNoise(128, 128, 4.5, 5.5);
-
-    // Matrix<double> noiseMap1 = noise1.generate();
-    // Matrix<double> noiseMap2 = noise2.generate();
-
-    // std::vector<Matrix<double>> maps = {noiseMap1, noiseMap2};
-    // noiseMap = Matrix<double>::normalizedAverage(maps, std::vector<double>{4, 3});
-    // spiceMap = Matrix<double>::mapToBinary(noiseMap, [](double h) { return h >= 0.66;});
-
+    plane.setSize(width, height);
+    noiseMap = Matrix<double>(width, height);
+    spiceMap = Matrix<Resource>(width, height, Resource::NONE);
+    wallMask = Matrix<bool>(width, height, false);
+    grid.reset();
+    edgeToborderMap.clear();
+    zoneMasks = {};
+    resourceGenerators.clear();
+    is_done = false;
     deduceSeed();
     plane.clear();
     plane.applyMagnetGrid(cornerMagnets);
     plane.initEmbed(mapTemplate->zoneGraph);
     generationStage = GenerationStage::EMBED;
-    zoneBloater.finishAndReset();
 }
 
 void Generation::runIteration(){

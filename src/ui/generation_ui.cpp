@@ -13,7 +13,10 @@ void GenerationUI::build(){
     ImGui::Text("Generation");
     ImGui::Dummy(ImVec2(0, 5));
     
-    mapRendererPtr->render();
+    const float spacing = ImGui::GetStyle().ItemSpacing.y;
+    const float controlsHeight = 5.0f + 2 * spacing + ImGui::GetTextLineHeightWithSpacing()
+        + 2 * ImGui::GetFrameHeightWithSpacing() + 30.0f;
+    mapRendererPtr->render(std::max(0.0f, ImGui::GetContentRegionAvail().y - controlsHeight));
 
     ImGui::Dummy(ImVec2(0, 5));
     
@@ -34,7 +37,7 @@ void GenerationUI::build(){
     }
     ImGui::Checkbox("Use random##use random seed", &(generationPtr->isSeedRandom));
 
-    float available_space = ImGui::GetContentRegionAvail().y - 30.0f - ImGui::GetStyle().ItemSpacing.y;
+    float available_space = std::max(0.0f, ImGui::GetContentRegionAvail().y - 30.0f - ImGui::GetStyle().ItemSpacing.y);
     ImGui::Dummy(ImVec2(0, available_space));
     ImGui::ProgressBar(generationPtr->generationProgress, ImVec2(-1, 30));
 }

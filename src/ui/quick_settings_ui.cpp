@@ -2,52 +2,72 @@
 #include "quick_settings_ui.h"
 #include "slider.h"
 #include "int_field.h"
-#include <iostream>
+#include <optional>
+#include <string>
+#include <vector>
 
-QuickSettingsUI::QuickSettingsUI(QuickSettings *quickSettingsPtr){
-    this->quickSettingsPtr = quickSettingsPtr;
+namespace {
+std::optional<int> sidePicker(const char* id, int current, const std::vector<int>& choices) {
+    std::optional<int> selected;
+    ImGui::SetNextItemWidth(-1.0f);
+    ImGui::BeginDisabled(choices.size() == 1);
+    if (ImGui::BeginCombo(id, std::to_string(current).c_str())) {
+        for (int side : choices) {
+            const bool active = side == current;
+            if (ImGui::Selectable(std::to_string(side).c_str(), active)) selected = side;
+            if (active) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::EndDisabled();
+    return selected;
+}
 }
 
-void QuickSettingsUI::build(){
-    ImGui::Text("Settings");
+QuickSettingsUI::QuickSettingsUI(QuickSettings* quickSettingsPtr) : quickSettingsPtr(quickSettingsPtr) {}
+
+void QuickSettingsUI::build() {
+    ImGui::Text("Map size");
     ImGui::Dummy(ImVec2(0, 5));
-
-    ImGui::BeginGroup();
-        {
-            const float column_width = ImGui::GetContentRegionAvail().x;
-            const float spacing = 8.0f;
-            const float symbol_width = ImGui::CalcTextSize("×").x;
-            const float input_width = (column_width - symbol_width - spacing * 2) / 2.0f;
-
-            // LABELS ROW (left-aligned)
-            ImGui::Text("Width");
-            ImGui::SameLine(input_width + 2* spacing + symbol_width);
-            ImGui::Text("Height");
-
-            // INPUTS ROW (with ×)
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
-            
-            // Width input
-            ImGui::SetNextItemWidth(input_width);
-            int width = quickSettingsPtr->width.getValue();
-            ImGui::InputInt("##width", &width, 0, 0, ImGuiInputTextFlags_CharsDecimal);
-            
-            // × symbol
-            ImGui::SameLine(0, spacing);
-            ImGui::Text("×");
-            
-            // Height input
-            ImGui::SameLine(0, spacing);
-            ImGui::SetNextItemWidth(input_width);
-            int height = quickSettingsPtr->height.getValue();
-            ImGui::InputInt("##height", &height, 0, 0, ImGuiInputTextFlags_CharsDecimal);
-
-            quickSettingsPtr->width.setValue(width);
-            quickSettingsPtr->height.setValue(height);
+    const auto& limits = quickSettingsPtr->dimensionLimits;
+    if (ImGui::BeginTable("##map_dimensions", 2, ImGuiTableFlags_SizingStretchSame)) {
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("Width");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextUnformatted("Height");
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        if (auto value = sidePicker("##width", quickSettingsPtr->width.getValue(), limits.allowedSides(true)))
+            quickSettingsPtr->setWidth(*value);
+        ImGui::TableSetColumnIndex(1);
+        if (auto value = sidePicker("##height", quickSettingsPtr->height.getValue(), limits.allowedSides(false)))
+            quickSettingsPtr->setHeight(*value);
+        ImGui::EndTable();
+    }
+    ImGui::TextWrapped("Even numbers, 32-128 cells.");
+    if (limits != MapDimensionLimits{}) {
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Template limits:");
+        ImGui::Text("Width: %d-%d", limits.minWidth, limits.maxWidth);
+        ImGui::Text("Height: %d-%d", limits.minHeight, limits.maxHeight);
+        if (limits.squareOnly()) {
+            ImGui::TextWrapped("Square map: both sides change together.");
+        } else if (limits.minAspectRatio != 0.25 || limits.maxAspectRatio != 4.0) {
+            ImGui::TextWrapped("Width / height: %.3g to %.3g.", limits.minAspectRatio, limits.maxAspectRatio);
+            ImGui::TextWrapped("The other side adjusts to keep this shape.");
         }
-    ImGui::EndGroup();
-        
+    }
+    if (quickSettingsPtr->sizeAdjustedToTemplate) {
+        ImGui::Spacing();
+        ImGui::TextWrapped("Size adjusted to fit this template.");
+    }
+
     ImGui::Dummy(ImVec2(0, 10));
+    ImGui::Separator();
+    if (!ImGui::CollapsingHeader("Other settings")) return;
+    ImGui::TextWrapped("These settings aren't available yet.");
+    ImGui::BeginDisabled();
     buildIntField(quickSettingsPtr->spotCount, "Number of spots", "##spots");
     ImGui::Dummy(ImVec2(0, 10));
     buildSlider(quickSettingsPtr->amountOfSpice, "Amount of spice", "##spice");
@@ -55,10 +75,5 @@ void QuickSettingsUI::build(){
     buildSlider(quickSettingsPtr->amountOfDunes, "Amount of dunes", "##dunes");
     ImGui::Dummy(ImVec2(0, 10));
     buildSlider(quickSettingsPtr->amountOfInfantryCliffs, "Amount of infantry cliffs", "##inf_cliffs");
-    
-    
-    
-
-
-    
+    ImGui::EndDisabled();
 }

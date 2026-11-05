@@ -30,6 +30,6 @@ int LimitedInt::getMinLimit(){
     return min_value;
 }
 
-int LimitedInt::getValue(){
+int LimitedInt::getValue() const{
     return value;
 }
