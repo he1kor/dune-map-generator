@@ -132,6 +132,7 @@ void Generation::postProcess(){
     else {
         zoneBloater.reset();
         edgeToborderMap = tiles::Border::getAllBorders<ResourceRadialNode<Resource>>(*grid);
+        wallMask = Matrix<bool>(grid->getWidth(), grid->getHeight(), false);
         
         for (auto& [pair, border] : edgeToborderMap){
             auto passParams = mapTemplate->zoneGraph->tryGetSymEdge(pair.first, pair.second);
@@ -153,6 +154,8 @@ void Generation::postProcess(){
                     if (segment.isDisabled()) continue;
                     grid->setTile(segment.getLeftPos(), Identifiable::nullID);
                     grid->setTile(segment.getRightPos(), Identifiable::nullID);
+                    wallMask.set(segment.getLeftPos().x, segment.getLeftPos().y, true);
+                    wallMask.set(segment.getRightPos().x, segment.getRightPos().y, true);
                 }
             }
         }
@@ -179,7 +182,12 @@ void Generation::postProcess(){
         }
         MultizoneResourceGenerator<Resource> multizoneGenerator;
         multizoneGenerator.setup(resourceGenerators, zoneMasks.influenceMask);
-        spiceMap = multizoneGenerator.generateResourcesMap();
+        spiceMap = multizoneGenerator.generateResourcesMap(Resource::NONE);
+        for (int y = 0; y < spiceMap.getHeight(); ++y) {
+            for (int x = 0; x < spiceMap.getWidth(); ++x) {
+                if (wallMask.get(x, y)) spiceMap.set(x, y, mapTemplate->wallResource);
+            }
+        }
 
         auto spiceMask = spiceMap.mapToBinary([](Resource resource) { 
             return resource == Resource::BASIC_SPICE || resource == Resource::THICK_SPICE;

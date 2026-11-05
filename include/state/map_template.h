@@ -8,5 +8,6 @@ class MapTemplate{
 public:
     MapTemplate(){};
     std::vector<NoiseOctaveParam> octaves;
+    Resource wallResource = Resource::CLIFF_ROCK;
     std::shared_ptr<EdgeGraph<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection>> zoneGraph;
 };

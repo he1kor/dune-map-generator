@@ -27,20 +27,7 @@ const uint32_t MapRenderer::mapTile(const Tile tile){
 }
 
 const uint32_t MapRenderer::mapResource(const Resource spice){
-    switch (spice){
-        case Resource::ROCK:
-            return 0xff254d74;
-        case Resource::SAND:
-            return 0xffb2d7e3;
-        case Resource::DUNES:
-            return 0xff7ab1c9;
-        case Resource::BASIC_SPICE:
-            return 0xff0499ff;
-        case Resource::THICK_SPICE:
-            return 0xff0766bb;
-        default:
-            return 0xff000000;
-    };
+    return resourceColor(spice);
 }
 
 std::vector<uint32_t> MapRenderer::generateDistinctColors(int n){

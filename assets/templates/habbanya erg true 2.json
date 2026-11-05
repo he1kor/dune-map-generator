@@ -1,0 +1,1664 @@
+{
+    "name": "True HabbanyaErg 2",
+    "walls": {
+        "resource": "cliff_rock"
+    },
+    "octaves": {
+        "octave1": {
+            "minRadius": 2.0,
+            "maxRadius": 3.0
+        },
+        "octave2": {
+            "minRadius": 5.0,
+            "maxRadius": 8.0
+        },
+        "octave3": {
+            "minRadius": 8.0,
+            "maxRadius": 12.0
+        }
+    },
+    "nodes": [
+        {
+            "id": 1,
+            "data": {
+                "radius": 3.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "content": [
+                        {
+                            "name": "rock",
+                            "startThreshold": 0.0,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 2,
+            "data": {
+                "radius": 3.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "content": [
+                        {
+                            "name": "rock",
+                            "startThreshold": 0.0,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 3,
+            "data": {
+                "radius": 3.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "content": [
+                        {
+                            "name": "rock",
+                            "startThreshold": 0.0,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 4,
+            "data": {
+                "radius": 3.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "content": [
+                        {
+                            "name": "rock",
+                            "startThreshold": 0.0,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 5,
+            "data": {
+                "radius": 3.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "content": [
+                        {
+                            "name": "rock",
+                            "startThreshold": 0.0,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 6,
+            "data": {
+                "radius": 3.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "content": [
+                        {
+                            "name": "rock",
+                            "startThreshold": 0.0,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 7,
+            "data": {
+                "radius": 3.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "content": [
+                        {
+                            "name": "rock",
+                            "startThreshold": 0.0,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 8,
+            "data": {
+                "radius": 3.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "content": [
+                        {
+                            "name": "rock",
+                            "startThreshold": 0.0,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 9,
+            "data": {
+                "radius": 3.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "content": [
+                        {
+                            "name": "rock",
+                            "startThreshold": 0.0,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 10,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 1.0,
+                    "octave3_weight": 0.1,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.3
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.3,
+                            "endThreshold": 0.5
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.5,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 11,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 1.0,
+                    "octave3_weight": 0.1,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.3
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.3,
+                            "endThreshold": 0.5
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.5,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 12,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 1.0,
+                    "octave3_weight": 0.1,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.3
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.3,
+                            "endThreshold": 0.5
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.5,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 13,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 2.0,
+                    "octave3_weight": 4.0,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.0
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.15
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.15,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 14,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 1.0,
+                    "octave3_weight": 0.1,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.3
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.3,
+                            "endThreshold": 0.5
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.5,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 15,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 1.0,
+                    "octave3_weight": 0.1,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.3
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.3,
+                            "endThreshold": 0.5
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.5,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 16,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 1.0,
+                    "octave3_weight": 0.1,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.3
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.3,
+                            "endThreshold": 0.5
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.5,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 17,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 1.0,
+                    "octave3_weight": 0.1,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.3
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.3,
+                            "endThreshold": 0.5
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.5,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 18,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 2.0,
+                    "octave3_weight": 4.0,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.0
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.15
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.15,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 19,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 1.0,
+                    "octave3_weight": 0.1,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.3
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.3,
+                            "endThreshold": 0.5
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.5,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 20,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 2.0,
+                    "octave3_weight": 4.0,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.0
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.15
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.15,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 21,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {
+                    "octave1_weight": 1.0,
+                    "octave2_weight": 2.0,
+                    "octave3_weight": 4.0,
+                    "content": [
+                        {
+                            "name": "dunes",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.0
+                        },
+                        {
+                            "name": "sand",
+                            "startThreshold": 0.0,
+                            "endThreshold": 0.02
+                        },
+                        {
+                            "name": "spice",
+                            "startThreshold": 0.02,
+                            "endThreshold": 0.15
+                        },
+                        {
+                            "name": "thick_spice",
+                            "startThreshold": 0.15,
+                            "endThreshold": 1.0
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "symmetrical_edges": [
+        {
+            "ID_first": 1,
+            "ID_second": 10,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 1,
+            "ID_second": 11,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 2,
+            "ID_second": 10,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 2,
+            "ID_second": 12,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 2,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                }
+            }
+        },
+        {
+            "ID_first": 3,
+            "ID_second": 12,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 3,
+            "ID_second": 14,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 4,
+            "ID_second": 15,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 4,
+            "ID_second": 16,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 5,
+            "ID_second": 16,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 5,
+            "ID_second": 17,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 5,
+            "ID_second": 18,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                }
+            }
+        },
+        {
+            "ID_first": 6,
+            "ID_second": 17,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 6,
+            "ID_second": 19,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 7,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 7,
+            "ID_second": 18,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 7,
+            "ID_second": 20,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 7,
+            "ID_second": 21,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 8,
+            "ID_second": 11,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 8,
+            "ID_second": 15,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 8,
+            "ID_second": 20,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                }
+            }
+        },
+        {
+            "ID_first": 9,
+            "ID_second": 14,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 9,
+            "ID_second": 19,
+            "data": {
+                "passes": {
+                    "minPassWidth": 9,
+                    "maxPassWidth": 16,
+                    "minWallLength": 5,
+                    "maxWallLength": 25
+                }
+            }
+        },
+        {
+            "ID_first": 9,
+            "ID_second": 21,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                }
+            }
+        },
+        {
+            "ID_first": 10,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                },
+                "resourceBlend": {
+                    "distance": 10
+                }
+            }
+        },
+        {
+            "ID_first": 11,
+            "ID_second": 20,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                },
+                "resourceBlend": {
+                    "distance": 10
+                }
+            }
+        },
+        {
+            "ID_first": 12,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                },
+                "resourceBlend": {
+                    "distance": 10
+                }
+            }
+        },
+        {
+            "ID_first": 13,
+            "ID_second": 20,
+            "data": {
+                "passes": {
+                    "minPassWidth": 13,
+                    "maxPassWidth": 25,
+                    "minWallLength": 3,
+                    "maxWallLength": 5
+                }
+            }
+        },
+        {
+            "ID_first": 13,
+            "ID_second": 21,
+            "data": {
+                "passes": {
+                    "minPassWidth": 13,
+                    "maxPassWidth": 25,
+                    "minWallLength": 3,
+                    "maxWallLength": 5
+                }
+            }
+        },
+        {
+            "ID_first": 14,
+            "ID_second": 21,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                },
+                "resourceBlend": {
+                    "distance": 10
+                }
+            }
+        },
+        {
+            "ID_first": 15,
+            "ID_second": 20,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                },
+                "resourceBlend": {
+                    "distance": 10
+                }
+            }
+        },
+        {
+            "ID_first": 16,
+            "ID_second": 18,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                },
+                "resourceBlend": {
+                    "distance": 10
+                }
+            }
+        },
+        {
+            "ID_first": 17,
+            "ID_second": 18,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                },
+                "resourceBlend": {
+                    "distance": 10
+                }
+            }
+        },
+        {
+            "ID_first": 18,
+            "ID_second": 20,
+            "data": {
+                "passes": {
+                    "minPassWidth": 13,
+                    "maxPassWidth": 25,
+                    "minWallLength": 3,
+                    "maxWallLength": 5
+                }
+            }
+        },
+        {
+            "ID_first": 18,
+            "ID_second": 21,
+            "data": {
+                "passes": {
+                    "minPassWidth": 13,
+                    "maxPassWidth": 25,
+                    "minWallLength": 3,
+                    "maxWallLength": 5
+                }
+            }
+        },
+        {
+            "ID_first": 19,
+            "ID_second": 21,
+            "data": {
+                "passes": {
+                    "minPassWidth": 14,
+                    "maxPassWidth": 20,
+                    "minWallLength": 3,
+                    "maxWallLength": 6
+                },
+                "resourceBlend": {
+                    "distance": 10
+                }
+            }
+        }
+    ],
+    "asymmetrical_edges": [
+        {
+            "ID_from": 1,
+            "ID_to": 10,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 1,
+            "ID_to": 11,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 2,
+            "ID_to": 10,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 2,
+            "ID_to": 12,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 2,
+            "ID_to": 13,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 3,
+            "ID_to": 12,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 3,
+            "ID_to": 14,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 4,
+            "ID_to": 15,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 4,
+            "ID_to": 16,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 5,
+            "ID_to": 16,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 5,
+            "ID_to": 17,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 5,
+            "ID_to": 18,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 6,
+            "ID_to": 17,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 6,
+            "ID_to": 19,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 7,
+            "ID_to": 13,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 7,
+            "ID_to": 18,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 7,
+            "ID_to": 20,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 7,
+            "ID_to": 21,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 8,
+            "ID_to": 11,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 8,
+            "ID_to": 15,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 8,
+            "ID_to": 20,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 9,
+            "ID_to": 14,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 9,
+            "ID_to": 19,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 9,
+            "ID_to": 21,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 10,
+            "ID_to": 1,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 10,
+            "ID_to": 2,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 10,
+            "ID_to": 13,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 11,
+            "ID_to": 1,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 11,
+            "ID_to": 8,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 11,
+            "ID_to": 20,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 12,
+            "ID_to": 2,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 12,
+            "ID_to": 3,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 12,
+            "ID_to": 13,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 13,
+            "ID_to": 2,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 13,
+            "ID_to": 7,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 150,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 13,
+            "ID_to": 10,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 13,
+            "ID_to": 12,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 13,
+            "ID_to": 20,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 13,
+            "ID_to": 21,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 14,
+            "ID_to": 3,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 14,
+            "ID_to": 9,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 15,
+            "ID_to": 4,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 15,
+            "ID_to": 8,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 16,
+            "ID_to": 4,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 16,
+            "ID_to": 5,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 16,
+            "ID_to": 18,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 17,
+            "ID_to": 5,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 17,
+            "ID_to": 6,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 17,
+            "ID_to": 18,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 18,
+            "ID_to": 5,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 18,
+            "ID_to": 7,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 150,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 18,
+            "ID_to": 16,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 18,
+            "ID_to": 17,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 18,
+            "ID_to": 20,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 18,
+            "ID_to": 21,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 19,
+            "ID_to": 6,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 19,
+            "ID_to": 9,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 19,
+            "ID_to": 21,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 20,
+            "ID_to": 7,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 150,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 20,
+            "ID_to": 8,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 20,
+            "ID_to": 11,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 20,
+            "ID_to": 13,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 20,
+            "ID_to": 15,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 20,
+            "ID_to": 18,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 21,
+            "ID_to": 7,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 150,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 21,
+            "ID_to": 9,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 110,
+                "bonusValue": 0.65
+            }
+        },
+        {
+            "ID_from": 21,
+            "ID_to": 13,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 21,
+            "ID_to": 14,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 21,
+            "ID_to": 18,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        },
+        {
+            "ID_from": 21,
+            "ID_to": 19,
+            "data": {
+                "intakeDistance": 0.0,
+                "areaGuaranteed": 0.0,
+                "bonusValue": 0.0
+            }
+        }
+    ]
+}

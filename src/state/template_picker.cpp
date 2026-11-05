@@ -7,6 +7,20 @@
 
 
 bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
+    Resource wallResource = Resource::CLIFF_ROCK;
+    auto wallsIt = json.find("walls");
+    if (wallsIt != json.end()) {
+        if (!wallsIt->is_object() || !wallsIt->contains("resource") || !(*wallsIt)["resource"].is_string()) {
+            badValueError = {true, "walls/resource", "a resource name"};
+            return false;
+        }
+        auto material = resourceFromString((*wallsIt)["resource"].get<std::string>());
+        if (!material) {
+            badValueError = {true, "walls/resource", "a known resource name"};
+            return false;
+        }
+        wallResource = *material;
+    }
     auto nodesIt = json.find("nodes");
     if (nodesIt == json.end()){
         noKeyError = {true, "nodes"};
@@ -104,6 +118,7 @@ bool TemplatePicker::tryReadEdgeGraph(const nlohmann::json& json){
         asymEdges.value()
     );
     mapTemplate->octaves = octaves.value();
+    mapTemplate->wallResource = wallResource;
     syssound::playInfo();
     return true;
 }
@@ -424,6 +439,12 @@ std::optional<
         contents.push_back(content.value());
     }
     
+    try {
+        validateResourceMappings(contents);
+    } catch (const std::invalid_argument& error) {
+        badValueError = {true, "nodes/[]/data/resources/content", error.what()};
+        return std::nullopt;
+    }
     return std::make_pair(octaveWeights, contents);
 }
 
@@ -477,6 +498,7 @@ std::optional<ResourceMapping<Resource>> TemplatePicker::tryReadContentData(cons
     resource = resourceFromString(resourceNameIt->get<std::string>());
     if (resource == std::nullopt){
         badValueError = {true, "nodes/[]/data/resources/content/[]/name", std::format("Unknown resource: {}", resourceNameIt->get<std::string>())};
+        return std::nullopt;
     }
 
 

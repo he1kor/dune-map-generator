@@ -37,6 +37,7 @@ class Generation{
 
         Matrix<double> noiseMap;
         Matrix<Resource> spiceMap;
+        Matrix<bool> wallMask;
         
         // std::shared_ptr<const EdgeGraph<Identifiable, Identifiable>> defaultGraph = habbanyaErgSymmetry;
         std::shared_ptr<MapTemplate> mapTemplate;

@@ -4,6 +4,12 @@ file(GLOB_RECURSE SOURCES
 
 option(BUILD_WITH_CONSOLE "Build as a console application (for debugging output)" ON)
 
+configure_file(
+    "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json"
+    "${CMAKE_CURRENT_BINARY_DIR}/habbanya erg true 2.json"
+    COPYONLY
+)
+
 if(WIN32 AND NOT BUILD_WITH_CONSOLE)
     set(APP_ICON "${CMAKE_SOURCE_DIR}/assets/icons/app_icon.ico")
     set(RESOURCE_FILE "${CMAKE_SOURCE_DIR}/resources.rc")
@@ -62,4 +68,21 @@ FetchContent_MakeAvailable(dune2000-map-api)
 
 if(MINGW)
     target_link_libraries(${PROJECT_NAME} mingw32)
+endif()
+
+option(MAPGENERATOR_BUILD_TESTS "Build map generation regression tests" OFF)
+if(MAPGENERATOR_BUILD_TESTS)
+    enable_testing()
+    add_executable(resource_generation_regression
+        ../tests/resource_generation_regression.cc
+        state/template_picker.cpp
+        state/generation.cpp
+    )
+    target_include_directories(resource_generation_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(resource_generation_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
+    add_test(NAME resource_generation_regression COMMAND resource_generation_regression
+        "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json")
 endif()
