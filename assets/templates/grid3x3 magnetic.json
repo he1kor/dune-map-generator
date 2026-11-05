@@ -1,0 +1,98 @@
+{
+    "name": "3x3 magnetic grid",
+    "walls": {"resource": "cliff_rock"},
+    "octaves": {
+        "octave1": {"minRadius": 2.0, "maxRadius": 3.0},
+        "octave2": {"minRadius": 5.0, "maxRadius": 8.0},
+        "octave3": {"minRadius": 8.0, "maxRadius": 12.0}
+    },
+    "nodes": [
+        {
+            "id": 0,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.02,
+                "resources": {"content": [{"name": "sand", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        },
+        {
+            "id": 1,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.02,
+                "resources": {"content": [{"name": "sand", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        },
+        {
+            "id": 2,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.02,
+                "resources": {"content": [{"name": "sand", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        },
+        {
+            "id": 3,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.02,
+                "resources": {"content": [{"name": "sand", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        },
+        {
+            "id": 4,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.02,
+                "resources": {"content": [{"name": "rock", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        },
+        {
+            "id": 5,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.02,
+                "resources": {"content": [{"name": "sand", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        },
+        {
+            "id": 6,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.02,
+                "resources": {"content": [{"name": "sand", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        },
+        {
+            "id": 7,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.02,
+                "resources": {"content": [{"name": "sand", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        },
+        {
+            "id": 8,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.02,
+                "resources": {"content": [{"name": "sand", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        }
+    ],
+    "symmetrical_edges": [
+        {"ID_first": 0, "ID_second": 1, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}},
+        {"ID_first": 1, "ID_second": 2, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}},
+        {"ID_first": 3, "ID_second": 4, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}},
+        {"ID_first": 4, "ID_second": 5, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}},
+        {"ID_first": 6, "ID_second": 7, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}},
+        {"ID_first": 7, "ID_second": 8, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}},
+        {"ID_first": 0, "ID_second": 3, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}},
+        {"ID_first": 1, "ID_second": 4, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}},
+        {"ID_first": 2, "ID_second": 5, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}},
+        {"ID_first": 3, "ID_second": 6, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}},
+        {"ID_first": 4, "ID_second": 7, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}},
+        {"ID_first": 5, "ID_second": 8, "data": {"passes": {"minPassWidth": 3, "maxPassWidth": 6, "minWallLength": 2, "maxWallLength": 8}}}
+    ],
+    "asymmetrical_edges": []
+}

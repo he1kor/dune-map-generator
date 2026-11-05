@@ -4,11 +4,13 @@ file(GLOB_RECURSE SOURCES
 
 option(BUILD_WITH_CONSOLE "Build as a console application (for debugging output)" ON)
 
-configure_file(
-    "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json"
-    "${CMAKE_CURRENT_BINARY_DIR}/habbanya erg true 2.json"
-    COPYONLY
-)
+foreach(template IN ITEMS "habbanya erg true 2.json" "grid3x3 magnetic.json")
+    configure_file(
+        "${CMAKE_SOURCE_DIR}/assets/templates/${template}"
+        "${CMAKE_CURRENT_BINARY_DIR}/${template}"
+        COPYONLY
+    )
+endforeach()
 
 if(WIN32 AND NOT BUILD_WITH_CONSOLE)
     set(APP_ICON "${CMAKE_SOURCE_DIR}/assets/icons/app_icon.ico")
@@ -85,4 +87,16 @@ if(MAPGENERATOR_BUILD_TESTS)
     target_link_libraries(resource_generation_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
     add_test(NAME resource_generation_regression COMMAND resource_generation_regression
         "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json")
+    add_executable(magnetic_grid_regression
+        ../tests/magnetic_grid_regression.cc
+        state/template_picker.cpp
+        state/generation.cpp
+    )
+    target_include_directories(magnetic_grid_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(magnetic_grid_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
+    add_test(NAME magnetic_grid_regression COMMAND magnetic_grid_regression
+        "${CMAKE_SOURCE_DIR}/assets/templates/grid3x3 magnetic.json")
 endif()
