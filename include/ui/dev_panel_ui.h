@@ -118,7 +118,12 @@ public:
         if (!showDevPanel) return;
         
         if (ImGui::Begin("Dev Panel", &showDevPanel, ImGuiWindowFlags_AlwaysAutoResize)) {
-            
+            bool animate = generation.isAnimationEnabled();
+            if (ImGui::Checkbox("Animate", &animate)) generation.setAnimate(animate);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Show generation steps in the map preview. Slows generation for viewing.");
+            ImGui::Separator();
+            ImGui::BeginDisabled(generation.isRunning());
             ImGui::Text("Display Mode:");
             ImGui::Separator();
             
@@ -217,6 +222,7 @@ public:
                 }
             }
             
+            ImGui::EndDisabled();
             ImGui::Separator();
             ImGui::TextUnformatted("Press F1 to close");
         }

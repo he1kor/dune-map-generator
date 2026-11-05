@@ -1,6 +1,7 @@
 #include "app_layout.h"
 #include "colors.h"
 #include "generation_ui.h"
+#include "dev_panel_ui.h"
 #include "imgui_internal.h"
 #include "quick_settings_ui.h"
 #include "setup.h"
@@ -167,8 +168,50 @@ int main(int argc, char** argv) {
                     }
                 }
             }
+            // Status labels must remain usable even in the narrowest map panel.
+            io.DisplaySize = ImVec2(appLayout::minWindowWidth, appLayout::minWindowHeight);
+            for (auto stage : {GenerationStage::EMBED, GenerationStage::ZONE_BLOAT, GenerationStage::POST_PROCESS,
+                GenerationStage::BORDERS, GenerationStage::NOISE, GenerationStage::BLEND,
+                GenerationStage::RESOURCES, GenerationStage::FINISH}) {
+                generation.generationStage = stage;
+                generation.generationProgress = 0.5f;
+                require(ImGui::CalcTextSize(generation.statusText()).x <= 128.0f, "Status label does not fit the minimum panel width");
+                for (int frame = 0; frame < 3; ++frame) {
+                    ImGui::NewFrame();
+                    appLayout::build(settingsUI, filesUI, generationUI);
+                    ImGui::Render();
+                }
+                geometry();
+            }
+            generation.generationStage = GenerationStage::NONE;
+            generation.generationProgress = 0.0f;
+
+            DevPanelUI devPanel;
+            auto devFrame = [&] {
+                ImGui::NewFrame();
+                devPanel.handleInput();
+                appLayout::build(settingsUI, filesUI, generationUI);
+                devPanel.render(generation, renderer, picker);
+                ImGui::Render();
+            };
+            io.AddKeyEvent(ImGuiKey_F1, true);
+            devFrame();
+            io.AddKeyEvent(ImGuiKey_F1, false);
+            devFrame();
+            const auto* devWindow = ImGui::FindWindowByName("Dev Panel");
+            require(devWindow && devWindow->Active, "F1 did not open the developer panel");
+            io.AddMousePosEvent(devWindow->DC.CursorStartPos.x + ImGui::GetFrameHeight() * 0.5f,
+                devWindow->DC.CursorStartPos.y + ImGui::GetFrameHeight() * 0.5f);
+            devFrame();
+            for (bool enabled : {true, false}) {
+                io.AddMouseButtonEvent(0, true);
+                devFrame();
+                io.AddMouseButtonEvent(0, false);
+                devFrame();
+                require(generation.isAnimationEnabled() == enabled, "Animate checkbox did not update generation");
+            }
             std::cout << cases << " full-window scenarios remained stable across consecutive frames\n"
-                << "Minimum, reported, maximum and wide/short window sizes; collapsed/expanded settings; template limits passed\n";
+                << "Window sizes, template limits, generation status labels and F1 Animate checkbox passed\n";
         }
         ImGui::DestroyContext();
         return 0;

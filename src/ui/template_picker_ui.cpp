@@ -60,20 +60,22 @@ void TemplatePickerUI::buildErrors()
 }
 
 void TemplatePickerUI::buildGenerateButton(){
-    if (generationPtr->generationProgress == 1.0f || generationPtr->generationProgress == 0.0f){
-        bool disabled = templatePickerPtr->mapTemplate == nullptr;
-        ImGui::BeginDisabled(disabled);
-        const auto size = quickSettingsPtr->dimensions();
-        if (ImGui::Button("Generate", ImVec2(-1, 30))){
-            generationPtr->generate(templatePickerPtr->mapTemplate, size.width, size.height);
-            mapRenderer.setDistinctColors(*(templatePickerPtr->mapTemplate->zoneGraph));
+    const bool running = generationPtr->isRunning();
+    const bool noTemplate = templatePickerPtr->mapTemplate == nullptr;
+    ImGui::BeginDisabled(running || noTemplate);
+    const auto size = quickSettingsPtr->dimensions();
+    if (ImGui::Button(running ? "Generating..." : "Generate", ImVec2(-1, 30))){
+        try {
+            if (generationPtr->startAsync(templatePickerPtr->mapTemplate, size.width, size.height))
+                mapRenderer.setDistinctColors(*(templatePickerPtr->mapTemplate->zoneGraph));
+        } catch (const std::exception& error) {
+            initError(error.what());
         }
-        if (disabled && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-            ImGui::SetTooltip("No template is set!");
-        }
-        ImGui::EndDisabled();
     }
-    else ImGui::Button("Generation...", ImVec2(-1, 30));
+    if (noTemplate && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+        ImGui::SetTooltip("No template is set!");
+    }
+    ImGui::EndDisabled();
 }
 
 void TemplatePickerUI::buildTemplatePickButton(){
@@ -100,7 +102,9 @@ void TemplatePickerUI::build(){
 
 
 
+    ImGui::BeginDisabled(generationPtr->isRunning());
     buildTemplatePickButton();
+    ImGui::EndDisabled();
 
 
     ImGui::Dummy(ImVec2(0, 10));

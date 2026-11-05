@@ -75,6 +75,18 @@ endif()
 option(MAPGENERATOR_BUILD_TESTS "Build map generation regression tests" OFF)
 if(MAPGENERATOR_BUILD_TESTS)
     enable_testing()
+    add_executable(async_generation_regression
+        ../tests/async_generation_regression.cc
+        state/template_picker.cpp
+        state/generation.cpp
+    )
+    target_include_directories(async_generation_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(async_generation_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
+    add_test(NAME async_generation_regression COMMAND async_generation_regression
+        "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json")
     add_executable(resource_generation_regression
         ../tests/resource_generation_regression.cc
         state/template_picker.cpp

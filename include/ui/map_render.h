@@ -18,6 +18,8 @@
 #include <matrix.h>
 #include "resources.h"
 
+struct GenerationPreview;
+
 class MapRenderer {
 public:
     const int maxMapSize = 128;
@@ -124,6 +126,7 @@ public:
 
     const std::vector<uint32_t> convertMap(SmartMap map);
     const std::vector<uint32_t> convertResourceMatrix(const Matrix<Resource> &matrix);
+    std::vector<uint32_t> convertPreview(const GenerationPreview& preview);
 
 
     template <typename T>

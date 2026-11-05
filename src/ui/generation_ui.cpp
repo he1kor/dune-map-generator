@@ -3,6 +3,7 @@
 #include "map_render.h"
 #include <iostream>
 #include <string>
+#include <cstdio>
 
 
 GenerationUI::GenerationUI(Generation *generationPtr, MapRenderer *mapRendererPtr){
@@ -22,7 +23,7 @@ void GenerationUI::build(){
     
     ImGui::Text("Seed");
     ImGui::SetNextItemWidth(-1);
-    
+    ImGui::BeginDisabled(generationPtr->isRunning());
     
     if (generationPtr->isSeedRandom) {
         ImGui::BeginDisabled();
@@ -36,8 +37,21 @@ void GenerationUI::build(){
         ImGui::InputScalar("##Seed", ImGuiDataType_S64, &(generationPtr->seed));
     }
     ImGui::Checkbox("Use random##use random seed", &(generationPtr->isSeedRandom));
+    ImGui::EndDisabled();
 
     float available_space = std::max(0.0f, ImGui::GetContentRegionAvail().y - 30.0f - ImGui::GetStyle().ItemSpacing.y);
     ImGui::Dummy(ImVec2(0, available_space));
-    ImGui::ProgressBar(generationPtr->generationProgress, ImVec2(-1, 30));
+    char status[128];
+    if (generationPtr->isRunning())
+        std::snprintf(status, sizeof(status), "%s (%.0f%%)", generationPtr->statusText(), generationPtr->generationProgress * 100.0f);
+    else
+        std::snprintf(status, sizeof(status), "%s", generationPtr->statusText());
+    const bool fits = ImGui::CalcTextSize(status).x + 2 * ImGui::GetStyle().FramePadding.x <= ImGui::GetContentRegionAvail().x;
+    ImGui::ProgressBar(generationPtr->generationProgress, ImVec2(-1, 30), fits ? status : generationPtr->statusText());
+    if (ImGui::IsItemHovered()) {
+        if (!generationPtr->generationError.empty())
+            ImGui::SetTooltip("%s", generationPtr->generationError.c_str());
+        else if (generationPtr->isRunning())
+            ImGui::SetTooltip("%s\nProgress is estimated by generation stage.", status);
+    }
 }

@@ -1,4 +1,5 @@
 #include "map_render.h"
+#include "generation.h"
 
 #include <math.h>
 
@@ -144,6 +145,20 @@ const std::vector<uint32_t> MapRenderer::convertResourceMatrix(const Matrix<Reso
         }
     }   
     return result;
+}
+
+std::vector<uint32_t> MapRenderer::convertPreview(const GenerationPreview& preview) {
+    std::vector<uint32_t> pixels(preview.width * preview.height, 0xff000000);
+    if (!preview.zones.empty()) {
+        for (size_t i = 0; i < pixels.size(); ++i)
+            pixels[i] = zoneColors.at(Identifiable(preview.zones[i]));
+    } else {
+        for (const auto& [start, end] : preview.edges)
+            drawLine(pixels, preview.width, preview.height, start, end, 0xffaaaaaa);
+        for (const auto& point : preview.nodes)
+            drawCircle(pixels, preview.width, preview.height, static_cast<int>(point.x), static_cast<int>(point.y), 3, 0xff0000ff);
+    }
+    return pixels;
 }
 
 

@@ -100,16 +100,14 @@ int main(){
 
         devPanelUI.handleInput();
 
-        if (generation.generationStage != GenerationStage::NONE){
-            
-            generation.runIteration();
-
-            if (generation.generationStage == GenerationStage::EMBED)
-                mapRenderer.updateMap(mapRenderer.convertPlane(generation.plane, *(generation.mapTemplate->zoneGraph)), generation.plane.getWidth(), generation.plane.getHeight());
-            else if (generation.generationStage == GenerationStage::ZONE_BLOAT){
-                mapRenderer.updateMap(mapRenderer.convertGrid(*(generation.grid)), generation.plane.getWidth(), generation.plane.getHeight());
-            }
+        const bool wasRunning = generation.isRunning();
+        generation.poll();
+        if (wasRunning && !generation.isRunning() && !generation.generationError.empty() && generation.mapTemplate) {
+            mapRenderer.setDistinctColors(*generation.mapTemplate->zoneGraph);
+            devPanelUI.onGenerationComplete(generation, mapRenderer);
         }
+        if (auto preview = generation.takePreview(); preview && generation.isAnimationEnabled())
+            mapRenderer.updateMap(mapRenderer.convertPreview(*preview), preview->width, preview->height);
         if (generation.is_done){
             generation.is_done = false;
 
