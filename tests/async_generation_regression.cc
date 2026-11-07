@@ -72,6 +72,15 @@ int main(int argc, char** argv) {
         finish(generation);
         require(generation.is_done && generation.generationError.empty() && mapData(generation) == expected,
             "Background generation differs from synchronous generation");
+        const auto synchronousIntersections = baseline.plane.findEdgeIntersections();
+        const auto asynchronousIntersections = generation.plane.findEdgeIntersections();
+        require(asynchronousIntersections.size() == synchronousIntersections.size(),
+            "Async result lost embedding validation state");
+        for (size_t i = 0; i < synchronousIntersections.size(); ++i) {
+            require(asynchronousIntersections[i].firstEdge == synchronousIntersections[i].firstEdge
+                && asynchronousIntersections[i].secondEdge == synchronousIntersections[i].secondEdge,
+                "Async result reports different intersecting edges");
+        }
 
         const auto previousGrid = generation.grid;
         generation.setAnimate(true);

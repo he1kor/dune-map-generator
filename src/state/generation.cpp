@@ -204,8 +204,8 @@ void Generation::poll() {
 
 void Generation::acceptResult(Generation& result) {
     // Transfer completed buffers only. The simulator's self pointers stay with its worker.
-    using RenderPlane = Plane<ResourceRadialNode<Resource>>;
-    static_cast<RenderPlane&>(plane) = std::move(static_cast<RenderPlane&>(result.plane));
+    // Keep the embedding graph with its spots so validation also works after an async run.
+    plane = std::move(result.plane);
     noiseMap = std::move(result.noiseMap);
     spiceMap = std::move(result.spiceMap);
     wallMask = std::move(result.wallMask);

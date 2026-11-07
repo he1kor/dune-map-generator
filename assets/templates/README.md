@@ -57,6 +57,42 @@ rejected. A directed rule requires a corresponding undirected connection. Each
 zone needs at least one undirected connection because the current generator
 starts zone expansion from graph edges.
 
+### Zone sizes and connection geometry
+
+The current force-directed embedding uses the same spring target for every
+connection: `sqrt(width * height / (3.5 * numberOfZones))`. This sets a global
+spacing scale, not a guaranteed distance: node repulsion, border repulsion,
+magnetic forces and the fixed iteration budget also affect final positions.
+Embedding does not read node radii or connection parameters.
+The active `stepForceDirected()` path does not call the existing
+`applyEdgeRepulse()` helper and has no constraint preventing edge crossings.
+
+Node `data.radius` is a relative weight used later when seeding zone growth.
+For an edge from A to B, A receives the first `rA / (rA + rB)` fraction of the
+rasterized center-to-center line, and B receives the remainder (rounded to
+whole tiles). Thus radii 3 and 1 split that line approximately 75%/25%.
+Multiplying every radius by the same amount has no effect. Random growth and
+smoothing follow, so radius does not prescribe a final tile area or a geometric
+radius in map units.
+
+The connection fields currently have these meanings:
+
+| Fields | Used for |
+| --- | --- |
+| `passes.minPassWidth`, `maxPassWidth` | Passage widths on the generated zone border |
+| `passes.minWallLength`, `maxWallLength` | Wall lengths between passages |
+| `resourceBlend.distance` | Resource blending across a zone border |
+| `intakeDistance`, `areaGuaranteed`, `bonusValue` | Directed resource influence and guarantees during blending |
+
+There is currently no per-connection target distance or required total shared
+border length. A longer passage request does not stretch either zone during
+embedding or growth; it is applied when passages are generated on existing
+borders.
+
+When embedding finishes, intersecting straight graph edges are listed in a
+console warning before rasterization and zone growth. This is diagnostic only;
+generation continues. See GenCore's embedding diagnostics for the query API.
+
 Map width and height are selected in the application and passed to generation.
 Each side must be an even number from **32 to 128 cells**. Templates without
 dimension rules allow every size in that range, including rectangles.
