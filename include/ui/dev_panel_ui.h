@@ -122,6 +122,10 @@ public:
             if (ImGui::Checkbox("Animate", &animate)) generation.setAnimate(animate);
             if (ImGui::IsItemHovered())
                 ImGui::SetTooltip("Show generation steps in the map preview. Slows generation for viewing.");
+            bool showZoneIds = mapRenderer.areZoneIdsVisible();
+            if (ImGui::Checkbox("Show zone IDs", &showZoneIds)) mapRenderer.setZoneIdsVisible(showZoneIds);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Show each zone's ID at its node center, including on the generated map.");
             ImGui::Separator();
             ImGui::BeginDisabled(generation.isRunning());
             ImGui::Text("Display Mode:");

@@ -6,6 +6,7 @@
 #include <set>
 #include <nlohmann/json.hpp>
 #include "systemsound.h"
+#include "planar_layout.h"
 
 namespace {
 using Json = nlohmann::json;
@@ -247,10 +248,19 @@ SymEdges readSymEdges(const Json& json, const std::set<int>& ids) {
             const auto blendPath = child(dataPath, "resourceBlend");
             blendDistance = integer(member(*it, "distance", blendPath), child(blendPath, "distance"));
         }
-        result.emplace(std::make_pair(first, second), BasicSymConnection(blendDistance, tiles::PassParams{
+        BasicSymConnection connection(blendDistance, tiles::PassParams{
             static_cast<size_t>(minPass), static_cast<size_t>(maxPass),
             static_cast<size_t>(minWall), static_cast<size_t>(maxWall)
-        }));
+        });
+        if (const auto it = data.find("geometry"); it != data.end()) {
+            const auto geometryPath = child(dataPath, "geometry");
+            object(*it, geometryPath);
+            if (const auto distance = it->find("preferredCenterDistance"); distance != it->end())
+                connection.geometry.preferredCenterDistance = positive(*distance, child(geometryPath, "preferredCenterDistance"));
+            if (const auto weight = it->find("distanceWeight"); weight != it->end())
+                connection.geometry.distanceWeight = nonnegative(*weight, child(geometryPath, "distanceWeight"));
+        }
+        result.emplace(std::make_pair(first, second), connection);
     }
     return result;
 }
@@ -315,6 +325,11 @@ std::shared_ptr<MapTemplate> readGraph(const Json& json) {
     }
     result->zoneGraph = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection>>(
         rawGraph, symEdges, asymEdges);
+    try {
+        result->embeddingTopology = planar::makeTopology(*result->zoneGraph);
+    } catch (const planar::NonPlanarGraph& error) {
+        invalid("symmetrical_edges", error.what());
+    }
     return result;
 }
 } // namespace

@@ -205,6 +205,45 @@ int main(int argc, char** argv) {
             {"data", {{"intakeDistance", 0}, {"areaGuaranteed", 0}, {"bonusValue", 0}}}});
         reject(data, "asymmetrical_edges/0");
 
+        // Geometry is optional and soft; malformed numbers still identify their field.
+        invalidAt("symmetrical_edges/0/data/geometry", nullptr);
+        const std::string geometryPath = "symmetrical_edges/0/data/geometry/";
+        for (const Json value : {Json(0), Json(-1), Json("15"), Json(true), Json(nullptr),
+                Json(std::numeric_limits<double>::infinity())})
+            invalidAt(geometryPath + "preferredCenterDistance", value);
+        for (const Json value : {Json(-1), Json("2"), Json(true), Json(nullptr),
+                Json(std::numeric_limits<double>::quiet_NaN())})
+            invalidAt(geometryPath + "distanceWeight", value);
+        data = baseline;
+        data["symmetrical_edges"][0]["data"]["geometry"] =
+            {{"preferredCenterDistance", 15.0}, {"distanceWeight", 2.0}};
+        require(picker.tryReadEdgeGraph(data), "Valid edge geometry was rejected");
+        const auto& firstEdge = data["symmetrical_edges"][0];
+        const auto geometry = picker.mapTemplate->zoneGraph->getSymEdge(
+            Identifiable(firstEdge["ID_first"]), Identifiable(firstEdge["ID_second"])).geometry;
+        require(geometry.preferredCenterDistance == 15.0 && geometry.distanceWeight == 2.0,
+            "Edge geometry was not preserved");
+        require(bool(picker.mapTemplate->embeddingTopology), "Planar topology was not cached");
+
+        // K3,3 passes the elementary edge-count bound, so require a real planarity test.
+        for (bool bipartite : {true, false}) {
+            data = grid;
+            data["nodes"].erase(data["nodes"].begin() + (bipartite ? 6 : 5), data["nodes"].end());
+            data["symmetrical_edges"] = Json::array();
+            data["asymmetrical_edges"] = Json::array();
+            for (int a = 0; a < (bipartite ? 6 : 5); ++a) {
+                for (int b = a + 1; b < (bipartite ? 6 : 5); ++b) {
+                    if (bipartite && !(a < 3 && b >= 3)) continue;
+                    auto edge = grid["symmetrical_edges"][0];
+                    edge["ID_first"] = a; edge["ID_second"] = b;
+                    data["symmetrical_edges"].push_back(edge);
+                }
+            }
+            reject(data, "symmetrical_edges");
+            require(picker.badValueError.expectedType.find("obstruction") != std::string::npos,
+                "Nonplanarity error omitted its obstruction");
+        }
+
         auto integerData = baseline;
         integers(integerData);
         require(generate(integerData, 3) == generate(baseline, 3), "Numeric syntax changed the generated map");

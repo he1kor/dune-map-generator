@@ -165,8 +165,8 @@
         {
             "id": 10,
             "data": {
-                "radius": 1.0,
-                "susceptibility": 0.0,
+                "radius": 3.0,
+                "susceptibility": -0.125,
                 "resources": {
                     "octave1_weight": 1.0,
                     "octave2_weight": 1.0,
@@ -199,8 +199,8 @@
         {
             "id": 11,
             "data": {
-                "radius": 1.0,
-                "susceptibility": 0.0,
+                "radius": 3.0,
+                "susceptibility": -0.125,
                 "resources": {
                     "octave1_weight": 1.0,
                     "octave2_weight": 1.0,
@@ -233,8 +233,8 @@
         {
             "id": 12,
             "data": {
-                "radius": 1.0,
-                "susceptibility": 0.0,
+                "radius": 3.0,
+                "susceptibility": -0.125,
                 "resources": {
                     "octave1_weight": 1.0,
                     "octave2_weight": 1.0,
@@ -301,8 +301,8 @@
         {
             "id": 14,
             "data": {
-                "radius": 1.0,
-                "susceptibility": 0.0,
+                "radius": 3.0,
+                "susceptibility": -0.125,
                 "resources": {
                     "octave1_weight": 1.0,
                     "octave2_weight": 1.0,
@@ -335,8 +335,8 @@
         {
             "id": 15,
             "data": {
-                "radius": 1.0,
-                "susceptibility": 0.0,
+                "radius": 3.0,
+                "susceptibility": -0.125,
                 "resources": {
                     "octave1_weight": 1.0,
                     "octave2_weight": 1.0,
@@ -369,8 +369,8 @@
         {
             "id": 16,
             "data": {
-                "radius": 1.0,
-                "susceptibility": 0.0,
+                "radius": 3.0,
+                "susceptibility": -0.125,
                 "resources": {
                     "octave1_weight": 1.0,
                     "octave2_weight": 1.0,
@@ -403,8 +403,8 @@
         {
             "id": 17,
             "data": {
-                "radius": 1.0,
-                "susceptibility": 0.0,
+                "radius": 3.0,
+                "susceptibility": -0.125,
                 "resources": {
                     "octave1_weight": 1.0,
                     "octave2_weight": 1.0,
@@ -471,8 +471,8 @@
         {
             "id": 19,
             "data": {
-                "radius": 1.0,
-                "susceptibility": 0.0,
+                "radius": 3.0,
+                "susceptibility": -0.125,
                 "resources": {
                     "octave1_weight": 1.0,
                     "octave2_weight": 1.0,

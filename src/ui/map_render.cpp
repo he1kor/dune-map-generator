@@ -1,7 +1,8 @@
 #include "map_render.h"
 #include "generation.h"
 
-#include <math.h>
+#include <cmath>
+#include <string>
 
 MapRenderer::MapRenderer(Palette *palette) : textureID(0), mapWidth(0), mapHeight(0), palette(palette) {}
 
@@ -148,6 +149,9 @@ const std::vector<uint32_t> MapRenderer::convertResourceMatrix(const Matrix<Reso
 }
 
 std::vector<uint32_t> MapRenderer::convertPreview(const GenerationPreview& preview) {
+    zoneNodes.clear();
+    for (size_t i = 0; i < std::min(preview.nodes.size(), preview.nodeIds.size()); ++i)
+        zoneNodes.emplace_back(preview.nodeIds[i], preview.nodes[i]);
     std::vector<uint32_t> pixels(preview.width * preview.height, 0xff000000);
     if (!preview.zones.empty()) {
         for (size_t i = 0; i < pixels.size(); ++i)
@@ -229,5 +233,23 @@ void MapRenderer::render(float availableHeight){
         ImVec2(imagePos.x + renderWidth, imagePos.y + renderHeight)
     );
     draw_list->AddCallback(platform_io.DrawCallback_SetSamplerLinear);
+
+    if (showZoneIds) {
+        draw_list->PushClipRect(imagePos, ImVec2(imagePos.x + renderWidth, imagePos.y + renderHeight), true);
+        for (const auto& [id, node] : zoneNodes) {
+            if (!std::isfinite(node.x) || !std::isfinite(node.y)
+                || node.x < 0 || node.y < 0 || node.x >= mapWidth || node.y >= mapHeight)
+                continue;
+            const std::string label = std::to_string(id);
+            const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+            const ImVec2 textPos(imagePos.x + node.x * scale - textSize.x * 0.5f,
+                imagePos.y + node.y * scale - textSize.y * 0.5f);
+            draw_list->AddRectFilled(ImVec2(textPos.x - 3, textPos.y - 1),
+                ImVec2(textPos.x + textSize.x + 3, textPos.y + textSize.y + 1),
+                IM_COL32(0, 0, 0, 200), 3.0f);
+            draw_list->AddText(textPos, IM_COL32(255, 255, 255, 255), label.c_str());
+        }
+        draw_list->PopClipRect();
+    }
     ImGui::Dummy(ImVec2(availableSize.x, squareSize));
 }

@@ -138,6 +138,16 @@ public:
     int getOptimalMapSize(int availableWidth, int availableHeight);
     void render(float availableHeight);
 
+    bool areZoneIdsVisible() const { return showZoneIds; }
+    void setZoneIdsVisible(bool visible) { showZoneIds = visible; }
+
+    template <typename T>
+    void setZoneNodes(const Plane<T>& plane) {
+        zoneNodes.clear();
+        for (auto id : plane.getIDs())
+            zoneNodes.emplace_back(id.getID(), plane.getSpot(id).getCoords());
+    }
+
     
 private:
     std::vector<uint32_t> generateDistinctColors(int n);
@@ -146,6 +156,8 @@ private:
     int mapHeight;
     Palette* palette;
     std::unordered_map<Identifiable, uint32_t, IDHash> zoneColors;
+    bool showZoneIds = false;
+    std::vector<std::pair<int, DoubleVector2>> zoneNodes;
 };
 
 template <typename T>

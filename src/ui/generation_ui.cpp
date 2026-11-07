@@ -17,6 +17,8 @@ void GenerationUI::build(){
     const float spacing = ImGui::GetStyle().ItemSpacing.y;
     const float controlsHeight = 5.0f + 2 * spacing + ImGui::GetTextLineHeightWithSpacing()
         + 2 * ImGui::GetFrameHeightWithSpacing() + 30.0f;
+    if (!generationPtr->isRunning() && mapRendererPtr->areZoneIdsVisible())
+        mapRendererPtr->setZoneNodes(generationPtr->plane);
     mapRendererPtr->render(std::max(0.0f, ImGui::GetContentRegionAvail().y - controlsHeight));
 
     ImGui::Dummy(ImVec2(0, 5));

@@ -5,6 +5,8 @@
 #include <nodes.h>
 #include "map_dimensions.h"
 
+namespace planar { struct Topology; }
+
 class MapTemplate{
 public:
     MapTemplate(){};
@@ -12,4 +14,5 @@ public:
     Resource wallResource = Resource::CLIFF_ROCK;
     MapDimensionLimits dimensionLimits;
     std::shared_ptr<EdgeGraph<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection>> zoneGraph;
+    std::shared_ptr<const planar::Topology> embeddingTopology;
 };

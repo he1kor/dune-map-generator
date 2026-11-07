@@ -4,7 +4,11 @@ file(GLOB_RECURSE SOURCES
 
 option(BUILD_WITH_CONSOLE "Build as a console application (for debugging output)" ON)
 
-foreach(template IN ITEMS "habbanya erg true 2.json" "grid3x3 magnetic.json")
+foreach(template IN ITEMS
+    "habbanya erg true 2.json"
+    "grid3x3 magnetic.json"
+    "edge geometry example.json"
+)
     configure_file(
         "${CMAKE_SOURCE_DIR}/assets/templates/${template}"
         "${CMAKE_CURRENT_BINARY_DIR}/${template}"

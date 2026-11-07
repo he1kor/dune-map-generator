@@ -36,6 +36,7 @@ struct GenerationPreview {
     int width = 0;
     int height = 0;
     std::vector<DoubleVector2> nodes;
+    std::vector<int> nodeIds; // Same order as nodes, also present in zone previews.
     std::vector<std::pair<DoubleVector2, DoubleVector2>> edges;
     std::vector<int> zones;
 };

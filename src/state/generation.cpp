@@ -53,7 +53,10 @@ void Generation::generate(std::shared_ptr<MapTemplate> mapTemplate, int width, i
     deduceSeed();
     plane.clear();
     plane.applyMagnetGrid(cornerMagnets);
-    plane.initEmbed(mapTemplate->zoneGraph);
+    EdgeGeometryMap preferences;
+    for (const auto& [edge, connection] : mapTemplate->zoneGraph->getSymEdges())
+        preferences.emplace(edge, connection.geometry);
+    plane.initEmbed(mapTemplate->zoneGraph, preferences, static_cast<std::uint64_t>(seed), mapTemplate->embeddingTopology);
     generationStage = GenerationStage::EMBED;
 }
 
@@ -224,13 +227,16 @@ std::unique_ptr<GenerationPreview> Generation::makePreview() const {
     auto frame = std::make_unique<GenerationPreview>();
     frame->width = static_cast<int>(plane.getWidth());
     frame->height = static_cast<int>(plane.getHeight());
+    for (auto id : plane.getIDs()) {
+        frame->nodes.push_back(plane.getSpot(id).getCoords());
+        frame->nodeIds.push_back(id.getID());
+    }
     if (grid) {
         frame->zones.reserve(frame->width * frame->height);
         for (auto id : *grid) frame->zones.push_back(id.getID());
     } else {
         for (auto id : plane.getIDs()) {
             const auto start = plane.getSpot(id).getCoords();
-            frame->nodes.push_back(start);
             for (auto neighbor : mapTemplate->zoneGraph->getNode(id).getNeighbours()) {
                 if (neighbor > id) frame->edges.emplace_back(start, plane.getSpot(neighbor).getCoords());
             }
@@ -263,7 +269,7 @@ void Generation::deduceSeed(){
 }
 
 void Generation::embedTemplate(){
-    if (!plane.stepForceDirected()){
+    if (!plane.stepPlanar()){
         grid = std::make_shared<Grid<ResourceRadialNode<Resource>>>(safeRasterizePlane(plane));
         generationStage = GenerationStage::ZONE_BLOAT;
         generationProgress = 0.20f;

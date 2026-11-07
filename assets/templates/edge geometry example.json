@@ -1,0 +1,72 @@
+{
+    "name": "Edge geometry: short, long and weighted",
+    "dimensions": {
+        "width": {"min": 64, "max": 64},
+        "height": {"min": 64, "max": 64}
+    },
+    "walls": {"resource": "cliff_rock"},
+    "octaves": {
+        "octave1": {"minRadius": 2.0, "maxRadius": 3.0}
+    },
+    "nodes": [
+        {
+            "id": 1,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {"content": [{"name": "rock", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        },
+        {
+            "id": 2,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {"content": [{"name": "sand", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        },
+        {
+            "id": 3,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {"content": [{"name": "dunes", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        },
+        {
+            "id": 4,
+            "data": {
+                "radius": 1.0,
+                "susceptibility": 0.0,
+                "resources": {"content": [{"name": "spice", "startThreshold": 0.0, "endThreshold": 1.0}]}
+            }
+        }
+    ],
+    "symmetrical_edges": [
+        {
+            "ID_first": 1,
+            "ID_second": 2,
+            "data": {
+                "geometry": {"preferredCenterDistance": 8.0, "distanceWeight": 20.0},
+                "passes": {"minPassWidth": 2, "maxPassWidth": 5, "minWallLength": 2, "maxWallLength": 8}
+            }
+        },
+        {
+            "ID_first": 1,
+            "ID_second": 3,
+            "data": {
+                "geometry": {"preferredCenterDistance": 8.0, "distanceWeight": 1.0},
+                "passes": {"minPassWidth": 2, "maxPassWidth": 5, "minWallLength": 2, "maxWallLength": 8}
+            }
+        },
+        {
+            "ID_first": 1,
+            "ID_second": 4,
+            "data": {
+                "geometry": {"preferredCenterDistance": 24.0, "distanceWeight": 20.0},
+                "passes": {"minPassWidth": 2, "maxPassWidth": 5, "minWallLength": 2, "maxWallLength": 8}
+            }
+        }
+    ],
+    "asymmetrical_edges": []
+}
