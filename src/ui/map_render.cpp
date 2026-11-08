@@ -190,43 +190,30 @@ void MapRenderer::updateMap(const std::vector<uint32_t> &pixels, int width, int 
 }
 
 int MapRenderer::getOptimalMapSize(int availableWidth, int availableHeight){
-    return std::min(
-        (std::max(0, std::min(availableWidth, availableHeight)) / maxMapSize) * maxMapSize,
-        (maxScaleFactor * maxMapSize)
-    );
+    if (mapWidth <= 0 || mapHeight <= 0) return 0;
+    const int scale = std::max(0, std::min(availableWidth / mapWidth, availableHeight / mapHeight));
+    return scale * std::max(mapWidth, mapHeight);
 }
 
 void MapRenderer::render(float availableHeight){
     if (textureID == 0 || mapWidth == 0 || mapHeight == 0) return;
     
     ImVec2 availableSize = ImGui::GetContentRegionAvail();
-    float squareSize = getOptimalMapSize(static_cast<int>(availableSize.x), static_cast<int>(availableHeight));
-    if (squareSize <= 0) return;
-    
-    float scale = squareSize / maxMapSize;
+    const int longestSide = getOptimalMapSize(static_cast<int>(availableSize.x), static_cast<int>(availableHeight));
+    if (longestSide <= 0) return;
+    const float scale = longestSide / std::max(mapWidth, mapHeight);
     
     float renderWidth = mapWidth * scale;
     float renderHeight = mapHeight * scale;
     
-    float offsetX = (availableSize.x - squareSize) * 0.5f;
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-    ImVec2 squarePos(cursorPos.x + offsetX, cursorPos.y);
-    
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddRectFilled(
-        squarePos, 
-        ImVec2(squarePos.x + squareSize, squarePos.y + squareSize), 
-        IM_COL32(43, 33, 32, 255)
-    );
-    
-    // Draw the map texture (centered)
-    offsetX = (squareSize - renderWidth) * 0.5f;
-    float offsetY = (squareSize - renderHeight) * 0.5f;
     
     // ImGui's OpenGL sampler overrides the texture's GL_NEAREST parameters.
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     draw_list->AddCallback(platform_io.DrawCallback_SetSamplerNearest);
-    ImVec2 imagePos(squarePos.x + offsetX, squarePos.y + offsetY);
+    // Integer scale and pixel-aligned origin keep every map cell crisp.
+    ImVec2 imagePos(std::floor(cursorPos.x + (availableSize.x - renderWidth) * 0.5f), std::floor(cursorPos.y));
     draw_list->AddImage(
         (ImTextureID)(intptr_t)textureID,
         imagePos,
@@ -251,5 +238,5 @@ void MapRenderer::render(float availableHeight){
         }
         draw_list->PopClipRect();
     }
-    ImGui::Dummy(ImVec2(availableSize.x, squareSize));
+    ImGui::Dummy(ImVec2(availableSize.x, renderHeight));
 }

@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <expected>
+#include <string>
 
 enum class FileDialogStatus{
     CANCELED,
@@ -15,6 +16,7 @@ public:
         return instance;
     }
     std::expected<std::filesystem::path, FileDialogStatus> tryGetPathFromDialog();
+    std::expected<std::filesystem::path, FileDialogStatus> tryGetSavePathFromDialog(const std::string& defaultName);
 private:
     FileDialog();
     ~FileDialog();

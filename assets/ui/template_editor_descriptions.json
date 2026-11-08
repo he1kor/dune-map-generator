@@ -1,0 +1,111 @@
+{
+    "parameters": {
+        "Template name": "The template's display name in the editor and generator. This does not rename the JSON file.",
+        "Node ID": "A unique non-negative whole number identifying this zone. Changing it updates every connection and directed rule that refers to the zone.",
+        "Radius": "A positive relative size weight. Larger values give this zone a larger share of growth seeds and influence embedding spacing. It is not a guaranteed final area. The editor square grows with this value.",
+        "Susceptibility": "Magnetic attraction to the map's center. Positive values attract, negative values repel, and zero is neutral. Planarity and map boundaries can limit movement.",
+        "Custom wall resource": "Choose a material for generated boundary walls. When disabled, walls use Cliff rock.",
+        "Wall material": "The resource used to paint generated walls between zones, including walls between sand zones.",
+        "Octave count": "Use one to three noise layers. Removing a layer also removes its weights from every zone.",
+        "Minimum radius": "The smallest noise feature radius for this octave. Must be positive and no larger than the maximum radius.",
+        "Maximum radius": "The largest noise feature radius for this octave. Larger radii generally produce broader resource patches.",
+        "Override": "Enable an explicit noise weight for this zone and octave. An omitted weight defaults to zero.",
+        "Weight": "This octave's non-negative contribution to the zone's resource noise. Larger weights make that layer more influential. An omitted weight is zero.",
+        "Material": "The resource assigned to this noise interval. Its color fills the corresponding vertical band in the editor square.",
+        "Start threshold": "The lower bound of this resource's noise interval, from 0 to 1. Threshold zero is the bottom of the editor square. All positive intervals together must cover 0 to 1 without gaps or overlaps.",
+        "End threshold": "The upper bound of this resource's noise interval, from its start to 1. Threshold one is the top of the square. Match adjoining boundaries to avoid gaps or overlaps.",
+        "Restrict map dimensions": "Optionally limit the map sizes available in the Generator tab. Without restrictions, each side can be any even number from 32 to 128.",
+        "Set min": "Enable an inclusive minimum bound. Width and height must be even and between 32 and 128; aspect ratio is width divided by height.",
+        "Set max": "Enable an inclusive maximum bound. The restrictions must allow at least one supported map size.",
+        "min": "Inclusive lower bound. Width and height use even cell counts (32 to 128). Aspect ratio uses width / height, for example 1 for a square or 2 for twice as wide as tall.",
+        "max": "Inclusive upper bound. It must be at least the minimum and allow at least one even width/height pair.",
+        "Minimum pass width": "The minimum width of openings through the generated border, in cells. Cannot exceed the maximum. On the canvas, passages are transparent gaps.",
+        "Maximum pass width": "The maximum width of border openings, in cells. This affects passages, not the distance between zone centers.",
+        "Minimum wall length": "The minimum length of wall between passages, in cells. Cannot exceed the maximum. Black segments represent walls on the canvas.",
+        "Maximum wall length": "The maximum length of wall between passages, in cells. Zero wall lengths allow continuous openings.",
+        "Resource blending": "Enable resource mixing across this shared border. This shared setting applies to both zones; directed rules below control each direction separately.",
+        "Blend distance": "The non-negative whole-number reach of shared resource blending across this border, in cells. Zero disables this shared reach.",
+        "Preferred center distance": "Enable a preferred generation distance between the two zone seeds. Disabling it uses radius-derived spacing. The editor's drawn positions never set this distance.",
+        "Center distance": "A positive target distance in map cells. This is a soft preference: planarity, bounds and other forces may prevent an exact match.",
+        "Custom distance weight": "Override the strength of the center-distance preference. The default is 1.",
+        "Distance weight": "The non-negative importance of fitting the desired center distance. Larger values prioritize this edge; zero disables its distance objective without removing the connection.",
+        "Enable directed rule": "Enable resource influence from the first displayed zone to the second. The reverse rule is independent and requires the same shared connection.",
+        "Intake distance": "A non-negative whole-number distance controlling the spatial reach of this directed resource intake during blending.",
+        "Guaranteed area": "A non-negative whole-number budget of cells for guaranteed directed resource influence near this border. This is not a guarantee of the zone's total final area.",
+        "Bonus value": "A non-negative weight added to resource influence by this directed rule. Larger bonuses strengthen the rule's contribution during blending.",
+        "default": "Configure this template parameter. Apply validates the value before changing the document."
+    },
+    "text": {
+        "selection_mode": "Selection mode (V)\nCtrl-click or drag a box to select multiple zones.",
+        "edge_mode": "Edge mode (E)\nClick two zones to connect them.\nOr select a zone, hold Shift and click another.",
+        "fit_graph": "Fit all zones in view (F / Home)",
+        "empty_canvas": "Double-click the canvas to create your first node.",
+        "canvas_status": "{count} selected  |  {mode}  |  F2: help",
+        "node_tooltip": "Node {id}\nRadius: {radius}\nSusceptibility: {susceptibility}",
+        "edge_tooltip": "Connection {first} - {second}",
+        "dimensions": "Width and height must be even, from 32 to 128. Aspect ratio is width / height.",
+        "automatic_value": "Automatic",
+        "resource_intervals": "Positive intervals must cover 0 to 1 without gaps or overlaps. Split an interval to add a resource row.",
+        "save_changes": "Save your template changes before continuing?",
+        "unapplied_changes": "This menu has unapplied changes.",
+        "discard_changes": "Discard them or keep editing?",
+        "saved": "Template saved: {filename}",
+        "generation_selected": "Template selected. Open the Generator tab to generate a map.",
+        "node_copied": "Node data copied.",
+        "edge_copied": "Connection data copied.",
+        "node_pasted": "Node data pasted to {count} zones.",
+        "edge_pasted": "Connection data pasted.",
+        "map_dimensions": "Even numbers, 32-128 cells.",
+        "map_square": "Square map: both sides change together.",
+        "map_aspect": "Width / height: {min} to {max}.",
+        "map_adjust_other": "The other side adjusts to keep this shape.",
+        "map_adjusted": "Size adjusted to fit this template.",
+        "topology_warning": "This graph topology is non-planar: its connections cannot be drawn without crossings, regardless of node placement. Remove or change connections to restore planarity. Auto place is disabled and generation cannot use this topology. Crossed lines in a manual drawing alone do not mean the topology is non-planar.",
+        "auto_place": "Arrange nodes as a compact diagram. Prefer rectangular boundaries, symmetric rows and columns, and horizontal, vertical or 45-degree connections. Grid snapping preserves topology and avoids node overlaps. Leave room for one complete edge pattern at 100% zoom, then fit the whole graph in view. Only visualizer positions change; Undo restores the previous arrangement.",
+        "auto_place_disabled": "Auto place is unavailable while the graph has a topology warning. Remove or change connections until the warning clears.",
+        "auto_placed": "Nodes placed automatically. Undo restores the previous positions."
+    },
+    "help": [
+        {
+            "title": "Canvas",
+            "paragraphs": [
+                "Double-click empty space to create a zone. Double-click a zone or edge to edit it. Drag a zone to move the selection. Drag empty space to select a group; Ctrl-click adds or removes individual zones.",
+                "V: selection mode. E: edge mode. To connect quickly, click zone A, hold Shift and click zone B. Shift temporarily selects edge mode; release it to return to your chosen mode.",
+                "Ctrl while dragging: snap the grabbed zone's center to grid crosses or cell centers (32 units between the two grids). All selected zones keep their relative spacing. Ctrl+A: select all. Delete: remove selection. Enter: edit selection. Esc: clear selection or cancel a pending edge.",
+                "Wheel: zoom at the pointer. Middle or right drag: pan. F or Home: fit graph.",
+                "Auto place creates a compact diagram with rectangular boundaries and symmetric rows and columns where topology permits. Grid-like graphs are laid out as grids; irregular graphs use a certified planar construction. Positions snap to grid crosses or cell centers and are checked for node overlaps and edge crossings. Connections leave room for one full dotted pattern at 100% zoom, and the whole graph is fitted into the canvas. The top menu shows (!) for non-planar connection topology; Auto place is disabled until it is fixed. Placement changes only visualizer positions and is one undo step."
+            ]
+        },
+        {
+            "title": "Files and history",
+            "paragraphs": [
+                "Ctrl+C: copy data from the active zone or connection. Ctrl+V: paste to all selected zones or the selected connection. Copy data and Paste data are also in Edit and the right-click menu. IDs, canvas positions and connections stay unchanged. Edge data includes both directed rules: the source first-to-second rule maps to the destination first-to-second rule. A disabled source direction clears that destination rule. Node and edge clipboards are separate types; incompatible or invalid data is rejected without changes. When several zones are selected, Copy data uses the last clicked zone.",
+                "Ctrl+N: new. Ctrl+O: open. Ctrl+S: save. Ctrl+Shift+S: save as. Ctrl+Z: undo. Ctrl+Y or Ctrl+Shift+Z: redo. Ctrl+comma: global settings. Ctrl+Enter: use for generation. Each group move and applied settings menu is one document undo step. Inside a menu, Undo/Redo also works on individual fields, toggles and resource rows before applying.",
+                "Undo/redo notifications list changed values as from -> to. Notifications stack and let mouse input pass through to controls below; only each message's x button captures clicks. Click x to dismiss it, or let it fade after four seconds. Hover does not extend its lifetime. Selection and camera navigation do not edit the template."
+            ]
+        },
+        {
+            "title": "Settings menus",
+            "paragraphs": [
+                "Enter applies the menu. Escape, Cancel and the x button close it. If you changed values, a confirmation lets you keep editing or discard them. Hover any (?) marker to learn what that parameter does. F2 opens this help."
+            ]
+        },
+        {
+            "title": "Template basics",
+            "paragraphs": [
+                "A zone is a node with a unique ID, relative radius and magnetic susceptibility. Its resource intervals cover 0 to 1 without gaps or overlaps and color the square from bottom to top. Noise octaves control patch scales; per-zone weights control their contributions.",
+                "Edges describe shared border walls, passages and resource blending. Directed rules apply independently from A to B and from B to A. Optional center distances affect generation spacing; drawing a longer edge does not set a generation distance.",
+                "Canvas positions are saved as visualizer metadata and never affect generation. Drafts may have isolated zones or nonplanar graphs. Use for generation validates a snapshot and selects it in the Generator tab; later edits require selecting a new snapshot. Canvas coordinates are stored with at most two decimal places.",
+                "Save in assets/templates if you want changes to survive CMake configuration. Runtime JSON copies in build/src can be replaced by configuration."
+            ]
+        }
+    ],
+    "materials": {
+        "rock": "Rock",
+        "dunes": "Dunes",
+        "sand": "Sand",
+        "spice": "Spice",
+        "thick_spice": "Thick spice",
+        "cliff_rock": "Cliff rock"
+    }
+}

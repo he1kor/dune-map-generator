@@ -2,6 +2,8 @@
 #include "quick_settings_ui.h"
 #include "slider.h"
 #include "int_field.h"
+#include "template_editor_descriptions.h"
+#include <cstdio>
 #include <optional>
 #include <string>
 #include <vector>
@@ -45,22 +47,25 @@ void QuickSettingsUI::build() {
             quickSettingsPtr->setHeight(*value);
         ImGui::EndTable();
     }
-    ImGui::TextWrapped("Even numbers, 32-128 cells.");
+    ImGui::TextWrapped("%s", uiDescriptions().text("map_dimensions").c_str());
     if (limits != MapDimensionLimits{}) {
         ImGui::Spacing();
         ImGui::TextUnformatted("Template limits:");
         ImGui::Text("Width: %d-%d", limits.minWidth, limits.maxWidth);
         ImGui::Text("Height: %d-%d", limits.minHeight, limits.maxHeight);
         if (limits.squareOnly()) {
-            ImGui::TextWrapped("Square map: both sides change together.");
+            ImGui::TextWrapped("%s", uiDescriptions().text("map_square").c_str());
         } else if (limits.minAspectRatio != 0.25 || limits.maxAspectRatio != 4.0) {
-            ImGui::TextWrapped("Width / height: %.3g to %.3g.", limits.minAspectRatio, limits.maxAspectRatio);
-            ImGui::TextWrapped("The other side adjusts to keep this shape.");
+            char minimum[32], maximum[32];
+            std::snprintf(minimum, sizeof(minimum), "%.3g", limits.minAspectRatio);
+            std::snprintf(maximum, sizeof(maximum), "%.3g", limits.maxAspectRatio);
+            ImGui::TextWrapped("%s", uiDescriptions().format("map_aspect", {{"min", minimum}, {"max", maximum}}).c_str());
+            ImGui::TextWrapped("%s", uiDescriptions().text("map_adjust_other").c_str());
         }
     }
     if (quickSettingsPtr->sizeAdjustedToTemplate) {
         ImGui::Spacing();
-        ImGui::TextWrapped("Size adjusted to fit this template.");
+        ImGui::TextWrapped("%s", uiDescriptions().text("map_adjusted").c_str());
     }
 
     ImGui::Dummy(ImVec2(0, 10));

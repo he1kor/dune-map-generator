@@ -11,6 +11,7 @@
     "nodes": [
         {
             "id": 1,
+            "visualizer": {"x": 0.0, "y": 0.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.0,
@@ -19,6 +20,7 @@
         },
         {
             "id": 2,
+            "visualizer": {"x": -180.0, "y": -160.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.0,
@@ -27,6 +29,7 @@
         },
         {
             "id": 3,
+            "visualizer": {"x": 180.0, "y": -160.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.0,
@@ -35,6 +38,7 @@
         },
         {
             "id": 4,
+            "visualizer": {"x": 0.0, "y": 260.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.0,

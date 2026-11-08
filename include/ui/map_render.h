@@ -23,7 +23,6 @@ struct GenerationPreview;
 class MapRenderer {
 public:
     const int maxMapSize = 128;
-    const int maxScaleFactor = 4;
 
     MapRenderer(Palette* palette);
 

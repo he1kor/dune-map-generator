@@ -4,6 +4,14 @@ file(GLOB_RECURSE SOURCES
 
 option(BUILD_WITH_CONSOLE "Build as a console application (for debugging output)" ON)
 
+set(EDITOR_DESCRIPTIONS_FILE "${CMAKE_SOURCE_DIR}/assets/ui/template_editor_descriptions.json")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${EDITOR_DESCRIPTIONS_FILE}")
+file(READ "${EDITOR_DESCRIPTIONS_FILE}" EDITOR_DESCRIPTIONS_JSON)
+configure_file("${CMAKE_SOURCE_DIR}/assets/ui/template_editor_descriptions_data.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/template_editor_descriptions_data.h" @ONLY)
+configure_file("${EDITOR_DESCRIPTIONS_FILE}"
+    "${CMAKE_CURRENT_BINARY_DIR}/template_editor_descriptions.json" COPYONLY)
+
 foreach(template IN ITEMS
     "habbanya erg true 2.json"
     "grid3x3 magnetic.json"
@@ -35,6 +43,7 @@ add_library(glad STATIC ${GLAD_SRC})
 target_include_directories(glad PUBLIC ${GLAD_INCLUDE})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}/generated
     ${CMAKE_SOURCE_DIR}/include/global
     ${CMAKE_SOURCE_DIR}/include/ui
     ${CMAKE_SOURCE_DIR}/include/state
@@ -129,6 +138,22 @@ if(MAPGENERATOR_BUILD_TESTS)
         "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json"
         "${CMAKE_SOURCE_DIR}/assets/templates/grid3x3 magnetic.json"
         "${CMAKE_CURRENT_BINARY_DIR}/template-validation-regression.json")
+    add_executable(template_editor_regression
+        ../tests/template_editor_regression.cc
+        state/template_editor.cpp
+        state/template_editor_layout.cpp
+        state/template_picker.cpp
+        state/generation.cpp
+    )
+    target_include_directories(template_editor_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(template_editor_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
+    add_test(NAME template_editor_regression COMMAND template_editor_regression
+        "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json"
+        "${CMAKE_SOURCE_DIR}/assets/templates/edge geometry example.json"
+        "${CMAKE_CURRENT_BINARY_DIR}/template-editor-regression.json")
     add_executable(map_dimensions_regression
         ../tests/map_dimensions_regression.cc
         state/template_picker.cpp
@@ -151,6 +176,8 @@ if(MAPGENERATOR_BUILD_TESTS)
         ui/quick_settings_ui.cpp
         ui/generation_ui.cpp
         ui/template_picker_ui.cpp
+        ui/template_editor_ui.cpp
+        ui/template_editor_descriptions.cpp
         ui/map_render.cpp
         ui/slider.cpp
         ui/int_field.cpp
@@ -159,10 +186,13 @@ if(MAPGENERATOR_BUILD_TESTS)
         state/limited_setting.cpp
         state/generation.cpp
         state/template_picker.cpp
+        state/template_editor.cpp
+        state/template_editor_layout.cpp
         global/setup.cpp
         global/filedialog.cpp
     )
     target_include_directories(ui_layout_regression PRIVATE
+        ${CMAKE_CURRENT_BINARY_DIR}/generated
         ${CMAKE_SOURCE_DIR}/include/ui
         ${CMAKE_SOURCE_DIR}/include/state
         ${CMAKE_SOURCE_DIR}/include/global

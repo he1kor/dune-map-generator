@@ -9,6 +9,7 @@
     "nodes": [
         {
             "id": 0,
+            "visualizer": {"x": 0.0, "y": 0.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.02,
@@ -17,6 +18,7 @@
         },
         {
             "id": 1,
+            "visualizer": {"x": 180.0, "y": 0.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.02,
@@ -25,6 +27,7 @@
         },
         {
             "id": 2,
+            "visualizer": {"x": 360.0, "y": 0.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.02,
@@ -33,6 +36,7 @@
         },
         {
             "id": 3,
+            "visualizer": {"x": 0.0, "y": 180.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.02,
@@ -41,6 +45,7 @@
         },
         {
             "id": 4,
+            "visualizer": {"x": 180.0, "y": 180.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.02,
@@ -49,6 +54,7 @@
         },
         {
             "id": 5,
+            "visualizer": {"x": 360.0, "y": 180.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.02,
@@ -57,6 +63,7 @@
         },
         {
             "id": 6,
+            "visualizer": {"x": 0.0, "y": 360.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.02,
@@ -65,6 +72,7 @@
         },
         {
             "id": 7,
+            "visualizer": {"x": 180.0, "y": 360.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.02,
@@ -73,6 +81,7 @@
         },
         {
             "id": 8,
+            "visualizer": {"x": 360.0, "y": 360.0},
             "data": {
                 "radius": 1.0,
                 "susceptibility": 0.02,

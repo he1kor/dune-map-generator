@@ -1,5 +1,119 @@
 `habbanya erg true 2.json` is the current template. CMake copies it to `build/src`
 when configuring the application; edit this source copy to retain changes.
+
+### Template editor
+
+Open the **Template editor** tab to create a template or load an existing JSON.
+**Settings** edits the name, wall material, one to three noise octaves,
+and optional map dimension limits. The **File** menu contains New, Open, Save,
+and Save as. An asterisk marks unsaved changes. New, Open, and closing the app offer to save
+your work before continuing.
+
+- Double-click empty canvas to add a square node; drag a node to move it.
+- Click a node, hold Shift, and click another to connect them. The cursor and
+  edge icons select **Selection** (`V`) and **Edge** (`E`) modes; Shift temporarily
+  activates Edge mode. Self-connections and duplicate connections are ignored.
+- Ctrl-click adds or removes individual zones from the selection. Drag empty
+  space to select a box of zones; Ctrl adds to the current selection. Drag any
+  selected zone to move the entire group. Hold Ctrl during movement to snap the
+  grabbed zone's center to a 64-unit grid cross or a cell center halfway between
+  crosses, while keeping the group's spacing. Cell centers are marked with dots.
+- Double-click a node to edit its ID, radius, susceptibility, octave weights,
+  and resource thresholds. Renaming an ID updates all connected rules.
+- Resource intervals color the slightly rounded square from bottom (threshold 0) to top (1).
+  **Split row** adds an interval; removing a row extends its touching neighbor.
+  Larger radii produce larger squares. `S` on each node is its susceptibility.
+- Double-click a connection to edit shared passage, wall, blend and optional
+  geometry settings. Both directed rules appear separately as `A -> B` and
+  `B -> A`, and can be enabled independently.
+- Connections repeat black min-wall, transparent min-pass, black max-wall,
+  transparent max-pass segments. Each length unit uses two screen pixels and
+  the black stroke uses 3.5 pixels, independent of zoom and generation resolution.
+- Use the mouse wheel to zoom about the pointer; drag with the middle or right
+  mouse button to pan. **Fit** (or `F` / `Home` over the canvas) frames all nodes.
+  Right-click opens canvas actions; `Delete` removes the selected item and its
+  dependent rules. `Esc` cancels a pending connection.
+- **Auto place** creates a compact diagram with a rectangular outer boundary,
+  symmetric rows/columns and horizontal, vertical or 45-degree connections where
+  possible. A uniform harmonic layout preserves grid symmetries; the generator's
+  certified planar construction is retained for irregular topologies. It scales
+  and snaps the drawing to grid crosses or cell centers.
+  It checks for node overlaps, edge crossings, and edges passing through unrelated
+  nodes after snapping. Connections leave room for one complete dotted pattern
+  at 100% zoom, without the previous large clearance halos. The initial camera
+  fits the entire graph into view. Only visualizer
+  positions change, and the whole placement is one undo step.
+- A **!** icon in the top menu warns when the graph topology is non-planar.
+  Hover or click it for an explanation and the offending connections. Auto place
+  is disabled until the topology is fixed. Moving nodes cannot fix non-planarity;
+  crossed lines in a manual drawing alone do not indicate non-planar topology.
+
+**Edit** contains Undo/Redo and selection actions. All document edits, including
+new/open, can be undone; a group drag or settings Apply is one history step.
+Inside a settings menu, Undo/Redo also restores individual field edits,
+checkboxes and resource-row changes before Apply.
+Saving retains history. Returning to the saved values clears the unsaved marker.
+Undo/redo notifications stack and show every changed value as `from -> to`;
+their bodies let mouse input pass through to controls below. Click **x** to
+dismiss a message, or let it fade after four seconds (the last 0.4 seconds fade
+out). Hover does not extend its lifetime. Camera navigation and
+selection do not edit the document or add history entries.
+
+**Copy data** (`Ctrl+C`) copies the last clicked zone's settings or the selected
+edge's shared settings and both directed rules. **Paste data** (`Ctrl+V`) applies
+node data to all selected zones, or edge data to the selected edge. Both actions
+are available in Edit and the right-click menu. Destination IDs, canvas positions,
+and connections stay unchanged. Edge directions map first-to-second and
+second-to-first; an absent source direction clears the corresponding destination
+rule. Invalid or incompatible data is rejected without changing the document.
+One paste to multiple zones is one undo step. Input boxes retain normal text copy/paste.
+Canvas coordinates are rounded to two decimal places on load and movement.
+
+Descriptions and the Help content live in
+[`assets/ui/template_editor_descriptions.json`](../ui/template_editor_descriptions.json).
+See [`assets/ui/README.md`](../ui/README.md) for runtime overrides.
+That JSON also defines material display names, such as **Cliff rock** and
+**Thick spice**; saved templates retain keys such as `cliff_rock` and `thick_spice`.
+
+Settings menus have labeled input boxes and `(?)` explanations on each parameter.
+Unchecked single-value overrides keep their input visible and disabled, showing
+the default value (or Automatic for radius-derived center distances).
+Enter applies the menu. Escape, Cancel, and the close icon ask before discarding
+changed settings. **Help** (`F2`) explains the controls and template concepts.
+
+| Shortcut | Action |
+| --- | --- |
+| Ctrl+N / Ctrl+O | New template / Open JSON |
+| Ctrl+S / Ctrl+Shift+S | Save / Save as |
+| Ctrl+Z | Undo |
+| Ctrl+Y / Ctrl+Shift+Z | Redo |
+| Ctrl+A | Select all zones on the canvas |
+| Ctrl+comma | Global settings |
+| Ctrl+Enter | Use for generation |
+| Enter / Delete | Edit / delete selection on the canvas |
+| V / E / hold Shift | Selection mode / Edge mode / temporary Edge mode |
+| F / Home | Fit graph |
+| F2 | Help |
+
+Each node stores its canvas center in optional metadata alongside `id` and `data`:
+
+```json
+"visualizer": {"x": 200.0, "y": -80.0}
+```
+
+These coordinates affect only the editor. Generation ignores them, even when
+the drawn edges cross. Templates without coordinates get an initial grid in
+the editor; saving records that layout. Bundled templates include saved layouts.
+Editing retains other optional fields and unknown extension metadata.
+
+Drafts with empty, isolated or nonplanar graphs can be saved and reopened.
+Field values and resource interval coverage must still be valid. **Use for
+generation** checks the full generator requirements, selects a separate snapshot,
+and applies its dimension limits. Switch to **Generator** and click **Generate**.
+Later editor changes take effect when you click **Use for generation** again.
+Saving a runtime JSON in `build/src` does not update its source in
+`assets/templates`; use Save as into that folder to retain edits across CMake
+configuration.
 Intermediate sand zones 10, 11, 12, 14, 15, 16, 17, 19 use radius `3.0` and
 susceptibility `-0.125` to give them more space and push them toward the perimeter
 between the rock islands. Reload the template after changing its runtime JSON.

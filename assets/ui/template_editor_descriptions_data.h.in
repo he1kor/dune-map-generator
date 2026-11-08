@@ -1,0 +1,3 @@
+#pragma once
+
+inline constexpr const char* bundledEditorDescriptions = R"MAPGEN_HELP(@EDITOR_DESCRIPTIONS_JSON@)MAPGEN_HELP";

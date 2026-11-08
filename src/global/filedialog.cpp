@@ -13,7 +13,7 @@ std::expected<std::filesystem::path, FileDialogStatus> FileDialog::tryGetPathFro
 
     nfdresult_t result = NFD_OpenDialogU8_With(&outPath, &args);
     if (result == NFD_OKAY){
-        auto path = std::filesystem::path(outPath);
+        auto path = std::filesystem::path(reinterpret_cast<const char8_t*>(outPath));
         NFD_FreePathU8(outPath);
         return path;
     }
@@ -23,6 +23,22 @@ std::expected<std::filesystem::path, FileDialogStatus> FileDialog::tryGetPathFro
 
 
     return std::unexpected(FileDialogStatus::ERROR);
+}
+
+std::expected<std::filesystem::path, FileDialogStatus> FileDialog::tryGetSavePathFromDialog(const std::string& defaultName) {
+    nfdu8char_t* outPath = nullptr;
+    nfdu8filteritem_t filters[] = {{"Template config file", "json"}};
+    nfdsavedialogu8args_t args = {};
+    args.filterList = filters;
+    args.filterCount = 1;
+    args.defaultName = defaultName.c_str();
+    const auto result = NFD_SaveDialogU8_With(&outPath, &args);
+    if (result == NFD_OKAY) {
+        auto path = std::filesystem::path(reinterpret_cast<const char8_t*>(outPath));
+        NFD_FreePathU8(outPath);
+        return path;
+    }
+    return std::unexpected(result == NFD_CANCEL ? FileDialogStatus::CANCELED : FileDialogStatus::ERROR);
 }
 
 FileDialog::FileDialog(){

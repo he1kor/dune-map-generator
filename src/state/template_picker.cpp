@@ -1,4 +1,5 @@
 #include "template_picker.h"
+#include "template_validation.h"
 
 #include <cmath>
 #include <fstream>
@@ -289,7 +290,7 @@ AsymEdges readAsymEdges(const Json& json, const std::set<int>& ids, const SymEdg
     return result;
 }
 
-std::shared_ptr<MapTemplate> readGraph(const Json& json) {
+std::shared_ptr<MapTemplate> readGraph(const Json& json, bool requireGeneratable = true) {
     object(json, "");
     if (json.contains("name")) name(json);
     auto result = std::make_shared<MapTemplate>();
@@ -300,7 +301,7 @@ std::shared_ptr<MapTemplate> readGraph(const Json& json) {
 
     const auto& nodes = member(json, "nodes", "");
     array(nodes, "nodes");
-    if (nodes.empty()) invalid("nodes", "a non-empty array of zones");
+    if (requireGeneratable && nodes.empty()) invalid("nodes", "a non-empty array of zones");
     std::set<int> ids;
     std::vector<std::pair<ResourceRadialNode<Resource>, std::vector<Identifiable>>> rawGraph;
     for (size_t i = 0; i < nodes.size(); ++i) {
@@ -320,19 +321,34 @@ std::shared_ptr<MapTemplate> readGraph(const Json& json) {
         auto& [node, adjacent] = rawGraph[i];
         adjacent = neighbours[node];
         // The current bloater creates starting cells from connections.
-        if (adjacent.empty()) invalid(child(child("nodes", std::to_string(i)), "id"),
+        if (requireGeneratable && adjacent.empty()) invalid(child(child("nodes", std::to_string(i)), "id"),
             "a zone with at least one symmetrical connection");
     }
     result->zoneGraph = std::make_shared<EdgeGraph<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection>>(
         rawGraph, symEdges, asymEdges);
-    try {
-        result->embeddingTopology = planar::makeTopology(*result->zoneGraph);
-    } catch (const planar::NonPlanarGraph& error) {
-        invalid("symmetrical_edges", error.what());
+    if (requireGeneratable) {
+        try {
+            result->embeddingTopology = planar::makeTopology(*result->zoneGraph);
+        } catch (const planar::NonPlanarGraph& error) {
+            invalid("symmetrical_edges", error.what());
+        }
     }
     return result;
 }
 } // namespace
+
+std::string templateValidationError(const nlohmann::json& document, bool requireGeneratable) {
+    try {
+        name(document);
+        readGraph(document, requireGeneratable);
+        return {};
+    } catch (const ValidationError& error) {
+        return error.missingKey ? "Missing field: " + error.path
+            : error.path + ": expected " + error.expected;
+    } catch (const std::exception& error) {
+        return error.what();
+    }
+}
 
 void TemplatePicker::resetErrors() {
     syntaxError = {};

@@ -10,6 +10,7 @@
 #include "app_layout.h"
 #include "setup.h"
 #include "template_picker_ui.h"
+#include "template_editor_ui.h"
 #include "generation.h"
 #include "generation_ui.h"
 #include "icon.h"
@@ -34,7 +35,7 @@ int main(){
 
     GLFWwindow* window = glfwCreateWindow(672, 500, "Dune 2000 Map Generator", nullptr, nullptr);
     glfwSetWindowSizeLimits(window, appLayout::minWindowWidth, appLayout::minWindowHeight,
-        appLayout::maxWindowWidth, appLayout::maxWindowHeight);
+        GLFW_DONT_CARE, GLFW_DONT_CARE);
     if (!window){
         glfwTerminate();
         return -1;
@@ -84,6 +85,8 @@ int main(){
 
 
     GenerationUI generationUI(&generation, &mapRenderer);
+    TemplateEditor templateEditor;
+    TemplateEditorUI templateEditorUI(templateEditor, templatePicker, generation, quickSettings);
     
     DevPanelUI devPanelUI;
 
@@ -93,6 +96,10 @@ int main(){
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
+        if (glfwWindowShouldClose(window)) {
+            if (templateEditorUI.requestClose()) break;
+            glfwSetWindowShouldClose(window, GLFW_FALSE);
+        }
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -123,7 +130,7 @@ int main(){
         }
 
 
-        appLayout::build(quickSettingsUI, templatePickerUI, generationUI);
+        appLayout::build(quickSettingsUI, templatePickerUI, generationUI, templateEditorUI);
         devPanelUI.render(generation, mapRenderer, templatePicker);
 
         // Рендеринг
@@ -137,6 +144,7 @@ int main(){
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
+        if (templateEditorUI.closeApproved()) break;
     }
 
     ImGui_ImplOpenGL3_Shutdown();

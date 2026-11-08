@@ -40,7 +40,7 @@ void setColors(){
 
     //Not working?
     colors[ImGuiCol_TabSelectedOverline] = VARIANT_BASIC;
-    colors[ImGuiCol_ModalWindowDimBg] = VARIANT_BASIC;
+    colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0, 0, 0, 0);
     colors[ImGuiCol_TabDimmedSelected] = VARIANT_EXTRA;
     colors[ImGuiCol_Tab] = VARIANT_EXTRA;
     colors[ImGuiCol_TabHovered] = VARIANT_EXTRA;
