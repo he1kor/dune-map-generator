@@ -140,6 +140,36 @@ if(MAPGENERATOR_BUILD_TESTS)
     target_link_libraries(position_magnet_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
     add_test(NAME position_magnet_regression COMMAND position_magnet_regression
         "${CMAKE_SOURCE_DIR}/tests/fixtures/spice_scout.json")
+    add_executable(symmetric_embedding_regression
+        ../tests/symmetric_embedding_regression.cc
+        state/map_template.cpp
+        state/template_picker.cpp
+        state/template_editor.cpp
+        state/template_editor_layout.cpp
+        state/generation.cpp
+    )
+    target_include_directories(symmetric_embedding_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(symmetric_embedding_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
+    add_test(NAME symmetric_embedding_regression COMMAND symmetric_embedding_regression
+        "${CMAKE_SOURCE_DIR}/tests/fixtures/spice_scout.json")
+    add_executable(symmetry_modes_regression
+        ../tests/symmetry_modes_regression.cc
+        state/map_template.cpp
+        state/template_picker.cpp
+        state/template_editor.cpp
+        state/template_editor_layout.cpp
+        state/generation.cpp
+    )
+    target_include_directories(symmetry_modes_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(symmetry_modes_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
+    add_test(NAME symmetry_modes_regression COMMAND symmetry_modes_regression
+        "${CMAKE_SOURCE_DIR}/tests/fixtures/spice_scout.json")
     add_executable(template_validation_regression
         ../tests/template_validation_regression.cc
         state/map_template.cpp

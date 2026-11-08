@@ -1,4 +1,5 @@
 #include "map_template.h"
+#include "planar_symmetry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -7,6 +8,61 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include <tuple>
+
+std::shared_ptr<const planar::Reflection> MapTemplate::reflectionForGeneration(const PositionMagnetMap& magnets,
+    double width, double height) const {
+    if(symmetryMode==SymmetryMode::None)return nullptr;
+    auto topology=embeddingTopology;
+    if(!topology)topology=planar::makeTopology(*zoneGraph);
+    std::string mismatch;
+    auto accept=[&](const planar::Reflection& reflection) {
+        auto mirror=[&](Identifiable id) {
+            const auto index=std::lower_bound(topology->ids.begin(),topology->ids.end(),id)-topology->ids.begin();
+            return topology->ids[reflection.partner[index]];
+        };
+        for(auto id:topology->ids) {
+            const auto other=mirror(id);
+            const auto a=zoneGraph->getValue(id),b=zoneGraph->getValue(other);
+            auto resources=[](const auto& node) {
+                std::vector<std::tuple<double,double,int>> result;
+                for(const auto& row:node.resources)result.emplace_back(row.minimalThreshold,row.maximalThreshold,int(row.resource));
+                std::sort(result.begin(),result.end());return result;
+            };
+            if(a.getRadius()!=b.getRadius()||a.getSusceptibility()!=b.getSusceptibility()
+                ||a.octaveWeights!=b.octaveWeights||resources(a)!=resources(b)) {
+                mismatch="zones "+std::to_string(id.getID())+" and "+std::to_string(other.getID());return false;
+            }
+        }
+        auto symmetric=[](const auto& edge) {
+            return std::tuple{edge.minPassWidth,edge.maxPassWidth,edge.minWallLength,edge.maxWallLength,
+                edge.blendDistance,edge.geometry.preferredCenterDistance,edge.geometry.distanceWeight};
+        };
+        for(const auto& [pair,edge]:zoneGraph->getSymEdges()) {
+            const auto other=zoneGraph->tryGetSymEdge(mirror(pair.first),mirror(pair.second));
+            if(!other||symmetric(edge)!=symmetric(*other)) { mismatch="paired connection settings";return false; }
+        }
+        for(const auto& [pair,edge]:zoneGraph->getAsymEdges()) {
+            const auto& edges=zoneGraph->getAsymEdges();
+            const auto other=edges.find({mirror(pair.first),mirror(pair.second)});
+            const auto value=other==edges.end()?BasicAsymConnection{}:other->second;
+            if(std::tuple{edge.intakeDistance,edge.areaGuaranteed,edge.bonusValue}
+                !=std::tuple{value.intakeDistance,value.areaGuaranteed,value.bonusValue}) {
+                mismatch="paired directed connection rules";return false;
+            }
+        }
+        return true;
+    };
+    // Every symmetry mode uses generation data as graph labels. IDs, canvas
+    // positions and target coordinates do not define interchangeable zone types.
+    // Face-only mode still permits independent/asymmetric position targets.
+    const PositionMagnetMap unconstrained;
+    try { return planar::findReflection(*topology,symmetryMode==SymmetryMode::Faces?unconstrained:magnets,
+        width,height,symmetryMode==SymmetryMode::Complete,accept); }
+    catch(const planar::ConflictingSymmetrySettings&) {
+        throw planar::ConflictingSymmetrySettings("Symmetry requires matching zone and connection data. Check "+mismatch+".");
+    }
+}
 
 PositionMagnetMap MapTemplate::magnetsForGeneration(std::uint64_t seed, int width, int height) const {
     if (!rotatePositionMagnets || positionMagnets.empty()) return positionMagnets;
@@ -47,6 +103,43 @@ PositionMagnetMap MapTemplate::magnetsForGeneration(std::uint64_t seed, int widt
                 || std::abs(sine * p.x + cosine * p.y) > limitY + 1e-9) return false;
         return true;
     };
+
+    if(symmetryMode==SymmetryMode::Complete) {
+        // Square maps also admit both diagonal cell-to-cell reflections. Consider
+        // rigid rotations aligning every possible constrained magnet axis to
+        // that grid, rather than rounding an arbitrary sampled angle.
+        std::vector<double> angles;
+        auto add=[&](double normalAngle) {
+            const int count=width==height?8:4;
+            for(int direction=0;direction<count;++direction) {
+                double angle=std::fmod(direction*turn/count-normalAngle+turn,turn);
+                angles.push_back(angle);
+            }
+        };
+        add(0);
+        for(const auto& [id,p]:offsets) {
+            if(std::hypot(p.x,p.y)>1e-9)add(std::atan2(p.y,p.x)+std::numbers::pi/2);
+            for(const auto& [other,q]:offsets)if(id<other&&std::hypot(p.x-q.x,p.y-q.y)>1e-9)
+                add(std::atan2(p.y-q.y,p.x-q.x));
+        }
+        std::sort(angles.begin(),angles.end());
+        angles.erase(std::unique(angles.begin(),angles.end(),[](double a,double b){return std::abs(a-b)<1e-9;}),angles.end());
+        std::vector<PositionMagnetMap> fitting;
+        std::string settingsError;
+        for(double angle:angles)if(fits(angle)) {
+            auto candidate=positionMagnets;
+            for(const auto& [id,p]:offsets)candidate.at(id).position={
+                std::clamp(halfWidth+std::cos(angle)*p.x-std::sin(angle)*p.y,.5,width-.5)/width,
+                std::clamp(halfHeight+std::sin(angle)*p.x+std::cos(angle)*p.y,.5,height-.5)/height};
+            try { reflectionForGeneration(candidate,width,height);fitting.push_back(std::move(candidate)); }
+            catch(const planar::ConflictingSymmetryMagnets&) {}
+            catch(const planar::ConflictingSymmetrySettings& error) { settingsError=error.what(); }
+        }
+        if(fitting.empty()&&!settingsError.empty())throw planar::ConflictingSymmetrySettings(settingsError);
+        if(fitting.empty())throw planar::ConflictingSymmetryMagnets("Complete symmetry cannot fit the magnet arrangement on a grid reflection axis (horizontal/vertical, or either diagonal on square maps). Enlarge the magnet frame or move targets closer to its center.");
+        std::mt19937_64 random(seed^0x9e3779b97f4a7c15ULL);
+        return fitting[static_cast<size_t>((random()>>11)*0x1.0p-53*fitting.size())];
+    }
 
     // Every boundary crossing splits the circle into intervals on which either
     // the entire group fits or it does not. Sample the fitting angular lengths,

@@ -8,6 +8,7 @@
 #include <nlohmann/json.hpp>
 #include "systemsound.h"
 #include "planar_layout.h"
+#include "planar_symmetry.h"
 
 namespace {
 using Json = nlohmann::json;
@@ -296,6 +297,7 @@ std::shared_ptr<MapTemplate> readGraph(const Json& json, bool requireGeneratable
     auto result = std::make_shared<MapTemplate>();
     result->dimensionLimits = readDimensionLimits(json);
     result->octaves = readOctaves(json);
+    result->symmetryMode=templateSymmetryMode(json);
     if (const auto it = json.find("magnets"); it != json.end()) {
         object(*it, "magnets");
         if (const auto rotation = it->find("randomRotation"); rotation != it->end()) {
@@ -353,10 +355,24 @@ std::shared_ptr<MapTemplate> readGraph(const Json& json, bool requireGeneratable
         } catch (const planar::NonPlanarGraph& error) {
             invalid("symmetrical_edges", error.what());
         }
+        if (result->symmetryMode!=SymmetryMode::None) {
+            const auto size=result->dimensionLimits.closest({128,128});
+            try { result->embeddingReflection = result->reflectionForGeneration(result->magnetsForGeneration(0,size.width,size.height),size.width,size.height); }
+            catch (const std::invalid_argument& error) { invalid("embedding/symmetry", error.what()); }
+        }
     }
     return result;
 }
 } // namespace
+
+std::string templateSymmetryWarning(const nlohmann::json& document, std::shared_ptr<const planar::Topology> topology) {
+    try {
+        auto data=readGraph(document,false);data->embeddingTopology=std::move(topology);
+        const auto size=data->dimensionLimits.closest({128,128});
+        data->reflectionForGeneration(data->magnetsForGeneration(0,size.width,size.height),size.width,size.height);
+        return {};
+    }catch(const std::exception& error){return error.what();}
+}
 
 std::string templateValidationError(const nlohmann::json& document, bool requireGeneratable) {
     try {

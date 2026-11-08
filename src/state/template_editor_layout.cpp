@@ -1,5 +1,8 @@
 #include "template_editor.h"
 #include "planar_layout.h"
+#include "planar_symmetry.h"
+#include "template_validation.h"
+#include "template_symmetry.h"
 
 #include <algorithm>
 #include <array>
@@ -296,6 +299,21 @@ void TemplateEditor::updateTopology() const {
 const std::string& TemplateEditor::topologyWarning() const {
     updateTopology();
     return topologyWarning_;
+}
+
+const std::string& TemplateEditor::symmetryWarning() const {
+    static const std::string empty;
+    if (templateSymmetryMode(document_)==SymmetryMode::None) return empty;
+    updateTopology();
+    if (!topologyWarning_.empty()) return empty;
+    Json signature=document_;
+    signature.erase("visualizer");signature.erase("name");
+    for(auto& node:signature["nodes"])node.erase("visualizer");
+    if (signature != symmetrySignature_) {
+        symmetrySignature_ = signature; symmetryWarning_.clear();
+        symmetryWarning_=templateSymmetryWarning(document_,topology_);
+    }
+    return symmetryWarning_;
 }
 
 double TemplateEditor::patternLength(const Json& edge) {

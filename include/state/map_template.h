@@ -4,9 +4,10 @@
 #include <connection.h>
 #include <nodes.h>
 #include "map_dimensions.h"
+#include "template_symmetry.h"
 #include <cstdint>
 
-namespace planar { struct Topology; }
+namespace planar { struct Topology; struct Reflection; }
 
 class MapTemplate{
 public:
@@ -18,5 +19,9 @@ public:
     std::shared_ptr<const planar::Topology> embeddingTopology;
     PositionMagnetMap positionMagnets;
     bool rotatePositionMagnets = false;
+    SymmetryMode symmetryMode = SymmetryMode::None;
+    std::shared_ptr<const planar::Reflection> embeddingReflection;
     PositionMagnetMap magnetsForGeneration(std::uint64_t seed, int width, int height) const;
+    std::shared_ptr<const planar::Reflection> reflectionForGeneration(const PositionMagnetMap& magnets,
+        double width = 1, double height = 1) const;
 };

@@ -550,6 +550,7 @@ int main(int argc, char** argv) {
             click({globalFields.x + 14, globalFields.y + fieldHeight + inputHeight * 0.5f});
             key(ImGuiKey_Z, true); key(ImGuiKey_Y, true);
             auto* globalContent = globals->DC.ChildWindows[0];
+            ImGui::ActivateItemByID(ImHashStr("Embedding symmetry",0,globalContent->IDStack.back())); editorFrame();
             const auto rotationScope = ImHashStr("Random magnet rotation",0,globalContent->IDStack.back());
             const auto rotationCheckbox = ImHashStr("Random magnet rotation",0,rotationScope);
             ImGui::ActivateItemByID(rotationCheckbox); editorFrame();
@@ -557,9 +558,19 @@ int main(int argc, char** argv) {
             require(editor.document()["name"] == "UI template", "Global setting edits were not applied");
             require(!editor.document().contains("walls"), "Draft undo/redo did not restore checkbox changes");
             require(editor.document().at("magnets").at("randomRotation") == true, "Global magnet rotation checkbox did not apply");
+            require(templateSymmetryMode(editor.document())==SymmetryMode::Embedding, "Embedding symmetry radio did not apply");
+            for(const auto& [mode,label]:{std::pair{SymmetryMode::None,"No symmetry"},std::pair{SymmetryMode::Faces,"Face only symmetry"},
+                std::pair{SymmetryMode::Complete,"Complete symmetry"},std::pair{SymmetryMode::Embedding,"Embedding symmetry"}}) {
+                key(ImGuiKey_Comma,true);
+                auto* content=ImGui::FindWindowByName("Global template settings")->DC.ChildWindows[0];
+                ImGui::ActivateItemByID(ImHashStr(label,0,content->IDStack.back()));editorFrame();key(ImGuiKey_Enter);
+                require(templateSymmetryMode(editor.document())==mode,"Symmetry radio selected the wrong mode");
+            }
             key(ImGuiKey_Enter, true);
             require(picker.mapTemplate && picker.templateName == "UI template", "Use for generation did not select editor snapshot");
             require(picker.mapTemplate->rotatePositionMagnets, "Global magnet rotation checkbox did not reach generation");
+            require(picker.mapTemplate->symmetryMode==SymmetryMode::Embedding && picker.mapTemplate->embeddingReflection,
+                "Embedding symmetry radio did not reach generation");
             // Notifications must not intercept the real Generate button. Only
             // their small X region should capture clicks; hover must not keep
             // them alive, and the final part of their lifetime must fade.
@@ -677,6 +688,22 @@ int main(int argc, char** argv) {
             if (argc > 1) savePreview(std::string(argv[1]) + "-auto-place");
             key(ImGuiKey_Z, true);
             require(editor.document() == planarGraph, "UI auto placement is not one undo step");
+            TemplateEditor asymmetric;
+            for (int i=0; i<7; ++i) asymmetric.addNode({float(i*128),0});
+            for (auto [a,b] : std::vector<std::pair<int,int>>{{1,2},{1,3},{3,4},{1,5},{5,6},{6,7}}) asymmetric.connect(a,b);
+            auto asymmetricDraft=asymmetric.document(); asymmetricDraft["embedding"]={{"symmetrical",true}};
+            require(editor.replace(asymmetricDraft),"Cannot prepare asymmetric topology");
+            require(editor.topologyWarning().empty() && !editor.symmetryWarning().empty(),"Symmetry warning missing on planar asymmetric graph");
+            require(loggedFrame().find('!')!=std::string::npos,"Missing symmetry does not display the top menu warning icon");
+            ImGui::ActivateItemByID(ImHashStr("!##symmetry_warning",0,menuBar));
+            for(int i=0;i<4;++i)editorFrame();
+            require(!GImGui->OpenPopupStack.empty() && GImGui->OpenPopupStack.back().Window
+                && GImGui->OpenPopupStack.back().PopupId==ImHashStr("Embedding symmetry warning",0,menuBar),
+                "Symmetry warning icon did not open its explanation");
+            if(argc>1)savePreview(std::string(argv[1])+"-symmetry-warning");
+            key(ImGuiKey_Escape);
+            asymmetricDraft.erase("embedding"); require(editor.replace(asymmetricDraft),"Cannot disable symmetry");
+            require(loggedFrame().find('!')==std::string::npos,"Disabling symmetry leaves a warning icon");
             require(editor.replace(beforeLayoutChecks), "Cannot restore editor after layout checks");
             if (argc > 1) {
                 auto settingsPreview = editor.document();

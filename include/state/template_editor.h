@@ -62,6 +62,7 @@ public:
     static bool isDataClipboard(const Json& payload, const char* kind);
     static float halfSize(const Json& node);
     const std::string& topologyWarning() const;
+    const std::string& symmetryWarning() const;
     bool autoPlace();
     static double patternLength(const Json& edge);
     void beginAction(const std::string& label);
@@ -95,6 +96,8 @@ private:
     mutable Json topologySignature_;
     mutable std::shared_ptr<const planar::Topology> topology_;
     mutable std::string topologyWarning_;
+    mutable Json symmetrySignature_;
+    mutable std::string symmetryWarning_;
     void updateTopology() const;
     static std::string checkPositions(const Json& candidate);
     static void addMissingPositions(Json& candidate);

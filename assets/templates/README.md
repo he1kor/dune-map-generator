@@ -199,6 +199,77 @@ Magnetized zones also retain radius-based spacing from neighboring seeds so
 central repulsion cannot crowd another seed onto their target. This protects
 placement space; it does not impose exact zone areas or guarantee every passage.
 
+Choose a radio option in **Global settings > Symmetry**, or add this optional
+top-level setting:
+
+```json
+"embedding": {"symmetry": "faces"}
+```
+
+| Value | Radio option | What is constrained |
+| --- | --- | --- |
+| `none` | No symmetry | Existing initialization and independent relaxation. |
+| `faces` | Face only symmetry | Initial corresponding planar faces; subsequent positions and forces are independent. |
+| `embedding` | Embedding symmetry | Mirrored positions through initial placement and every relaxation step. |
+| `complete` | Complete symmetry | Embedding plus exactly reflected zone, wall, passage, noise and resource tiles. |
+
+Reflection is found from the real graph and matching generation data,
+independently of IDs and canvas positions. Every symmetry mode compares paired
+node radii, susceptibilities, resource intervals, octave weights, passage and
+blending parameters, geometry preferences and directed rules. Parsed values are
+compared, so JSON ordering and explicit versus omitted defaults do not affect
+the choice. A topology-only reflection exchanging different zone types is
+rejected; the editor's **!** explains if no matching reflection exists.
+Face-only mode starts both paired nodes inside or outside their
+corresponding triangles, then releases the coordinate constraint. Existing
+crossing prevention preserves those face choices while shapes and distances
+change independently. Different magnet targets are allowed in this mode.
+
+Embedding symmetry keeps paired centers mirrored, with fixed nodes on an axis
+through the map center. Perturbations, forces and displacement limits remain
+coupled. Node parameters are retained.
+Later growth, walls and resources can still be asymmetric.
+
+Without active position magnets, Face-only and Embedding symmetry choose their
+orientation from the seed across 360 degrees, separately from face and shape
+selection. The initializer keeps that orientation if it survives tile rounding,
+using other angles only as numerical fallbacks. Complete symmetry uses seeded
+horizontal/vertical or, on square maps, diagonal orientations. Saved magnet targets continue to guide
+orientation when present. Orientation uses a separate random stream and does
+not consume growth or resource randomness.
+
+Complete symmetry copies an authoritative half of the tile grid to the other
+half, exchanging paired zone IDs. Axis-node seeds are retained on both sides.
+Paired zones grow and smooth only on their respective sides of the axis;
+fixed axis zones may span both halves. This restriction does not insert a wall:
+walls and passage rules still follow actual zone borders.
+Projection happens between generation stages, with walls, openings, noise,
+blending masks and final resources mirrored as well. Square maps admit all four
+exact grid reflections: horizontal, vertical, main diagonal and anti-diagonal.
+Non-square maps admit horizontal and vertical reflections. The seed selects
+among compatible axes, and saved magnet targets can constrain the choice.
+Tiles on a diagonal reflect onto themselves: their single zone ownership label
+is retained as a tie without forcing extra blending. Each mirrored pair uses
+one combined resource percentile domain, preserving its configured intervals
+and avoiding low-resource streaks along the diagonal. Configured resource
+blending remains active at real borders. Away from the axis, zone IDs exchange
+with their partners exactly. Paired node, shared
+edge and directed-rule generation settings must agree; conflicts are reported
+instead of silently replacing configured materials. Dense layouts may need a
+larger resolution to hold all symmetric seeds.
+
+The editor's **!** explains missing planar reflection symmetry or incompatible
+magnet targets or unmatched generation data. Drafts can still be edited and saved; generation requires valid
+settings. A bounded search reports an inconclusive limit separately from an
+exhausted search with no reflection found. Every accepted drawing is checked for
+crossings and must survive tile rounding at the requested map resolution.
+Embedding modes use compatible magnets to orient their axis. Complete-mode
+random rotation selects rigid rotations fitting a grid-compatible axis,
+preserving target distances and forces. Other modes retain continuous rotation.
+Omission selects `none`. Earlier `embedding/symmetrical: true` selects
+`embedding`; `false` selects `none`. The new string takes precedence when both
+are present. Changing a radio writes the string and removes the old boolean.
+
 Enable **Random magnet rotation** in Global settings > Position magnets, or add
 this optional top-level setting to the template:
 
@@ -220,9 +291,10 @@ rectangles to half-turns. Enlarge the editor map frame or move targets toward it
 center to allow more rotation. An already outside/inactive target stays inactive.
 
 The generator reads saved `data.magnet.position`, not raw visualizer coordinates
-or the editor frame. With no active positional magnets, the previous seeded
-layout behavior is preserved. Zone growth, resource noise and passage rules are
-unchanged. After editing a selected template, use **Use for generation** again
+or the editor frame. With No symmetry and no active positional magnets, the previous seeded
+layout behavior is preserved. Growth, resource noise and passage rules retain
+their existing algorithms; Complete symmetry adds mirroring between stages.
+After editing a selected template, use **Use for generation** again
 to update the generator's snapshot.
 
 ### Magnetic grid example

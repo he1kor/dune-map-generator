@@ -246,6 +246,7 @@ bool TemplateEditorUI::save(bool saveAs) {
 
 void TemplateEditorUI::toolbar() {
     const auto& topologyWarning = editor_.topologyWarning();
+    const auto& symmetryWarning = editor_.symmetryWarning();
     const float menuHeight = ImGui::GetFrameHeight() + 2 * ImGui::GetStyle().FramePadding.y;
     if (ImGui::BeginChild("editor_commands", {0, menuHeight}, 0,
             ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
@@ -290,6 +291,18 @@ void TemplateEditorUI::toolbar() {
                     ImGui::TextUnformatted(topologyWarning.c_str());
                     ImGui::PopTextWrapPos();
                     ImGui::EndPopup();
+                }
+            }
+            if (!symmetryWarning.empty()) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::ColorConvertU32ToFloat4(accent));
+                if (ImGui::MenuItem("!##symmetry_warning")) ImGui::OpenPopup("Embedding symmetry warning");
+                ImGui::PopStyleColor();
+                if (ImGui::IsItemHovered()) descriptionTooltip(symmetryWarning.c_str());
+                if (ImGui::BeginPopup("Embedding symmetry warning")) {
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 25);
+                    ImGui::TextUnformatted(uiDescriptions().text("symmetry_warning").c_str());
+                    ImGui::Separator(); ImGui::TextUnformatted(symmetryWarning.c_str());
+                    ImGui::PopTextWrapPos(); ImGui::EndPopup();
                 }
             }
             const auto title = std::string(editor_.dirty() ? "* " : "") + editor_.document()["name"].get<std::string>();
@@ -936,6 +949,17 @@ void TemplateEditorUI::globalFields() {
     ImGui::BeginDisabled(!walls);
     resourceField("Wall material", walls ? draft_["walls"]["resource"] : defaultWall, true);
     ImGui::EndDisabled();
+    ImGui::SeparatorText("Symmetry");
+    const auto symmetry=templateSymmetryMode(draft_);
+    for(const auto& [mode,label]:{std::pair{SymmetryMode::None,"No symmetry"},
+        std::pair{SymmetryMode::Faces,"Face only symmetry"},std::pair{SymmetryMode::Embedding,"Embedding symmetry"},
+        std::pair{SymmetryMode::Complete,"Complete symmetry"}}) {
+        if(ImGui::RadioButton(label,symmetry==mode)) {
+            draft_["embedding"]["symmetry"]=symmetryKey(mode);
+            draft_["embedding"].erase("symmetrical");
+        }
+        helpMarker(uiDescriptions().parameter(label).c_str());
+    }
     ImGui::SeparatorText("Position magnets");
     bool rotateMagnets = draft_.value("magnets", Json::object()).value("randomRotation", false);
     if (checkboxField("Random magnet rotation", &rotateMagnets)) {

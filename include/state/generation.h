@@ -81,6 +81,11 @@ class Generation{
         // ZoneBloater<Identifiable, Identifiable> zoneBloater;
         ZoneBloater<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection> zoneBloater;
         std::vector<Matrix<double>> resourceOctaves;
+        DoubleVector2 mirrorNormal{1,0};
+        std::unordered_map<Identifiable, Identifiable, IDHash> mirroredZoneIDs;
+        std::unordered_map<Identifiable, bool, IDHash> canonicalZoneSide;
+        bool canPlaceCompleteZone(Identifiable id, IntVector2 point) const;
+        void mirrorCompleteTiles(bool seedNodes = false);
 
         std::future<std::unique_ptr<Generation>> worker;
         std::atomic<bool> animate{false};
