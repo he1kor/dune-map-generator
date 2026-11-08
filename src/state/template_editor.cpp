@@ -265,6 +265,33 @@ const Json* TemplateEditor::node(int id) const {
     return nullptr;
 }
 
+BoundaryPlacement TemplateEditor::boundaryPlacement(int id) const {
+    const auto* entry=node(id);
+    return entry?boundaryPlacementFromName(entry->at("data").value("boundary",std::string("any"))):BoundaryPlacement::Any;
+}
+
+void TemplateEditor::setBoundaryPlacement(const std::vector<int>& ids,BoundaryPlacement placement) {
+    if(ids.empty())return;
+    const auto name=boundaryPlacementName(placement);
+    const std::set<int> selected(ids.begin(),ids.end());
+    Action action(*this,"Set boundary placement to "+std::string(name));
+    for(auto& entry:document_["nodes"])if(selected.contains(entry["id"].get<int>())) {
+        if(placement==BoundaryPlacement::Any)entry["data"].erase("boundary");
+        else entry["data"]["boundary"]=name;
+    }
+    error_.clear();
+}
+
+void TemplateEditor::cycleBoundaryPlacement(const std::vector<int>& ids) {
+    if(ids.empty())return;
+    const auto current=boundaryPlacement(ids.front());
+    bool uniform=true;
+    for(int id:ids)uniform&=boundaryPlacement(id)==current;
+    const auto next=!uniform||current==BoundaryPlacement::Any?BoundaryPlacement::Outer
+        :current==BoundaryPlacement::Outer?BoundaryPlacement::Inner:BoundaryPlacement::Any;
+    setBoundaryPlacement(ids,next);
+}
+
 TemplatePoint TemplateEditor::position(int id) const {
     if (const auto* entry = node(id)) {
         const auto& point = entry->at("visualizer");

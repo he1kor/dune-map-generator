@@ -336,6 +336,29 @@ int main(int argc, char** argv) {
             require(editor.document()["nodes"].size() == 2, "Second canvas node was not created");
             const int firstId = editor.document()["nodes"][0]["id"], secondId = editor.document()["nodes"][1]["id"];
             {
+                const auto beforeBoundary=editor.document();
+                key(ImGuiKey_B);click(firstPoint);
+                require(editor.boundaryPlacement(firstId)==BoundaryPlacement::Outer,"Boundary mode click did not choose Outer");
+                click(firstPoint);
+                require(editor.boundaryPlacement(firstId)==BoundaryPlacement::Inner,"Boundary mode click did not choose Inner");
+                require(!editor.topologyWarning().empty(),"Impossible Inner placement has no warning");
+                click(firstPoint);
+                require(editor.boundaryPlacement(firstId)==BoundaryPlacement::Any,"Boundary mode did not cycle back to Any");
+                require(editor.document()==beforeBoundary,"Boundary clicks moved nodes or changed magnet frame");
+                key(ImGuiKey_V);settleClicks();click(firstPoint);
+                key(ImGuiKey_A,true);key(ImGuiKey_B,true);
+                require(editor.boundaryPlacement(firstId)==BoundaryPlacement::Outer
+                    &&editor.boundaryPlacement(secondId)==BoundaryPlacement::Outer,"Ctrl+B did not update selected nodes");
+                key(ImGuiKey_Z,true);
+                require(editor.document()==beforeBoundary,"Boundary batch was not one undo step");
+                key(ImGuiKey_B);editor.setBoundaryPlacement({firstId},BoundaryPlacement::Outer);
+                editor.setBoundaryPlacement({secondId},BoundaryPlacement::Inner);
+                io.AddMousePosEvent(-100,-100);editorFrame();
+                if(argc>1)savePreview(std::string(argv[1])+"-boundary-rules");
+                key(ImGuiKey_V);
+                require(editor.replace(beforeBoundary),"Cannot restore after boundary UI checks");
+            }
+            {
                 const auto beforeMagnets = editor.document();
                 const auto firstPosition = editor.position(firstId);
                 io.AddKeyEvent(ImGuiMod_Alt, true); editorFrame();
@@ -750,6 +773,22 @@ int main(int argc, char** argv) {
                 for (int i = 0; i < 3; ++i) editorFrame();
                 savePreview(std::string(argv[1]) + "-magnet-frame");
                 editor.setPosition(1, {1, 1});
+                TemplateEditor boundaryPreview;
+                std::vector<int> outerIds;
+                for(int y=0;y<3;++y)for(int x=0;x<3;++x) {
+                    const int id=boundaryPreview.addNode({float((x-1)*160),float((y-1)*160)});
+                    if(x!=1||y!=1)outerIds.push_back(id);
+                    if(x>0)boundaryPreview.connect(id-1,id);
+                    if(y>0)boundaryPreview.connect(id-3,id);
+                }
+                boundaryPreview.setBoundaryPlacement(outerIds,BoundaryPlacement::Outer);
+                boundaryPreview.setBoundaryPlacement({5},BoundaryPlacement::Inner);
+                require(boundaryPreview.topologyWarning().empty(),"Boundary preview topology is invalid");
+                require(editor.replace(boundaryPreview.document()),"Cannot prepare boundary preview");
+                io.DisplaySize={1440,900};key(ImGuiKey_B);key(ImGuiKey_F);
+                io.AddMousePosEvent(-100,-100);
+                for(int i=0;i<4;++i)editorFrame();
+                savePreview(std::string(argv[1])+"-boundary-grid");
             }
             const int lastId = editor.document()["nodes"][0]["id"];
             const auto lastPosition = editor.position(lastId);

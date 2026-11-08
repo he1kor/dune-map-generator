@@ -12,6 +12,7 @@
         "Node ID": "A unique non-negative whole number identifying this zone. Changing it updates every connection and directed rule that refers to the zone.",
         "Radius": "A positive relative size weight. Larger values give this zone a larger share of growth seeds and influence embedding spacing. It is not a guaranteed final area. The editor square grows with this value.",
         "Susceptibility": "Magnetic attraction to the map's center. Positive values attract, negative values repel, and zero is neutral. Planarity and map boundaries can limit movement.",
+        "Boundary placement": "Any permits either exterior or interior placement. Outer requires this zone to touch the unbounded face of the real connection graph. Inner forbids that contact and needs enclosure by real connection cycles. These hard rules take priority over magnet preferences without fixing a side, corner, position or distance. They describe embedding topology, not guaranteed contact with the final map's edge tiles.",
         "Custom wall resource": "Choose a material for generated boundary walls. When disabled, walls use Cliff rock.",
         "Wall material": "The resource used to paint generated walls between zones, including walls between sand zones.",
         "Octave count": "Use one to three noise layers. Removing a layer also removes its weights from every zone.",
@@ -48,6 +49,11 @@
         "selection_mode": "Selection mode (V)\nCtrl-click or drag a box to select multiple zones.",
         "edge_mode": "Edge mode (E)\nClick two zones to connect them.\nOr select a zone, hold Shift and click another.",
         "magnet_mode": "Magnet mode (M / hold Alt)\nSingle-click a zone to toggle its position magnet.\nDrag outward to increase force; drag toward its center to decrease.\nWheel resizes the map frame; Ctrl+wheel zooms the camera.",
+        "boundary_mode": "Boundary mode (B)\nClick a zone to cycle Any > Outer > Inner > Any.\nCtrl+B cycles the selection; a mixed selection becomes Outer.\nOuter zones show dashed frame links; Inner zones have an inset badge.\nWheel zooms the camera.",
+        "boundary_frame": "Outer face - any side",
+        "boundary_any": "Boundary: Any - may be outer or inner.",
+        "boundary_outer": "Boundary: Outer - must touch the outer face of the connection graph. The dashed frame link fixes no side or position; diagonal ties end at a corner for symmetry.",
+        "boundary_inner": "Boundary: Inner - must stay off the outer face. Needs enclosure by real connections; it is free to move inside and is not pinned to the center.",
         "fit_magnet_frame": "Reset the square map frame to fit all zone squares, including non-magnets. The frame is centered on the diagram bounds and cannot shrink below this size. Resizing changes normalized targets, not canvas positions.",
         "magnet_frame": "Map frame (0, 0) | {scale}%",
         "magnet_label": "Magnet force: {force}",
@@ -74,9 +80,9 @@
         "map_aspect": "Width / height: {min} to {max}.",
         "map_adjust_other": "The other side adjusts to keep this shape.",
         "map_adjusted": "Size adjusted to fit this template.",
-        "topology_warning": "This graph topology is non-planar: its connections cannot be drawn without crossings, regardless of node placement. Remove or change connections to restore planarity. Auto place is disabled and generation cannot use this topology. Crossed lines in a manual drawing alone do not mean the topology is non-planar.",
+        "topology_warning": "The connection graph or its boundary placement rules could not produce a valid embedding. The details below distinguish non-planarity, incompatible Outer/Inner requirements and an inconclusive search limit. Auto place is disabled until the warning clears. Drafts can still be edited and saved. Crossed lines in a manual drawing alone do not establish a topology conflict.",
         "auto_place": "Arrange nodes as a compact diagram. Prefer rectangular boundaries, symmetric rows and columns, and horizontal, vertical or 45-degree connections. Grid snapping preserves topology and avoids node overlaps. Leave room for one complete edge pattern at 100% zoom, then fit the whole graph in view. Only visualizer positions change; Undo restores the previous arrangement.",
-        "auto_place_disabled": "Auto place is unavailable while the graph has a topology warning. Remove or change connections until the warning clears.",
+        "auto_place_disabled": "Auto place is unavailable while the graph has a topology or boundary placement warning. Adjust the connections or Outer/Inner rules as explained by the top-menu !.",
         "auto_placed": "Nodes placed automatically. Undo restores the previous positions."
     },
     "help": [
@@ -93,10 +99,19 @@
             "title": "Canvas",
             "paragraphs": [
                 "Double-click empty space to create a zone. Double-click a zone or edge to edit it. Drag a zone to move the selection. Drag empty space to select a group; Ctrl-click adds or removes individual zones.",
-                "V: selection mode. E: edge mode. M: magnet mode. To connect quickly, click zone A, hold Shift and click zone B. Shift temporarily selects edge mode. Hold Alt for magnet mode; Alt takes priority over Shift. Release the modifier to return to your chosen mode.",
+                "V: selection mode. E: edge mode. M: magnet mode. B: boundary mode. Ctrl+B cycles boundary placement for selected zones. To connect quickly, click zone A, hold Shift and click zone B. Shift temporarily selects edge mode. Hold Alt for magnet mode; Alt takes priority over Shift. Release the modifier to return to your chosen mode.",
                 "Ctrl while dragging: snap the grabbed zone's center to grid crosses or cell centers (32 units between the two grids). All selected zones keep their relative spacing. Ctrl+A: select all. Delete: remove selection. Enter: edit selection. Esc: clear selection or cancel a pending edge.",
-                "Wheel: zoom at the pointer. In Magnet mode, wheel down expands the map frame and wheel up shrinks it, stopping when it fits all zones. Ctrl+wheel still zooms. Middle or right drag: pan. F or Home: fit graph, including the map frame in Magnet mode.",
+                "Wheel: zoom at the pointer, including in Boundary mode. In Magnet mode, wheel down expands the map frame and wheel up shrinks it, stopping when it fits all zones. Ctrl+wheel still zooms. Middle or right drag: pan. F or Home: fit graph, including the map frame in Magnet or Boundary mode.",
                 "Auto place creates a compact diagram with rectangular boundaries and symmetric rows and columns where topology permits. Grid-like graphs are laid out as grids; irregular graphs use a certified planar construction. Positions snap to grid crosses or cell centers and are checked for node overlaps and edge crossings. Connections leave room for one full dotted pattern at 100% zoom, and the whole graph is fitted into the canvas. The top menu shows (!) for non-planar connection topology; Auto place is disabled until it is fixed. Placement changes only visualizer positions and is one undo step."
+            ]
+        },
+        {
+            "title": "Boundary placement",
+            "paragraphs": [
+                "Every zone has one boundary placement state: Any (the default), Outer, or Inner. Outer must touch the unbounded face of the real connection graph; Inner must not touch it. Any imposes no restriction. Inner does not pin a zone to the center or choose a particular bounded face. These are hard embedding rules, not promises of contact with the grown map's edge tiles.",
+                "Press B for Boundary mode and click zones to cycle Any > Outer > Inner > Any. Ctrl+B cycles a uniform selection; a mixed selection becomes Outer first. Each batch is one undo step. Node settings and the context menu offer direct choices. Shift still temporarily selects Edge mode and Alt selects Magnet mode.",
+                "Outer zones have a cyan frame badge and dashed links to the shared square map frame. Links appear for all Outer zones in Boundary mode, and for hovered or selected Outer zones otherwise. Equal nearest-side distances end at the shared corner for visual symmetry. The endpoint never specifies a side, corner, coordinate or force. Inner zones have a purple inset badge and no center tether. Any zones have no boundary badge. Boundary-mode wheel zooms; frame resizing remains in Magnet mode.",
+                "Inner zones need real cycles enclosing them. A graph made entirely of trees, or a simple cycle alone, cannot have Inner zones. A leaf attached to a triangle can be placed inside it. Some combinations are incompatible even when individual choices are possible. The top-menu ! explains conflicts or an inconclusive search limit; drafts remain saveable. Magnets, symmetry, automatic placement and tile rounding must respect the rules. Manual canvas positions illustrate the template and do not change the saved state. Choose Use for generation after editing to update the generation snapshot."
             ]
         },
         {

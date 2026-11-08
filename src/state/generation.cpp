@@ -64,6 +64,7 @@ void Generation::generate(std::shared_ptr<MapTemplate> mapTemplate, int width, i
         preferences.emplace(edge, connection.geometry);
     const auto positionMagnets = mapTemplate->magnetsForGeneration(static_cast<std::uint64_t>(seed), width, height);
     auto topology = mapTemplate->embeddingTopology;
+    if(!topology&&!mapTemplate->nodeBoundary.empty())topology=planar::makeTopology(*mapTemplate->zoneGraph,mapTemplate->nodeBoundary);
     std::shared_ptr<const planar::Reflection> reflection;
     if (mapTemplate->symmetryMode!=SymmetryMode::None) {
         if (!topology) topology = planar::makeTopology(*mapTemplate->zoneGraph);

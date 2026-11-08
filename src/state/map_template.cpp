@@ -14,7 +14,7 @@ std::shared_ptr<const planar::Reflection> MapTemplate::reflectionForGeneration(c
     double width, double height) const {
     if(symmetryMode==SymmetryMode::None)return nullptr;
     auto topology=embeddingTopology;
-    if(!topology)topology=planar::makeTopology(*zoneGraph);
+    if(!topology)topology=planar::makeTopology(*zoneGraph,nodeBoundary);
     std::string mismatch;
     auto accept=[&](const planar::Reflection& reflection) {
         auto mirror=[&](Identifiable id) {

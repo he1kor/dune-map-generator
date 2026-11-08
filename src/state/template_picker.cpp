@@ -319,6 +319,13 @@ std::shared_ptr<MapTemplate> readGraph(const Json& json, bool requireGeneratable
         if (!ids.insert(id).second) invalid(child(path, "id"), "a unique node ID");
         rawGraph.push_back({readNode(nodes[i], path, id, result->octaves.size()), {}});
         const auto& data = nodes[i]["data"];
+        if(const auto it=data.find("boundary");it!=data.end()) {
+            const auto boundaryPath=child(child(path,"data"),"boundary");
+            const auto value=text(*it,boundaryPath);
+            if(value!="any"&&value!="outer"&&value!="inner")invalid(boundaryPath,"any, outer or inner");
+            const auto placement=boundaryPlacementFromName(value);
+            if(placement!=BoundaryPlacement::Any)result->nodeBoundary.emplace(Identifiable(id),placement);
+        }
         if (const auto it = data.find("magnet"); it != data.end()) {
             const auto magnetPath = child(child(path, "data"), "magnet");
             const double force = number(member(*it, "force", magnetPath), child(magnetPath, "force"));
@@ -351,9 +358,13 @@ std::shared_ptr<MapTemplate> readGraph(const Json& json, bool requireGeneratable
         rawGraph, symEdges, asymEdges);
     if (requireGeneratable) {
         try {
-            result->embeddingTopology = planar::makeTopology(*result->zoneGraph);
+            result->embeddingTopology = planar::makeTopology(*result->zoneGraph,result->nodeBoundary);
         } catch (const planar::NonPlanarGraph& error) {
             invalid("symmetrical_edges", error.what());
+        } catch (const planar::ConflictingBoundaryRules& error) {
+            invalid("nodes/boundary",error.what());
+        } catch (const planar::BoundarySearchLimit& error) {
+            invalid("nodes/boundary",error.what());
         }
         if (result->symmetryMode!=SymmetryMode::None) {
             const auto size=result->dimensionLimits.closest({128,128});

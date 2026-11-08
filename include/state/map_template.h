@@ -18,6 +18,7 @@ public:
     std::shared_ptr<EdgeGraph<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection>> zoneGraph;
     std::shared_ptr<const planar::Topology> embeddingTopology;
     PositionMagnetMap positionMagnets;
+    NodeBoundaryMap nodeBoundary;
     bool rotatePositionMagnets = false;
     SymmetryMode symmetryMode = SymmetryMode::None;
     std::shared_ptr<const planar::Reflection> embeddingReflection;

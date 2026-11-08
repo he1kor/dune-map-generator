@@ -27,7 +27,7 @@ private:
     ImVec2 camera_{0, 0};
     float zoom_ = 1;
     bool fit_ = true;
-    enum class Mode { Selection, Edge, Magnet };
+    enum class Mode { Selection, Edge, Magnet, Boundary };
     Mode mode_ = Mode::Selection;
     int connectionStart_ = -1;
     int selectedNode_ = -1;

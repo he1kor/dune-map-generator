@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <embedding_parameters.h>
 
 namespace planar { struct Topology; }
 
@@ -54,6 +55,9 @@ public:
     void setMagnet(int id, bool enabled);
     void setMagnetForce(int id, double force);
     void setMagnetFrameScale(double scale);
+    BoundaryPlacement boundaryPlacement(int id) const;
+    void setBoundaryPlacement(const std::vector<int>& ids,BoundaryPlacement placement);
+    void cycleBoundaryPlacement(const std::vector<int>& ids);
     const Json* node(int id) const;
     Json copyNodeData(int id) const;
     Json copyConnectionData(size_t index) const;

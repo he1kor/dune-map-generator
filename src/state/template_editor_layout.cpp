@@ -10,6 +10,7 @@
 #include <limits>
 #include <map>
 #include <numeric>
+#include <set>
 
 namespace {
 using Points = std::vector<DoubleVector2>;
@@ -87,7 +88,7 @@ Points spacedDrawing(const Points& input, const planar::Topology& topology,
                 || std::abs(placed.x) > coordinateLimit || std::abs(placed.y) > coordinateLimit) return {};
             result.push_back(placed);
         }
-        if (planar::validDrawing(result, topology.edges)
+        if (planar::validDrawing(result, topology.edges) && planar::validBoundaryDrawing(result,topology)
             && spacingScale(result, topology.edges, halfSizes, patterns) <= 1 + 1e-9) return result;
         if (attempt >= 4) scale *= 1.15;
     }
@@ -104,6 +105,7 @@ Points rectangularDrawing(const planar::Topology& topology) {
     auto boundary = topology.outerFace;
     const size_t m = boundary.size();
     if (m < 3) return {};
+    if(std::set<size_t>(boundary.begin(),boundary.end()).size()!=m)return {};
     // Use the private biconnected scaffold, including face centers. Solving
     // only real edges collapses leaves onto their parent and whole branches
     // onto a line, forcing an unnecessarily large triangular fallback.
@@ -268,7 +270,7 @@ Points relaxDiagram(Points points, const planar::Topology& topology,
         planar::limitDisplacements(points, topology.edges, movement);
         auto candidate = points;
         for (size_t i = 0; i < points.size(); ++i) { candidate[i].x += movement[i].x; candidate[i].y += movement[i].y; }
-        if (planar::validDrawing(candidate, topology.edges)) points = std::move(candidate);
+        if (planar::validDrawing(candidate, topology.edges) && planar::validBoundaryDrawing(candidate,topology)) points = std::move(candidate);
     }
     return points;
 }
@@ -277,6 +279,15 @@ Points relaxDiagram(Points points, const planar::Topology& topology,
 void TemplateEditor::updateTopology() const {
     std::vector<int> ids;
     std::vector<std::pair<int, int>> edges;
+    NodeBoundaryMap boundary;
+    Json boundarySignature=Json::object();
+    for(const auto& node:document_["nodes"]) {
+        const auto placement=boundaryPlacement(node["id"].get<int>());
+        if(placement!=BoundaryPlacement::Any) {
+            boundary.emplace(Identifiable(node["id"].get<int>()),placement);
+            boundarySignature[node["id"].dump()]=boundaryPlacementName(placement);
+        }
+    }
     for (const auto& node : document_["nodes"]) ids.push_back(node["id"].get<int>());
     for (const auto& edge : document_["symmetrical_edges"]) {
         const int a = edge["ID_first"], b = edge["ID_second"];
@@ -284,7 +295,7 @@ void TemplateEditor::updateTopology() const {
     }
     std::sort(ids.begin(), ids.end());
     std::sort(edges.begin(), edges.end());
-    const Json signature = Json::array({ids, edges});
+    const Json signature = Json::array({ids, edges,boundarySignature});
     if (signature == topologySignature_) return;
     topologySignature_ = signature;
     topology_.reset(); topologyWarning_.clear();
@@ -292,7 +303,8 @@ void TemplateEditor::updateTopology() const {
     std::vector<std::pair<Identifiable, Identifiable>> connections;
     for (int id : ids) identified.emplace_back(id);
     for (auto [a, b] : edges) connections.emplace_back(a, b);
-    try { topology_ = planar::makeTopology(std::move(identified), connections); }
+    // Never spend the generation-sized combinatorial search budget in a redraw.
+    try { topology_ = planar::makeTopology(std::move(identified), connections,boundary,std::chrono::milliseconds(25)); }
     catch (const std::exception& error) { topologyWarning_ = error.what(); }
 }
 
@@ -347,7 +359,7 @@ bool TemplateEditor::autoPlace() {
         double bestScore = std::numeric_limits<double>::infinity();
         for (const auto& seed : {rectangularDrawing(*topology_), topology_->gridDrawing}) {
             for (const auto& drawing : {alignRows(seed), seed}) {
-                if (drawing.empty() || !planar::validDrawing(drawing, topology_->edges)) continue;
+                if (drawing.empty() || !planar::validDrawing(drawing, topology_->edges) || !planar::validBoundaryDrawing(drawing,*topology_)) continue;
                 auto candidate = spacedDrawing(drawing, *topology_, halfSizes, patterns);
                 const double score = diagramScore(candidate, topology_->edges);
                 if (score < bestScore) { bestScore = score; points = std::move(candidate); }
@@ -357,7 +369,7 @@ bool TemplateEditor::autoPlace() {
             auto refined = relaxDiagram(points, *topology_, halfSizes, patterns);
             for (auto& p : refined) { p.x /= grid; p.y /= grid; }
             for (const auto& drawing : {alignRows(refined), refined}) {
-                if (!planar::validDrawing(drawing, topology_->edges)) continue;
+                if (!planar::validDrawing(drawing, topology_->edges) || !planar::validBoundaryDrawing(drawing,*topology_)) continue;
                 auto candidate = spacedDrawing(drawing, *topology_, halfSizes, patterns);
                 const double score = diagramScore(candidate, topology_->edges);
                 if (score < bestScore) { bestScore = score; points = std::move(candidate); }

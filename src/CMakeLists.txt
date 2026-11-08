@@ -88,6 +88,22 @@ endif()
 option(MAPGENERATOR_BUILD_TESTS "Build map generation regression tests" OFF)
 if(MAPGENERATOR_BUILD_TESTS)
     enable_testing()
+    add_executable(boundary_template_regression
+        ../tests/boundary_template_regression.cc
+        state/map_template.cpp
+        state/template_picker.cpp
+        state/template_editor.cpp
+        state/template_editor_layout.cpp
+        state/generation.cpp
+    )
+    target_include_directories(boundary_template_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(boundary_template_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
+    add_test(NAME boundary_template_regression COMMAND boundary_template_regression
+        "${CMAKE_CURRENT_BINARY_DIR}/boundary-template-regression.json"
+        "${CMAKE_SOURCE_DIR}/tests/fixtures/spice_scout.json")
     add_executable(async_generation_regression
         ../tests/async_generation_regression.cc
         state/map_template.cpp
