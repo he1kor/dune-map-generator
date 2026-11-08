@@ -153,7 +153,8 @@ if(MAPGENERATOR_BUILD_TESTS)
     add_test(NAME template_editor_regression COMMAND template_editor_regression
         "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json"
         "${CMAKE_SOURCE_DIR}/assets/templates/edge geometry example.json"
-        "${CMAKE_CURRENT_BINARY_DIR}/template-editor-regression.json")
+        "${CMAKE_CURRENT_BINARY_DIR}/template-editor-regression.json"
+        "${CMAKE_SOURCE_DIR}/tests/fixtures/spice_scout.json")
     add_executable(map_dimensions_regression
         ../tests/map_dimensions_regression.cc
         state/template_picker.cpp

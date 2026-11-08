@@ -12,7 +12,8 @@ your work before continuing.
 - Double-click empty canvas to add a square node; drag a node to move it.
 - Click a node, hold Shift, and click another to connect them. The cursor and
   edge icons select **Selection** (`V`) and **Edge** (`E`) modes; Shift temporarily
-  activates Edge mode. Self-connections and duplicate connections are ignored.
+  activates Edge mode. The source stays selected after connecting; keep holding
+  Shift to connect it to more zones. Self-connections and duplicates are ignored.
 - Ctrl-click adds or removes individual zones from the selection. Drag empty
   space to select a box of zones; Ctrl adds to the current selection. Drag any
   selected zone to move the entire group. Hold Ctrl during movement to snap the
@@ -36,8 +37,9 @@ your work before continuing.
 - **Auto place** creates a compact diagram with a rectangular outer boundary,
   symmetric rows/columns and horizontal, vertical or 45-degree connections where
   possible. A uniform harmonic layout preserves grid symmetries; the generator's
-  certified planar construction is retained for irregular topologies. It scales
-  and snaps the drawing to grid crosses or cell centers.
+  certified planar construction is retained for irregular topologies. Branches
+  use the private drawing scaffold instead of collapsing onto their parent.
+  Clearance-aware compaction shortens long edges before grid snapping.
   It checks for node overlaps, edge crossings, and edges passing through unrelated
   nodes after snapping. Connections leave room for one complete dotted pattern
   at 100% zoom, without the previous large clearance halos. The initial camera

@@ -539,12 +539,14 @@ void TemplateEditorUI::canvas() {
         } else if (hitNode >= 0 && (mode_ == Mode::Edge || io.KeyShift)) {
             const int source = connectionStart_ >= 0 ? connectionStart_
                 : io.KeyShift && selectedNode_ >= 0 ? selectedNode_ : -1;
-            if (source < 0 || source == hitNode) connectionStart_ = hitNode;
+            if (source < 0 || source == hitNode) {
+                connectionStart_ = hitNode;
+                selectedNode_ = hitNode; selectedNodes_ = {hitNode}; selectedEdge_ = -1;
+            }
             else {
                 editor_.connect(source, hitNode);
                 connectionStart_ = -1;
             }
-            selectedNode_ = hitNode; selectedNodes_ = {hitNode}; selectedEdge_ = -1;
         } else if (hitNode >= 0) {
             if (io.KeyCtrl) {
                 if (selectedNodes_.contains(hitNode)) toggleOnRelease_ = hitNode;

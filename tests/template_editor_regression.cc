@@ -305,9 +305,28 @@ static void checkAutoPlacement() {
     }
 }
 
+static void checkSpiceScout(const std::filesystem::path& path) {
+    TemplateEditor editor;
+    require(editor.load(path), editor.error());
+    const auto original = editor.document();
+    require(editor.autoPlace(), editor.error());
+    requirePlacedLayout(editor);
+    require(withoutPositions(editor.document()) == withoutPositions(original), "Spice Scout placement changed generation settings");
+    double minX = 1e10, minY = 1e10, maxX = -1e10, maxY = -1e10;
+    for (const auto& node : editor.document()["nodes"]) {
+        const auto p = editor.position(node["id"]);
+        minX = std::min(minX, double(p.x)); maxX = std::max(maxX, double(p.x));
+        minY = std::min(minY, double(p.y)); maxY = std::max(maxY, double(p.y));
+    }
+    require(maxX - minX <= 1800 && maxY - minY <= 1800, "Spice Scout still has an oversized diagram");
+    const auto placed = editor.document();
+    require(editor.autoPlace() && editor.document() == placed, "Spice Scout placement is not repeatable");
+}
+
 int main(int argc, char** argv) {
     try {
-        require(argc == 4, "Pass the canonical template, geometry template and scratch path");
+        require(argc == 4 || argc == 5, "Pass the canonical template, geometry template, scratch path and optional Spice Scout fixture");
+        if (argc == 5) checkSpiceScout(argv[4]);
         TemplateEditor editor;
         const std::filesystem::path scratch(argv[3]);
         checkHistory(scratch);

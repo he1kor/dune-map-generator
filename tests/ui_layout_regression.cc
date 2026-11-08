@@ -341,6 +341,10 @@ int main(int argc, char** argv) {
             click(secondPoint);
             io.AddKeyEvent(ImGuiMod_Shift, false); editorFrame();
             require(editor.document()["symmetrical_edges"].size() == 1, "Shift-click did not connect nodes");
+            key(ImGuiKey_Delete);
+            require(!editor.node(firstId) && editor.node(secondId), "Connecting selected the destination instead of retaining the source zone");
+            key(ImGuiKey_Z, true);
+            require(editor.node(firstId) && editor.document()["symmetrical_edges"].size() == 1, "Cannot undo source-zone deletion after connecting");
             const auto beforeDrag = editor.position(firstId);
             settleClicks();
             io.AddMousePosEvent(firstPoint.x, firstPoint.y); editorFrame();
