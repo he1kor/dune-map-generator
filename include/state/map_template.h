@@ -4,6 +4,7 @@
 #include <connection.h>
 #include <nodes.h>
 #include "map_dimensions.h"
+#include <cstdint>
 
 namespace planar { struct Topology; }
 
@@ -15,4 +16,7 @@ public:
     MapDimensionLimits dimensionLimits;
     std::shared_ptr<EdgeGraph<ResourceRadialNode<Resource>, BasicSymConnection, BasicAsymConnection>> zoneGraph;
     std::shared_ptr<const planar::Topology> embeddingTopology;
+    PositionMagnetMap positionMagnets;
+    bool rotatePositionMagnets = false;
+    PositionMagnetMap magnetsForGeneration(std::uint64_t seed, int width, int height) const;
 };

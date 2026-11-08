@@ -37,7 +37,30 @@ void TemplateEditor::createNew() {
 }
 
 std::string TemplateEditor::checkPositions(const Json& candidate) {
+    if (candidate.contains("visualizer") && !candidate["visualizer"].is_object())
+        return "visualizer: expected an object";
+    if (candidate.contains("visualizer") && candidate["visualizer"].is_object()
+            && candidate["visualizer"].contains("magnetFrame")) {
+        const auto& frame = candidate["visualizer"]["magnetFrame"];
+        if (!frame.is_object() || !frame.contains("scale") || !frame["scale"].is_number()
+                || !std::isfinite(frame["scale"].get<double>())
+                || frame["scale"].get<double>() < 1 || frame["scale"].get<double>() > 100)
+            return "visualizer/magnetFrame/scale: expected a finite scale between 1 and 100";
+    }
     for (const auto& node : candidate.at("nodes")) {
+        if (node["data"].contains("magnet")) {
+            const auto& magnet = node["data"]["magnet"];
+            if (!magnet.is_object() || !magnet.contains("force") || !magnet["force"].is_number()
+                    || !std::isfinite(magnet["force"].get<double>())
+                    || magnet["force"].get<double>() < minMagnetForce || magnet["force"].get<double>() > maxMagnetForce)
+                return "nodes/" + node["id"].dump() + "/data/magnet/force: expected a finite force between 0.1 and 100";
+            if (magnet.contains("position")) for (const char* axis : {"x", "y"}) {
+                const auto& target = magnet["position"];
+                if (!target.is_object() || !target.contains(axis) || !target[axis].is_number()
+                        || !std::isfinite(target[axis].get<double>()))
+                    return "nodes/" + node["id"].dump() + "/data/magnet/position/" + axis + ": expected a finite coordinate";
+            }
+        }
         if (!node.contains("visualizer")) continue;
         const auto& point = node["visualizer"];
         for (const char* axis : {"x", "y"}) {
@@ -48,6 +71,98 @@ std::string TemplateEditor::checkPositions(const Json& candidate) {
         }
     }
     return {};
+}
+
+TemplateMagnetFrame TemplateEditor::magnetFrame(const Json& document) {
+    TemplateMagnetFrame frame;
+    if (document.contains("visualizer") && document["visualizer"].is_object()
+            && document["visualizer"].contains("magnetFrame"))
+        frame.scale = document["visualizer"]["magnetFrame"].value("scale", 1.0);
+    double minX = 1e30, minY = 1e30, maxX = -1e30, maxY = -1e30;
+    for (const auto& node : document["nodes"]) {
+        const double x = node["visualizer"]["x"], y = node["visualizer"]["y"], half = halfSize(node);
+        minX = std::min(minX, x - half); maxX = std::max(maxX, x + half);
+        minY = std::min(minY, y - half); maxY = std::max(maxY, y + half);
+    }
+    if (!document["nodes"].empty()) {
+        frame.center = {static_cast<float>(canvasCoordinate((minX + maxX) / 2)),
+            static_cast<float>(canvasCoordinate((minY + maxY) / 2))};
+        frame.halfExtent = std::max({64.0, maxX - frame.center.x, frame.center.x - minX,
+            maxY - frame.center.y, frame.center.y - minY}) + 16;
+    }
+    // Round outward so serialization never shrinks the frame onto a node.
+    frame.halfExtent = std::ceil(frame.halfExtent * frame.scale * 100) / 100;
+    return frame;
+}
+
+void TemplateEditor::updateMagnets(Json& document) {
+    bool hasMagnets = false;
+    for (const auto& node : document["nodes"]) hasMagnets |= node["data"].contains("magnet");
+    const bool hasFrame = document.contains("visualizer") && document["visualizer"].is_object()
+        && document["visualizer"].contains("magnetFrame");
+    if (!hasMagnets && !hasFrame) return;
+    const auto frame = magnetFrame(document);
+    auto& savedFrame = document["visualizer"]["magnetFrame"];
+    savedFrame["scale"] = frame.scale;
+    savedFrame["center"] = {{"x", canvasCoordinate(frame.center.x)}, {"y", canvasCoordinate(frame.center.y)}};
+    savedFrame["halfExtent"] = frame.halfExtent;
+    for (auto& node : document["nodes"]) if (node["data"].contains("magnet")) {
+        auto& magnet = node["data"]["magnet"];
+        magnet["force"] = canvasCoordinate(magnet["force"].get<double>());
+        for (const char* axis : {"x", "y"}) {
+            const double center = std::string(axis) == "x" ? frame.center.x : frame.center.y;
+            const double target = 0.5 + (node["visualizer"][axis].get<double>() - center) / (2 * frame.halfExtent);
+            magnet["position"][axis] = std::round(target * 1000000) / 1000000;
+        }
+    }
+}
+
+bool TemplateEditor::isMagnet(int id) const {
+    const auto* entry = node(id);
+    return entry && entry->at("data").contains("magnet");
+}
+
+double TemplateEditor::magnetForce(int id) const {
+    return isMagnet(id) ? node(id)->at("data").at("magnet").at("force").get<double>() : defaultMagnetForce;
+}
+
+TemplatePoint TemplateEditor::magnetTarget(int id) const {
+    const auto frame = magnetFrame();
+    const auto point = position(id);
+    return {static_cast<float>(0.5 + (point.x - frame.center.x) / (2 * frame.halfExtent)),
+        static_cast<float>(0.5 + (point.y - frame.center.y) / (2 * frame.halfExtent))};
+}
+
+bool TemplateEditor::magnetInsideFrame(int id) const {
+    if (!isMagnet(id)) return false;
+    const auto target = magnetTarget(id);
+    return target.x >= 0 && target.x <= 1 && target.y >= 0 && target.y <= 1;
+}
+
+void TemplateEditor::setMagnet(int id, bool enabled) {
+    Action action(*this, std::string(enabled ? "Enable magnet on zone " : "Disable magnet on zone ") + std::to_string(id));
+    for (auto& node : document_["nodes"]) if (node["id"] == id) {
+        if (enabled && !node["data"].contains("magnet")) node["data"]["magnet"] = {{"force", defaultMagnetForce}};
+        else if (!enabled) node["data"].erase("magnet");
+        return;
+    }
+}
+
+void TemplateEditor::setMagnetForce(int id, double force) {
+    if (!std::isfinite(force)) return;
+    Action action(*this, "Adjust magnet force on zone " + std::to_string(id));
+    for (auto& node : document_["nodes"]) if (node["id"] == id) {
+        node["data"]["magnet"]["force"] = canvasCoordinate(std::clamp(force, minMagnetForce, maxMagnetForce));
+        return;
+    }
+}
+
+void TemplateEditor::setMagnetFrameScale(double scale) {
+    if (!std::isfinite(scale)) return;
+    scale = std::clamp(canvasCoordinate(scale), 1.0, 100.0);
+    if (scale == magnetFrame().scale) return;
+    Action action(*this, "Resize magnet frame");
+    document_["visualizer"]["magnetFrame"]["scale"] = scale;
 }
 
 float TemplateEditor::halfSize(const Json& node) {
@@ -74,6 +189,7 @@ bool TemplateEditor::replace(Json candidate, const std::string& label) {
     error_ = checkPositions(candidate);
     if (!error_.empty()) return false;
     addMissingPositions(candidate);
+    updateMagnets(candidate);
     Action action(*this, label);
     if (document_ != candidate) {
         document_ = std::move(candidate);
@@ -305,6 +421,7 @@ void TemplateEditor::beginAction(const std::string& label) {
 
 void TemplateEditor::endAction() {
     if (actionDepth_ == 0 || --actionDepth_ != 0) return;
+    updateMagnets(document_);
     if (actionBefore_.document == document_ && actionBefore_.path == path_ && actionBefore_.session == session_) return;
     undo_.push_back({std::move(actionBefore_), {document_, path_, session_}, std::move(actionLabel_)});
     redo_.clear();

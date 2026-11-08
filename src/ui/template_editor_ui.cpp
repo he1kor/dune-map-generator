@@ -24,6 +24,30 @@ constexpr float gridSpacing = 64;
 constexpr double toastDuration = 4;
 constexpr double toastFadeDuration = 0.4;
 
+// Layer two clipped rounded outlines to keep both magnetic poles continuous,
+// including through the rounded corners. All glow widths are screen pixels.
+void magnetContour(ImDrawList* draw, ImVec2 minimum, ImVec2 maximum, float rounding, double force, bool active) {
+    const float strength = static_cast<float>(std::clamp(std::log1p(force) / std::log1p(TemplateEditor::maxMagnetForce), 0.0, 1.0));
+    const float reach = 4 + 17 * strength;
+    const float middle = (minimum.x + maximum.x) * 0.5f;
+    for (int pole = 0; pole < 2; ++pole) {
+        draw->PushClipRect({pole ? middle : minimum.x - reach - 4, minimum.y - reach - 4},
+            {pole ? maximum.x + reach + 4 : middle, maximum.y + reach + 4}, true);
+        auto color = [&](int alpha) {
+            alpha = static_cast<int>(alpha * (active ? 1.0f : 0.3f));
+            return pole ? IM_COL32(65 + int(60 * strength), 135 + int(90 * strength), 255, alpha)
+                : IM_COL32(235 + int(20 * strength), 65 + int(60 * strength), 85 + int(50 * strength), alpha);
+        };
+        for (int layer = 7; layer >= 1; --layer) {
+            const float spread = reach * layer / 7;
+            draw->AddRect({minimum.x - spread, minimum.y - spread}, {maximum.x + spread, maximum.y + spread},
+                color(10 + int(28 * strength)), rounding + spread, std::max(2.0f, reach / 5));
+        }
+        draw->AddRect(minimum, maximum, color(210 + int(45 * strength)), rounding, 2.5f + strength);
+        draw->PopClipRect();
+    }
+}
+
 void descriptionTooltip(const char* text) {
     ImGui::BeginTooltip();
     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 25);
@@ -281,14 +305,18 @@ void TemplateEditorUI::toolbar() {
     }
     ImGui::EndChild();
 
-    auto modeButton = [&](const char* id, bool edge, bool selected, const char* hint) {
+    auto modeButton = [&](const char* id, Mode mode, bool selected, const char* hint) {
         ImGui::PushStyleColor(ImGuiCol_Button, selected ? RED_EXTRA : HARD_BROWN);
         const bool clicked = ImGui::Button(id, {32, ImGui::GetFrameHeight()});
         ImGui::PopStyleColor();
         const auto p = ImGui::GetItemRectMin();
         auto* draw = ImGui::GetWindowDrawList();
         const ImVec2 center(p.x + 16, p.y + ImGui::GetFrameHeight() * 0.5f);
-        if (edge) {
+        if (mode == Mode::Magnet) {
+            draw->AddRect({center.x - 8, center.y - 8}, {center.x + 8, center.y + 8}, textColor, 4.0f, 2.0f);
+            draw->AddLine({center.x - 8, center.y}, {center.x - 8, center.y + 6}, IM_COL32(255, 90, 110, 255), 4);
+            draw->AddLine({center.x + 8, center.y}, {center.x + 8, center.y + 6}, IM_COL32(110, 180, 255, 255), 4);
+        } else if (mode == Mode::Edge) {
             draw->AddLine({center.x - 7, center.y + 5}, {center.x + 7, center.y - 5}, textColor, 1.5f);
             draw->AddRectFilled({center.x - 10, center.y + 2}, {center.x - 4, center.y + 8}, textColor);
             draw->AddRectFilled({center.x + 4, center.y - 8}, {center.x + 10, center.y - 2}, textColor);
@@ -299,13 +327,22 @@ void TemplateEditorUI::toolbar() {
         if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", hint);
         return clicked;
     };
-    const bool edgeMode = mode_ == Mode::Edge || ImGui::GetIO().KeyShift;
-    if (modeButton("##selection_mode", false, !edgeMode, uiDescriptions().text("selection_mode").c_str())) {
+    const auto effectiveMode = activeMode();
+    if (modeButton("##selection_mode", Mode::Selection, effectiveMode == Mode::Selection, uiDescriptions().text("selection_mode").c_str())) {
         mode_ = Mode::Selection; connectionStart_ = -1;
     }
     ImGui::SameLine();
-    if (modeButton("##edge_mode", true, edgeMode, uiDescriptions().text("edge_mode").c_str())) {
+    if (modeButton("##edge_mode", Mode::Edge, effectiveMode == Mode::Edge, uiDescriptions().text("edge_mode").c_str())) {
         mode_ = Mode::Edge; connectionStart_ = -1;
+    }
+    ImGui::SameLine();
+    if (modeButton("##magnet_mode", Mode::Magnet, effectiveMode == Mode::Magnet, uiDescriptions().text("magnet_mode").c_str())) {
+        mode_ = Mode::Magnet; connectionStart_ = -1;
+    }
+    if (activeMode() == Mode::Magnet) {
+        ImGui::SameLine();
+        if (ImGui::Button("Fit frame")) editor_.setMagnetFrameScale(1);
+        if (ImGui::IsItemHovered()) descriptionTooltip(uiDescriptions().text("fit_magnet_frame").c_str());
     }
     ImGui::SameLine(0, 16);
     if (ImGui::Button("+ Zone")) {
@@ -363,8 +400,22 @@ void TemplateEditorUI::useForGeneration() {
 }
 
 void TemplateEditorUI::finishMove() {
+    finishMagnet();
     if (moving_) { editor_.endAction(); moving_ = false; }
     draggingNode_ = -1; dragPositions_.clear(); toggleOnRelease_ = -1;
+}
+
+TemplateEditorUI::Mode TemplateEditorUI::activeMode() const {
+    const auto& io = ImGui::GetIO();
+    if (io.KeyAlt) return Mode::Magnet;
+    if (io.KeyShift) return Mode::Edge;
+    return mode_;
+}
+
+void TemplateEditorUI::finishMagnet() {
+    if (magnetDragging_) editor_.endAction();
+    magnetDragging_ = false;
+    magnetNode_ = -1;
 }
 
 void TemplateEditorUI::resetInteraction() {
@@ -402,6 +453,8 @@ void TemplateEditorUI::shortcuts() {
     } else {
         if (ImGui::IsKeyPressed(ImGuiKey_V, false)) { mode_ = Mode::Selection; connectionStart_ = -1; }
         if (ImGui::IsKeyPressed(ImGuiKey_E, false)) { mode_ = Mode::Edge; connectionStart_ = -1; }
+        if (ImGui::IsKeyPressed(ImGuiKey_M, false)) { mode_ = Mode::Magnet; connectionStart_ = -1; }
+        if (ImGui::IsKeyPressed(ImGuiKey_F, false) || ImGui::IsKeyPressed(ImGuiKey_Home, false)) fit_ = true;
         if (ImGui::IsKeyPressed(ImGuiKey_F2, false)) openHelp_ = true;
     }
 }
@@ -450,15 +503,25 @@ void TemplateEditorUI::fitView() {
     fit_ = false;
     if (editor_.document()["nodes"].empty()) { camera_ = {0, 0}; zoom_ = 1; return; }
     ImVec2 minimum(1e20f, 1e20f), maximum(-1e20f, -1e20f);
+    bool hasMagnets = false;
     for (const auto& node : editor_.document()["nodes"]) {
+        hasMagnets |= node["data"].contains("magnet");
         const auto point = editor_.position(node["id"]);
         const float half = TemplateEditor::halfSize(node);
         minimum.x = std::min(minimum.x, point.x - half); minimum.y = std::min(minimum.y, point.y - half);
         maximum.x = std::max(maximum.x, point.x + half); maximum.y = std::max(maximum.y, point.y + half);
     }
+    if (activeMode() == Mode::Magnet) {
+        const auto frame = editor_.magnetFrame();
+        minimum.x = std::min(minimum.x, frame.center.x - float(frame.halfExtent));
+        minimum.y = std::min(minimum.y, frame.center.y - float(frame.halfExtent));
+        maximum.x = std::max(maximum.x, frame.center.x + float(frame.halfExtent));
+        maximum.y = std::max(maximum.y, frame.center.y + float(frame.halfExtent));
+    }
     camera_ = {(minimum.x + maximum.x) * 0.5f, (minimum.y + maximum.y) * 0.5f};
+    const float verticalPadding = hasMagnets || activeMode() == Mode::Magnet ? 112.0f : 64.0f;
     zoom_ = std::clamp(std::min(std::max(20.0f, canvasSize_.x - 64) / std::max(1.0f, maximum.x - minimum.x),
-        std::max(20.0f, canvasSize_.y - 64) / std::max(1.0f, maximum.y - minimum.y)), 0.02f, 4.0f);
+        std::max(20.0f, canvasSize_.y - verticalPadding) / std::max(1.0f, maximum.y - minimum.y)), 0.02f, 4.0f);
 }
 
 void TemplateEditorUI::autoPlace() {
@@ -491,11 +554,17 @@ void TemplateEditorUI::canvas() {
         | ImGuiButtonFlags_MouseButtonMiddle | ImGuiButtonFlags_MouseButtonRight);
     const bool hovered = ImGui::IsItemHovered();
     auto& io = ImGui::GetIO();
+    const auto effectiveMode = activeMode();
+    const bool magnetMode = effectiveMode == Mode::Magnet;
     if (hovered && io.MouseWheel != 0) {
-        const auto before = world(io.MousePos);
-        zoom_ = std::clamp(zoom_ * std::pow(1.15f, io.MouseWheel), 0.02f, 4.0f);
-        const auto after = world(io.MousePos);
-        camera_.x += before.x - after.x; camera_.y += before.y - after.y;
+        if (magnetMode && !io.KeyCtrl && magnetNode_ < 0) {
+            editor_.setMagnetFrameScale(editor_.magnetFrame().scale * std::pow(1.1, -io.MouseWheel));
+        } else if (magnetNode_ < 0) {
+            const auto before = world(io.MousePos);
+            zoom_ = std::clamp(zoom_ * std::pow(1.15f, io.MouseWheel), 0.02f, 4.0f);
+            const auto after = world(io.MousePos);
+            camera_.x += before.x - after.x; camera_.y += before.y - after.y;
+        }
     }
     if (ImGui::IsItemActive() && (ImGui::IsMouseDragging(ImGuiMouseButton_Middle, 0)
             || ImGui::IsMouseDragging(ImGuiMouseButton_Right))) {
@@ -523,7 +592,15 @@ void TemplateEditorUI::canvas() {
     }
     if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         toggleOnRelease_ = -1;
-        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+        if (magnetMode) {
+            connectionStart_ = -1;
+            if (hitNode >= 0) {
+                magnetNode_ = hitNode;
+                magnetStartForce_ = editor_.magnetForce(hitNode);
+                const auto center = screen(editor_.position(hitNode));
+                magnetStartDistance_ = std::hypot(io.MousePos.x - center.x, io.MousePos.y - center.y);
+            }
+        } else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
             if (hitNode >= 0) {
                 selectedNode_ = hitNode; selectedNodes_ = {hitNode}; selectedEdge_ = -1;
                 edit(Dialog::Node, hitNode);
@@ -536,7 +613,7 @@ void TemplateEditorUI::canvas() {
                 selectedNode_ = editor_.addNode(world(io.MousePos));
                 selectedNodes_ = {selectedNode_}; selectedEdge_ = -1;
             }
-        } else if (hitNode >= 0 && (mode_ == Mode::Edge || io.KeyShift)) {
+        } else if (hitNode >= 0 && effectiveMode == Mode::Edge) {
             const int source = connectionStart_ >= 0 ? connectionStart_
                 : io.KeyShift && selectedNode_ >= 0 ? selectedNode_ : -1;
             if (source < 0 || source == hitNode) {
@@ -561,10 +638,24 @@ void TemplateEditorUI::canvas() {
             connectionStart_ = -1;
             selectedEdge_ = hitEdge;
             if (!io.KeyCtrl) { selectedNodes_.clear(); selectedNode_ = -1; }
-            if (hitEdge < 0 && mode_ == Mode::Selection && !io.KeyShift) {
+            if (hitEdge < 0 && effectiveMode == Mode::Selection) {
                 selecting_ = true; selectionStart_ = world(io.MousePos); selectionBase_ = selectedNodes_;
             }
         }
+    }
+    if (magnetNode_ >= 0 && ImGui::IsMouseDown(ImGuiMouseButton_Left)
+            && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        if (!magnetDragging_) {
+            editor_.beginAction("Adjust magnet force on zone " + std::to_string(magnetNode_));
+            magnetDragging_ = true;
+        }
+        const auto center = screen(editor_.position(magnetNode_));
+        const float distance = std::hypot(io.MousePos.x - center.x, io.MousePos.y - center.y);
+        const double force = distance <= 1 ? TemplateEditor::minMagnetForce
+            : distance < magnetStartDistance_ ? TemplateEditor::minMagnetForce
+                + (magnetStartForce_ - TemplateEditor::minMagnetForce) * distance / magnetStartDistance_
+            : magnetStartForce_ + (distance - magnetStartDistance_) / 48.0;
+        editor_.setMagnetForce(magnetNode_, force);
     }
     if (draggingNode_ >= 0 && ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
         if (!moving_) {
@@ -607,6 +698,7 @@ void TemplateEditorUI::canvas() {
         selectedNode_ = selectedNodes_.empty() ? -1 : *selectedNodes_.begin();
     }
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+        if (magnetNode_ >= 0 && !magnetDragging_) editor_.setMagnet(magnetNode_, !editor_.isMagnet(magnetNode_));
         if (toggleOnRelease_ >= 0 && !moving_) {
             selectedNodes_.erase(toggleOnRelease_);
             selectedNode_ = selectedNodes_.empty() ? -1 : *selectedNodes_.begin();
@@ -650,7 +742,6 @@ void TemplateEditorUI::canvas() {
     if (ImGui::IsWindowFocused() && !io.WantTextInput) {
         if (ImGui::IsKeyPressed(ImGuiKey_Delete)) deleteSelection();
         if (ImGui::IsKeyPressed(ImGuiKey_Escape)) { finishMove(); connectionStart_ = -1; selecting_ = false; selectedNodes_.clear(); selectedNode_ = selectedEdge_ = -1; }
-        if (ImGui::IsKeyPressed(ImGuiKey_F) || ImGui::IsKeyPressed(ImGuiKey_Home)) fit_ = true;
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_A)) {
             selectedNodes_.clear();
             for (const auto& node : editor_.document()["nodes"]) selectedNodes_.insert(node["id"].get<int>());
@@ -681,6 +772,32 @@ void TemplateEditorUI::canvas() {
             for (float cy = canvasOrigin_.y + centerY; cy < maximum.y; cy += grid)
                 draw->AddCircleFilled({cx, cy}, 1.5f, IM_COL32(255, 255, 255, io.KeyCtrl ? 110 : 35), 4);
     }
+    if (magnetMode) {
+        const auto frame = editor_.magnetFrame();
+        const float half = static_cast<float>(frame.halfExtent);
+        const auto lo = screen({frame.center.x - half, frame.center.y - half});
+        const auto hi = screen({frame.center.x + half, frame.center.y + half});
+        auto shade = [&](ImVec2 a, ImVec2 b) {
+            a.x = std::max(a.x, canvasOrigin_.x); a.y = std::max(a.y, canvasOrigin_.y);
+            b.x = std::min(b.x, maximum.x); b.y = std::min(b.y, maximum.y);
+            if (a.x < b.x && a.y < b.y) draw->AddRectFilled(a, b, IM_COL32(20, 22, 30, 70));
+        };
+        shade(canvasOrigin_, {maximum.x, lo.y});
+        shade({canvasOrigin_.x, hi.y}, maximum);
+        shade({canvasOrigin_.x, lo.y}, {lo.x, hi.y});
+        shade({hi.x, lo.y}, {maximum.x, hi.y});
+        draw->AddRect(lo, hi, IM_COL32(230, 232, 245, 235), 0.0f, 2.0f);
+        const auto center = screen(frame.center);
+        draw->AddLine({center.x - 6, center.y}, {center.x + 6, center.y}, IM_COL32(230, 232, 245, 180));
+        draw->AddLine({center.x, center.y - 6}, {center.x, center.y + 6}, IM_COL32(230, 232, 245, 180));
+        const auto caption = uiDescriptions().format("magnet_frame", {{"scale", std::to_string(int(std::round(frame.scale * 100)))}});
+        draw->AddText({lo.x, lo.y - ImGui::GetTextLineHeight() - 6}, textColor, caption.c_str());
+        draw->AddText({lo.x, hi.y + 6}, textColor, "(0, 1)");
+        const auto topRight = ImGui::CalcTextSize("(1, 0)");
+        draw->AddText({hi.x - topRight.x, lo.y - ImGui::GetTextLineHeight() - 6}, textColor, "(1, 0)");
+        const auto bottomRight = ImGui::CalcTextSize("(1, 1)");
+        draw->AddText({hi.x - bottomRight.x, hi.y + 6}, textColor, "(1, 1)");
+    }
     // Re-read arrays after canvas actions, which may have erased entries.
     for (size_t i = 0; i < editor_.document()["symmetrical_edges"].size(); ++i) {
         const auto& edge = editor_.document()["symmetrical_edges"][i];
@@ -697,8 +814,13 @@ void TemplateEditorUI::canvas() {
         patternedEdge(draw, a, b, edge["data"]["passes"], canvasOrigin_, maximum,
             static_cast<int>(i) == selectedEdge_ || static_cast<int>(i) == hitEdge);
     }
-    const int source = connectionStart_ >= 0 ? connectionStart_ : io.KeyShift ? selectedNode_ : -1;
+    const int source = !magnetMode ? (connectionStart_ >= 0 ? connectionStart_ : io.KeyShift ? selectedNode_ : -1) : -1;
     if (hovered && source >= 0 && editor_.node(source)) draw->AddLine(screen(editor_.position(source)), io.MousePos, accent, 2);
+    if (magnetDragging_ && magnetNode_ >= 0) {
+        const auto center = screen(editor_.position(magnetNode_));
+        draw->AddLine(center, io.MousePos, IM_COL32(240, 225, 255, 180), 1.5f);
+        draw->AddCircle(io.MousePos, 4, IM_COL32(240, 225, 255, 240), 12, 1.5f);
+    }
     for (const auto& node : editor_.document()["nodes"]) {
         const int id = node["id"];
         const auto center = screen(editor_.position(id));
@@ -738,6 +860,7 @@ void TemplateEditorUI::canvas() {
         }
         draw->AddRect(minimum, end, selectedNodes_.contains(id) || id == hitNode || id == connectionStart_ ? accent
             : IM_COL32(28, 24, 19, 255), rounding, 0, selectedNodes_.contains(id) ? 3 : 1.5f);
+        if (editor_.isMagnet(id)) magnetContour(draw, minimum, end, rounding, editor_.magnetForce(id), editor_.magnetInsideFrame(id));
         char label[128];
         std::snprintf(label, sizeof(label), "ID %d\nS: %.4g", id, node["data"]["susceptibility"].get<double>());
         const float normalSize = ImGui::GetFontSize();
@@ -749,6 +872,17 @@ void TemplateEditorUI::canvas() {
         const ImVec2 textPosition(center.x - textSize.x * 0.5f, center.y - textSize.y * 0.5f);
         draw->AddText(ImGui::GetFont(), fontSize, {textPosition.x + 1, textPosition.y + 1}, IM_COL32(0, 0, 0, 255), label);
         draw->AddText(ImGui::GetFont(), fontSize, textPosition, textColor, label);
+        if (editor_.isMagnet(id)) {
+            // A full-width force label must not shrink the zone ID into tiny
+            // text on small squares. Keep it attached just below the node.
+            const auto forceLabel = uiDescriptions().format("magnet_label", {{"force", node["data"]["magnet"]["force"].dump()}});
+            const float forceSize = normalSize * 0.85f;
+            const auto bounds = ImGui::GetFont()->CalcTextSizeA(forceSize, 1e8f, 0, forceLabel.c_str());
+            const ImVec2 position(center.x - bounds.x * 0.5f, end.y + 6);
+            draw->AddRectFilled({position.x - 4, position.y - 2}, {position.x + bounds.x + 4, position.y + bounds.y + 2},
+                IM_COL32(30, 26, 32, 215), 3);
+            draw->AddText(ImGui::GetFont(), forceSize, position, textColor, forceLabel.c_str());
+        }
     }
     if (editor_.document()["nodes"].empty())
         draw->AddText({canvasOrigin_.x + 16, canvasOrigin_.y + 16}, textColor, uiDescriptions().text("empty_canvas").c_str());
@@ -759,7 +893,7 @@ void TemplateEditorUI::canvas() {
         draw->AddRectFilled(lo, hi, IM_COL32(255, 202, 104, 35)); draw->AddRect(lo, hi, accent);
     }
     const auto status = uiDescriptions().format("canvas_status", {{"count", std::to_string(selectedNodes_.size())},
-        {"mode", mode_ == Mode::Edge || io.KeyShift ? "Edge mode" : "Selection mode"}});
+        {"mode", magnetMode ? "Magnet mode" : effectiveMode == Mode::Edge ? "Edge mode" : "Selection mode"}});
     draw->AddRectFilled({canvasOrigin_.x, maximum.y - ImGui::GetTextLineHeight() - 8}, maximum, IM_COL32(35, 28, 25, 210));
     draw->AddText({canvasOrigin_.x + 8, maximum.y - ImGui::GetTextLineHeight() - 4}, textColor, status.c_str());
     draw->PopClipRect();
@@ -776,6 +910,7 @@ void TemplateEditorUI::canvas() {
 }
 
 void TemplateEditorUI::edit(Dialog dialog, int index) {
+    finishMove();
     dialog_ = dialog;
     editingNode_ = dialog == Dialog::Node ? index : -1;
     editedId_ = editingNode_;
@@ -801,6 +936,15 @@ void TemplateEditorUI::globalFields() {
     ImGui::BeginDisabled(!walls);
     resourceField("Wall material", walls ? draft_["walls"]["resource"] : defaultWall, true);
     ImGui::EndDisabled();
+    ImGui::SeparatorText("Position magnets");
+    bool rotateMagnets = draft_.value("magnets", Json::object()).value("randomRotation", false);
+    if (checkboxField("Random magnet rotation", &rotateMagnets)) {
+        if (rotateMagnets) draft_["magnets"]["randomRotation"] = true;
+        else {
+            draft_["magnets"].erase("randomRotation");
+            if (draft_["magnets"].empty()) draft_.erase("magnets");
+        }
+    }
     ImGui::SeparatorText("Noise octaves");
     int count = static_cast<int>(draft_["octaves"].size());
     fieldLabel("Octave count");
@@ -864,6 +1008,22 @@ void TemplateEditorUI::nodeFields() {
     auto& data = (*node)["data"];
     numberField("Radius", data["radius"]);
     numberField("Susceptibility", data["susceptibility"]);
+    ImGui::Spacing();
+    ImGui::SeparatorText("Position magnet");
+    bool magnet = data.contains("magnet");
+    if (checkboxField("Magnet", &magnet)) {
+        if (magnet) data["magnet"] = {{"force", TemplateEditor::defaultMagnetForce}};
+        else data.erase("magnet");
+    }
+    overrideNumberField("Magnet force", magnet ? &data["magnet"]["force"] : nullptr, TemplateEditor::defaultMagnetForce);
+    if (magnet) {
+        const auto frame = TemplateEditor::magnetFrame(draft_);
+        char x[32], y[32];
+        std::snprintf(x, sizeof(x), "%.3f", 0.5 + ((*node)["visualizer"]["x"].get<double>() - frame.center.x) / (2 * frame.halfExtent));
+        std::snprintf(y, sizeof(y), "%.3f", 0.5 + ((*node)["visualizer"]["y"].get<double>() - frame.center.y) / (2 * frame.halfExtent));
+        ImGui::TextDisabled("%s", uiDescriptions().format("magnet_position", {{"x", x}, {"y", y}}).c_str());
+        helpMarker(uiDescriptions().parameter("Magnet position").c_str());
+    }
     ImGui::SeparatorText("Noise weights");
     auto& resources = data["resources"];
     for (size_t i = 1; i <= draft_["octaves"].size(); ++i) {

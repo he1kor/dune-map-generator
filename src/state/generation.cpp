@@ -56,7 +56,8 @@ void Generation::generate(std::shared_ptr<MapTemplate> mapTemplate, int width, i
     EdgeGeometryMap preferences;
     for (const auto& [edge, connection] : mapTemplate->zoneGraph->getSymEdges())
         preferences.emplace(edge, connection.geometry);
-    plane.initEmbed(mapTemplate->zoneGraph, preferences, static_cast<std::uint64_t>(seed), mapTemplate->embeddingTopology);
+    plane.initEmbed(mapTemplate->zoneGraph, preferences, static_cast<std::uint64_t>(seed), mapTemplate->embeddingTopology,
+        mapTemplate->magnetsForGeneration(static_cast<std::uint64_t>(seed), width, height));
     generationStage = GenerationStage::EMBED;
 }
 

@@ -27,7 +27,7 @@ private:
     ImVec2 camera_{0, 0};
     float zoom_ = 1;
     bool fit_ = true;
-    enum class Mode { Selection, Edge };
+    enum class Mode { Selection, Edge, Magnet };
     Mode mode_ = Mode::Selection;
     int connectionStart_ = -1;
     int selectedNode_ = -1;
@@ -38,6 +38,10 @@ private:
     TemplatePoint dragStart_;
     std::map<int, TemplatePoint> dragPositions_;
     bool moving_ = false;
+    int magnetNode_ = -1;
+    bool magnetDragging_ = false;
+    double magnetStartForce_ = 1;
+    float magnetStartDistance_ = 0;
     int toggleOnRelease_ = -1;
     bool selecting_ = false;
     TemplatePoint selectionStart_;
@@ -82,6 +86,8 @@ private:
     void autoPlace();
     void resetInteraction();
     void finishMove();
+    void finishMagnet();
+    Mode activeMode() const;
     void load();
     void createNew();
     void useForGeneration();

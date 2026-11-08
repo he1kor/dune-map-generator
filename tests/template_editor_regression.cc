@@ -33,6 +33,83 @@ static std::vector<int> generate(const Json& document) {
     return result;
 }
 
+static void checkMagnets(const std::filesystem::path& scratch) {
+    TemplateEditor editor;
+    const int a = editor.addNode({-160, -80}), b = editor.addNode({160, 80});
+    editor.connect(a, b);
+    const auto plain = editor.document();
+    editor.setMagnet(a, true);
+    const auto enabled = editor.document();
+    require(editor.isMagnet(a) && !editor.isMagnet(b) && editor.magnetInsideFrame(a), "Magnet toggle or frame membership failed");
+    require(editor.magnetForce(a) == TemplateEditor::defaultMagnetForce, "New magnet has no usable default force");
+    require(editor.magnetTarget(a).x < 0.5f && editor.magnetTarget(a).y < 0.5f, "Magnet target does not follow its map quadrant");
+    editor.beginAction("Magnet gesture");
+    for (double force : {2.0, 4.0, 8.0}) editor.setMagnetForce(a, force);
+    editor.endAction();
+    require(editor.undo().find("8.0 -> 1.0") != std::string::npos && editor.document() == enabled,
+        "Magnet gesture is not one undo step with force details");
+    editor.redo();
+    require(editor.magnetForce(a) == 8, "Magnet force redo failed");
+    editor.setMagnetForce(a, -10);
+    require(editor.isMagnet(a) && editor.magnetForce(a) == TemplateEditor::minMagnetForce, "Minimum force disables a magnet");
+    editor.setMagnetForce(a, 1e8);
+    require(editor.magnetForce(a) == TemplateEditor::maxMagnetForce, "Unbounded magnet force accepted");
+    const auto beforeResize = editor.document();
+    const auto beforeTarget = editor.magnetTarget(a);
+    const auto beforeFrame = editor.magnetFrame();
+    editor.setMagnetFrameScale(0.2);
+    require(editor.document() == beforeResize, "Frame shrinks below the fit of all zones");
+    editor.setMagnetFrameScale(2);
+    require(editor.magnetFrame().center == beforeFrame.center && editor.magnetFrame().halfExtent >= beforeFrame.halfExtent * 2,
+        "Resizing the map frame moved its center or did not resize it");
+    require(editor.position(a) == TemplatePoint{-160,-80} && editor.position(b) == TemplatePoint{160,80},
+        "Map frame resize changed zone positions");
+    require(editor.magnetTarget(a).x > beforeTarget.x && editor.magnetTarget(a).x < 0.5f,
+        "Larger frame did not bring normalized targets toward its center");
+    editor.setPosition(b, {2000, 800});
+    const auto frame = editor.magnetFrame();
+    for (int id : {a,b}) {
+        const auto p = editor.position(id);
+        require(std::abs(p.x-frame.center.x)+TemplateEditor::halfSize(*editor.node(id)) <= frame.halfExtent
+            && std::abs(p.y-frame.center.y)+TemplateEditor::halfSize(*editor.node(id)) <= frame.halfExtent,
+            "Frame does not fit a moved non-magnet zone square");
+    }
+    require(editor.pasteNodeData(editor.copyNodeData(a), {b}), editor.error());
+    require(editor.isMagnet(b) && editor.magnetForce(b) == editor.magnetForce(a)
+        && editor.node(a)->at("data").at("magnet").at("position") != editor.node(b)->at("data").at("magnet").at("position"),
+        "Pasting a magnet reused the source target instead of the destination position");
+    const auto fixedOrientation = editor.document();
+    auto rotating = fixedOrientation;
+    rotating["magnets"] = {{"randomRotation", true}};
+    require(editor.replace(rotating), editor.error());
+    editor.undo(); require(editor.document() == fixedOrientation, "Magnet rotation setting is not undoable");
+    editor.redo(); require(editor.document() == rotating, "Magnet rotation redo lost the setting or moved targets");
+    require(editor.save(scratch), editor.error());
+    TemplateEditor reopened;
+    require(reopened.load(scratch) && reopened.document() == editor.document(), "Magnet force, frame, targets or rotation lost during save/reload");
+    TemplatePicker rotatedPicker;
+    require(rotatedPicker.tryReadEdgeGraph(reopened.document()) && rotatedPicker.mapTemplate->rotatePositionMagnets,
+        "Saved rotation setting was not passed to generation");
+    const auto good = editor.document();
+    for (const Json force : {Json(0), Json(-1), Json(101), Json("bad"), Json(nullptr)}) {
+        auto bad = good; bad["nodes"][0]["data"]["magnet"]["force"] = force;
+        require(!editor.replace(bad) && editor.document() == good, "Invalid magnet force changed the document");
+    }
+    auto bad = good; bad["visualizer"]["magnetFrame"]["scale"] = 0.5;
+    require(!editor.replace(bad) && editor.document() == good, "Invalid frame scale changed the document");
+    for (const Json position : {Json("bad"), Json::array(), Json{{"x", 0}}, Json{{"x", 0}, {"y", nullptr}}}) {
+        bad = good; bad["nodes"][0]["data"]["magnet"]["position"] = position;
+        require(!editor.replace(bad) && editor.document() == good, "Malformed magnet target changed the document");
+    }
+    editor.setMagnet(a, false);
+    require(!editor.isMagnet(a), "Single-zone magnet disable failed");
+    editor.undo(); require(editor.document() == good, "Undo did not restore a disabled magnet");
+    auto sameTargets = editor.document();
+    for (auto& node : sameTargets["nodes"]) node["visualizer"] = {{"x", 12345}, {"y", -6789}};
+    require(generate(sameTargets) == generate(editor.document()), "Generation read visualizer coordinates instead of saved magnet targets");
+    std::filesystem::remove(scratch);
+}
+
 static void checkHistory(const std::filesystem::path& scratch) {
     TemplateEditor editor;
     const auto blank = editor.document();
@@ -330,6 +407,7 @@ int main(int argc, char** argv) {
         TemplateEditor editor;
         const std::filesystem::path scratch(argv[3]);
         checkHistory(scratch);
+        checkMagnets(scratch);
         checkDataClipboard();
         checkAutoPlacement();
         require(templateValidationError(editor.document(), false).empty(), "New draft is malformed");

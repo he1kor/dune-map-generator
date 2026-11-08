@@ -90,6 +90,7 @@ if(MAPGENERATOR_BUILD_TESTS)
     enable_testing()
     add_executable(async_generation_regression
         ../tests/async_generation_regression.cc
+        state/map_template.cpp
         state/template_picker.cpp
         state/generation.cpp
     )
@@ -102,6 +103,7 @@ if(MAPGENERATOR_BUILD_TESTS)
         "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json")
     add_executable(resource_generation_regression
         ../tests/resource_generation_regression.cc
+        state/map_template.cpp
         state/template_picker.cpp
         state/generation.cpp
     )
@@ -114,6 +116,7 @@ if(MAPGENERATOR_BUILD_TESTS)
         "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json")
     add_executable(magnetic_grid_regression
         ../tests/magnetic_grid_regression.cc
+        state/map_template.cpp
         state/template_picker.cpp
         state/generation.cpp
     )
@@ -124,8 +127,22 @@ if(MAPGENERATOR_BUILD_TESTS)
     target_link_libraries(magnetic_grid_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
     add_test(NAME magnetic_grid_regression COMMAND magnetic_grid_regression
         "${CMAKE_SOURCE_DIR}/assets/templates/grid3x3 magnetic.json")
+    add_executable(position_magnet_regression
+        ../tests/position_magnet_regression.cc
+        state/map_template.cpp
+        state/template_picker.cpp
+        state/generation.cpp
+    )
+    target_include_directories(position_magnet_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(position_magnet_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
+    add_test(NAME position_magnet_regression COMMAND position_magnet_regression
+        "${CMAKE_SOURCE_DIR}/tests/fixtures/spice_scout.json")
     add_executable(template_validation_regression
         ../tests/template_validation_regression.cc
+        state/map_template.cpp
         state/template_picker.cpp
         state/generation.cpp
     )
@@ -140,6 +157,7 @@ if(MAPGENERATOR_BUILD_TESTS)
         "${CMAKE_CURRENT_BINARY_DIR}/template-validation-regression.json")
     add_executable(template_editor_regression
         ../tests/template_editor_regression.cc
+        state/map_template.cpp
         state/template_editor.cpp
         state/template_editor_layout.cpp
         state/template_picker.cpp
@@ -157,6 +175,7 @@ if(MAPGENERATOR_BUILD_TESTS)
         "${CMAKE_SOURCE_DIR}/tests/fixtures/spice_scout.json")
     add_executable(map_dimensions_regression
         ../tests/map_dimensions_regression.cc
+        state/map_template.cpp
         state/template_picker.cpp
         state/generation.cpp
         state/quick_settings.cpp
@@ -173,6 +192,7 @@ if(MAPGENERATOR_BUILD_TESTS)
         "${CMAKE_SOURCE_DIR}/assets/templates/habbanya erg true 2.json")
     add_executable(ui_layout_regression
         ../tests/ui_layout_regression.cc
+        state/map_template.cpp
         ui/app_layout.cpp
         ui/quick_settings_ui.cpp
         ui/generation_ui.cpp

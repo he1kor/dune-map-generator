@@ -15,6 +15,12 @@ struct TemplatePoint {
     bool operator==(const TemplatePoint&) const = default;
 };
 
+struct TemplateMagnetFrame {
+    TemplatePoint center;
+    double halfExtent = 128;
+    double scale = 1;
+};
+
 // The editable JSON is kept separate from MapTemplate. Visualizer metadata and
 // optional/unknown fields survive edits without entering generation data.
 class TemplateEditor {
@@ -36,6 +42,18 @@ public:
     bool renameNode(int oldId, int newId, Json& candidate) const;
     void setPosition(int id, TemplatePoint position);
     TemplatePoint position(int id) const;
+    static constexpr double minMagnetForce = 0.1;
+    static constexpr double defaultMagnetForce = 1.0;
+    static constexpr double maxMagnetForce = 100.0;
+    static TemplateMagnetFrame magnetFrame(const Json& document);
+    TemplateMagnetFrame magnetFrame() const { return magnetFrame(document_); }
+    bool isMagnet(int id) const;
+    double magnetForce(int id) const;
+    TemplatePoint magnetTarget(int id) const;
+    bool magnetInsideFrame(int id) const;
+    void setMagnet(int id, bool enabled);
+    void setMagnetForce(int id, double force);
+    void setMagnetFrameScale(double scale);
     const Json* node(int id) const;
     Json copyNodeData(int id) const;
     Json copyConnectionData(size_t index) const;
@@ -80,4 +98,5 @@ private:
     void updateTopology() const;
     static std::string checkPositions(const Json& candidate);
     static void addMissingPositions(Json& candidate);
+    static void updateMagnets(Json& candidate);
 };

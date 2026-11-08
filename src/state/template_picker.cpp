@@ -296,6 +296,13 @@ std::shared_ptr<MapTemplate> readGraph(const Json& json, bool requireGeneratable
     auto result = std::make_shared<MapTemplate>();
     result->dimensionLimits = readDimensionLimits(json);
     result->octaves = readOctaves(json);
+    if (const auto it = json.find("magnets"); it != json.end()) {
+        object(*it, "magnets");
+        if (const auto rotation = it->find("randomRotation"); rotation != it->end()) {
+            if (!rotation->is_boolean()) invalid("magnets/randomRotation", "a boolean");
+            result->rotatePositionMagnets = rotation->get<bool>();
+        }
+    }
     if (const auto it = json.find("walls"); it != json.end())
         result->wallResource = material(member(*it, "resource", "walls"), "walls/resource");
 
@@ -309,6 +316,20 @@ std::shared_ptr<MapTemplate> readGraph(const Json& json, bool requireGeneratable
         const int id = integer(member(nodes[i], "id", path), child(path, "id"));
         if (!ids.insert(id).second) invalid(child(path, "id"), "a unique node ID");
         rawGraph.push_back({readNode(nodes[i], path, id, result->octaves.size()), {}});
+        const auto& data = nodes[i]["data"];
+        if (const auto it = data.find("magnet"); it != data.end()) {
+            const auto magnetPath = child(child(path, "data"), "magnet");
+            const double force = number(member(*it, "force", magnetPath), child(magnetPath, "force"));
+            if (force < 0.1 || force > 100) invalid(child(magnetPath, "force"), "a force between 0.1 and 100");
+            // The editor derives a newly enabled target after draft validation.
+            if (!requireGeneratable && !it->contains("position")) continue;
+            const auto positionPath = child(magnetPath, "position");
+            const auto& position = member(*it, "position", magnetPath);
+            const double x = number(member(position, "x", positionPath), child(positionPath, "x"));
+            const double y = number(member(position, "y", positionPath), child(positionPath, "y"));
+            if (x >= 0 && x <= 1 && y >= 0 && y <= 1)
+                result->positionMagnets.emplace(Identifiable(id), PositionMagnet{{x,y},force});
+        }
     }
     const auto symEdges = readSymEdges(json, ids);
     const auto asymEdges = readAsymEdges(json, ids, symEdges);

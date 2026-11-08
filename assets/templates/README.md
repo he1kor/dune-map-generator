@@ -167,6 +167,64 @@ all three geometry objects gives roughly 32–33 tiles per connection at this ma
 size. Full generation and crossing checks passed for the supplied example and
 both comparisons at seeds `42`, `12419`, and `2026`.
 
+### Per-zone position magnets (editor)
+
+The editor's Magnet mode (M, or hold Alt) toggles a position magnet with a
+single click. Drag a zone outward to increase force, or grab it off-center and
+drag toward its center to reduce force. Force ranges from 0.1 to 100; its minimum
+does not disable it. Node settings also expose the toggle and force. Red/blue
+contours glow more strongly as force increases. Each gesture is undoable.
+
+In Magnet mode the wheel changes the centered square map frame's scale. Its
+minimum fits all zone squares, including non-magnets; it can expand but cannot
+shrink below that fit. Fit frame resets its scale. Ctrl+wheel zooms the camera.
+Adding, moving, resizing and auto-placing zones update the frame and targets.
+
+An enabled node saves `data.magnet` with a positive `force` and a `position`
+object containing normalized `x`/`y` coordinates: top left is (0, 0), center is
+(0.5, 0.5), bottom right is (1, 1). The frame saves its `scale`, derived `center`
+and `halfExtent` under the root `visualizer.magnetFrame`. Targets are recomputed
+for destination zones when pasting node data. Camera navigation does not change
+them. Any target outside the unit square is ineligible for application.
+
+The generator loads these targets and uses them during initialization and
+relaxation. Initialization checks rotated/reflected planar candidates and can
+place magnetized leaves in their intended face before continuous movement
+begins. Subsequent positional attraction is independent of central-magnet
+susceptibility; the shared central magnet remains active. High strength holds
+the node closer to its target, using a stable spring step, but is not a lock.
+Map bounds and crossings still constrain movement. Targets at map edges are
+inset by half a tile so they can rasterize safely. Outside targets are ignored.
+Magnetized zones also retain radius-based spacing from neighboring seeds so
+central repulsion cannot crowd another seed onto their target. This protects
+placement space; it does not impose exact zone areas or guarantee every passage.
+
+Enable **Random magnet rotation** in Global settings > Position magnets, or add
+this optional top-level setting to the template:
+
+```json
+"magnets": {"randomRotation": true}
+```
+
+The seed chooses one common rotation around the map center for every active
+position magnet. Forces, pairwise distances and distances to the center stay
+unchanged. Rotation is measured in map cells, including on rectangular maps.
+The saved targets and editor drawing stay in their authored orientation. The
+same seed and map size reproduce the same rotation; it does not consume the
+growth/resource random stream. Omitted or `false` keeps the fixed orientation.
+
+Angles across the full circle are considered, but the entire target group must
+fit inside the map without scaling or clipping. Near-corner arrangements allow
+fewer angles; exact corner targets can limit square maps to quarter-turns and
+rectangles to half-turns. Enlarge the editor map frame or move targets toward its
+center to allow more rotation. An already outside/inactive target stays inactive.
+
+The generator reads saved `data.magnet.position`, not raw visualizer coordinates
+or the editor frame. With no active positional magnets, the previous seeded
+layout behavior is preserved. Zone growth, resource noise and passage rules are
+unchanged. After editing a selected template, use **Use for generation** again
+to update the generator's snapshot.
+
 ### Magnetic grid example
 
 `grid3x3 magnetic.json` is a small magnetic-placement example, also copied to

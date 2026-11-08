@@ -335,6 +335,56 @@ int main(int argc, char** argv) {
             doubleClick(secondPoint);
             require(editor.document()["nodes"].size() == 2, "Second canvas node was not created");
             const int firstId = editor.document()["nodes"][0]["id"], secondId = editor.document()["nodes"][1]["id"];
+            {
+                const auto beforeMagnets = editor.document();
+                const auto firstPosition = editor.position(firstId);
+                io.AddKeyEvent(ImGuiMod_Alt, true); editorFrame();
+                click(firstPoint);
+                require(editor.isMagnet(firstId) && !editor.isMagnet(secondId), "Alt-click did not toggle only the clicked zone magnet");
+                const auto beforeForce = editor.document();
+                drag(firstPoint, {firstPoint.x + 120, firstPoint.y});
+                require(editor.magnetForce(firstId) > TemplateEditor::defaultMagnetForce
+                    && editor.position(firstId) == firstPosition, "Magnet drag moved the zone or did not increase force");
+                const auto increasedForce = editor.document();
+                key(ImGuiKey_Z, true);
+                require(editor.document() == beforeForce, "Magnet drag is not one UI undo step");
+                key(ImGuiKey_Y, true);
+                require(editor.document() == increasedForce, "Magnet drag redo lost its force");
+                drag({firstPoint.x + 12, firstPoint.y}, firstPoint);
+                require(editor.isMagnet(firstId) && editor.magnetForce(firstId) == TemplateEditor::minMagnetForce,
+                    "Dragging toward the center did not retain a minimum-strength magnet");
+                click(firstPoint);
+                require(!editor.isMagnet(firstId), "Magnet mode click cannot disable a magnet");
+                click(firstPoint);
+                io.AddMousePosEvent(firstPoint.x + 110, firstPoint.y + 50); editorFrame();
+                const auto minimumFrame = editor.magnetFrame();
+                io.AddMouseWheelEvent(0, -3); editorFrame();
+                require(editor.magnetFrame().scale > 1 && editor.magnetFrame().center == minimumFrame.center,
+                    "Magnet wheel did not expand a centered map frame");
+                require(editor.position(firstId) == firstPosition, "Resizing the map frame moved a zone");
+                io.AddMouseWheelEvent(0, 100); editorFrame();
+                require(editor.magnetFrame().scale == 1, "Wheel shrinks map frame below all zones");
+                const auto beforeCamera = editor.document();
+                io.AddKeyEvent(ImGuiMod_Ctrl, true); editorFrame();
+                io.AddMouseWheelEvent(0, 1); editorFrame();
+                io.AddMouseWheelEvent(0, -1); editorFrame();
+                io.AddKeyEvent(ImGuiMod_Ctrl, false); editorFrame();
+                require(editor.document() == beforeCamera, "Camera zoom changed saved magnet targets");
+                io.AddKeyEvent(ImGuiMod_Alt, false); editorFrame();
+                click(secondPoint);
+                require(!editor.isMagnet(secondId), "Releasing Alt did not restore selection mode");
+                key(ImGuiKey_M);
+                editor.setMagnetForce(firstId, 20);
+                editor.setMagnet(secondId, true);
+                if (argc > 1) { editorFrame(); savePreview(std::string(argv[1]) + "-magnets"); }
+                for (int width : {static_cast<int>(appLayout::minWindowWidth), 800, 1024}) {
+                    io.DisplaySize.x = float(width);
+                    for (int i = 0; i < 3; ++i) editorFrame();
+                    require(root->ScrollMax.x == 0 && root->ScrollMax.y == 0, "Magnet toolbar overflows a supported window size");
+                }
+                key(ImGuiKey_V);
+                require(editor.replace(beforeMagnets), "Cannot restore canvas after magnet tests");
+            }
             settleClicks();
             click(firstPoint);
             io.AddKeyEvent(ImGuiMod_Shift, true); editorFrame();
@@ -499,11 +549,17 @@ int main(int argc, char** argv) {
             key(ImGuiKey_V, true);
             click({globalFields.x + 14, globalFields.y + fieldHeight + inputHeight * 0.5f});
             key(ImGuiKey_Z, true); key(ImGuiKey_Y, true);
+            auto* globalContent = globals->DC.ChildWindows[0];
+            const auto rotationScope = ImHashStr("Random magnet rotation",0,globalContent->IDStack.back());
+            const auto rotationCheckbox = ImHashStr("Random magnet rotation",0,rotationScope);
+            ImGui::ActivateItemByID(rotationCheckbox); editorFrame();
             key(ImGuiKey_Enter);
             require(editor.document()["name"] == "UI template", "Global setting edits were not applied");
             require(!editor.document().contains("walls"), "Draft undo/redo did not restore checkbox changes");
+            require(editor.document().at("magnets").at("randomRotation") == true, "Global magnet rotation checkbox did not apply");
             key(ImGuiKey_Enter, true);
             require(picker.mapTemplate && picker.templateName == "UI template", "Use for generation did not select editor snapshot");
+            require(picker.mapTemplate->rotatePositionMagnets, "Global magnet rotation checkbox did not reach generation");
             // Notifications must not intercept the real Generate button. Only
             // their small X region should capture clicks; hover must not keep
             // them alive, and the final part of their lifetime must fade.
@@ -658,6 +714,14 @@ int main(int argc, char** argv) {
                 io.DeltaTime = 13; editorFrame(); io.DeltaTime = 1.0f / 60;
                 editorFrame();
                 savePreview(std::string(argv[1]) + "-compact-diagram");
+                editor.setMagnetForce(1, 3);
+                editor.setMagnetForce(3, 20);
+                editor.setMagnetForce(5, 60);
+                key(ImGuiKey_M); key(ImGuiKey_F);
+                io.AddMousePosEvent(-100, -100);
+                io.DeltaTime = 13; editorFrame(); io.DeltaTime = 1.0f / 60;
+                for (int i = 0; i < 3; ++i) editorFrame();
+                savePreview(std::string(argv[1]) + "-magnet-frame");
                 editor.setPosition(1, {1, 1});
             }
             const int lastId = editor.document()["nodes"][0]["id"];
