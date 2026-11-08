@@ -38,14 +38,14 @@ void setColors(){
     colors[ImGuiCol_PlotHistogram] = RED_EXTRA;
     //colors[ImGuiCol_PlotHistogram] = VARIANT2_ULTRA;
 
-    //Not working?
-    colors[ImGuiCol_TabSelectedOverline] = VARIANT_BASIC;
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0, 0, 0, 0);
-    colors[ImGuiCol_TabDimmedSelected] = VARIANT_EXTRA;
-    colors[ImGuiCol_Tab] = VARIANT_EXTRA;
-    colors[ImGuiCol_TabHovered] = VARIANT_EXTRA;
-    colors[ImGuiCol_TabSelected] = VARIANT_EXTRA;
-    colors[ImGuiCol_TabDimmed] = VARIANT_BASIC;
+    colors[ImGuiCol_Tab] = MEDIUM_BROWN;
+    colors[ImGuiCol_TabHovered] = VARIANT2_EXTRA;
+    colors[ImGuiCol_TabSelected] = VARIANT2_BASIC;
+    colors[ImGuiCol_TabSelectedOverline] = VARIANT2_ULTRA;
+    colors[ImGuiCol_TabDimmed] = MEDIUM_BROWN;
+    colors[ImGuiCol_TabDimmedSelected] = VARIANT2_BASIC;
+    colors[ImGuiCol_TabDimmedSelectedOverline] = VARIANT2_ULTRA;
     
     colors[ImGuiCol_ScrollbarGrab] = HARD_BROWN;
     colors[ImGuiCol_ScrollbarGrabHovered] = MEDIUM_BROWN;
