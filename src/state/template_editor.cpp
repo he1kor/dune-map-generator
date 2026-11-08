@@ -340,6 +340,26 @@ bool TemplateEditor::connect(int first, int second) {
     return true;
 }
 
+bool TemplateEditor::invertConnection(Json& document, size_t index) {
+    const auto& edges = document["symmetrical_edges"];
+    if (index >= edges.size()) return false;
+    const int first = edges[index]["ID_first"], second = edges[index]["ID_second"];
+    bool changed = false;
+    for (auto& rule : document["asymmetrical_edges"]) {
+        if ((rule["ID_from"] == first && rule["ID_to"] == second)
+            || (rule["ID_from"] == second && rule["ID_to"] == first)) {
+            std::swap(rule["ID_from"], rule["ID_to"]);
+            changed = true;
+        }
+    }
+    return changed;
+}
+
+bool TemplateEditor::invertConnection(size_t index) {
+    Action action(*this, "Invert connection");
+    return invertConnection(document_, index);
+}
+
 bool TemplateEditor::isDataClipboard(const Json& payload, const char* kind) {
     return payload.is_object() && payload.contains("map_generator_clipboard")
         && payload["map_generator_clipboard"] == 1 && payload.contains("kind") && payload["kind"] == kind

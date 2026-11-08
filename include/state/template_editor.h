@@ -38,6 +38,8 @@ public:
     const std::string& error() const { return error_; }
     int addNode(TemplatePoint position);
     bool connect(int first, int second);
+    bool invertConnection(size_t index);
+    static bool invertConnection(Json& document, size_t index);
     void removeNode(int id);
     void removeConnection(size_t index);
     bool renameNode(int oldId, int newId, Json& candidate) const;

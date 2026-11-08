@@ -75,6 +75,9 @@
         "edge_copied": "Connection data copied.",
         "node_pasted": "Node data pasted to {count} zones.",
         "edge_pasted": "Connection data pasted.",
+        "connection_inverted": "Connection directions reversed.",
+        "invert_connection": "Swap the directed rules between these two zones. A single rule reverses direction; two rules exchange directions together. R reverses a selected connection or the connection being edited. Undo restores the previous directions.",
+        "directed_rule_color": "Matches this rule's solid arrow on the canvas. All unique directed-rule parameter sets in this template share a palette spread evenly across the color wheel. Equal parameters share a color. Adding or removing a unique set redistributes the palette; zone IDs, direction and rule order do not affect it. Unapplied connection edits preview the same colors in the canvas and menu.",
         "map_dimensions": "Even numbers, 32-128 cells.",
         "map_square": "Square map: both sides change together.",
         "map_aspect": "Width / height: {min} to {max}.",
@@ -143,6 +146,7 @@
             "paragraphs": [
                 "A zone is a node with a unique ID, relative radius and magnetic susceptibility. Its resource intervals cover 0 to 1 without gaps or overlaps and color the square from bottom to top. Noise octaves control patch scales; per-zone weights control their contributions.",
                 "Edges describe shared border walls, passages and resource blending. Directed rules apply independently from A to B and from B to A. Optional center distances affect generation spacing; drawing a longer edge does not set a generation distance.",
+                "Two solid rails surround each connection's wall/pass pattern, keeping connections visible even without walls. The pattern uses the configured wall resource color. Each enabled directed rule adds one solid arrow pointing to its destination zone. Opposite rules use separate lanes. All unique directed-rule parameter sets in the template receive colors spread evenly across the color wheel; equal parameters share a color. The matching swatches in Connection settings also preview unapplied edits on the canvas. Adding or removing a unique parameter set redistributes the palette. R inverts the selected connection, swapping its directed rules, or reverses the draft in Connection settings. The same action is available in Edit, the connection's right-click menu and Connection settings.",
                 "Canvas positions are saved as visualizer metadata and never affect generation. Drafts may have isolated zones or nonplanar graphs. Use for generation validates a snapshot and selects it in the Generator tab; later edits require selecting a new snapshot. Canvas coordinates are stored with at most two decimal places.",
                 "Save in assets/templates if you want changes to survive CMake configuration. Runtime JSON copies in build/src can be replaced by configuration."
             ]

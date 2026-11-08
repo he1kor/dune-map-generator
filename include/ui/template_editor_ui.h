@@ -82,6 +82,7 @@ private:
     bool save(bool saveAs);
     void guardChanges(std::function<void()> action);
     void deleteSelection();
+    void invertConnection();
     void fitView();
     void autoPlace();
     void resetInteraction();

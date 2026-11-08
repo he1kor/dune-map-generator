@@ -8,6 +8,9 @@
 #include "template_picker_ui.h"
 #include "template_editor_ui.h"
 #include "template_editor_descriptions.h"
+#include "resources.h"
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <chrono>
 #include <filesystem>
@@ -34,6 +37,30 @@ static void APIENTRY bindTexture(GLenum, GLuint) {}
 static void APIENTRY textureParameter(GLenum, GLenum, GLint) {}
 static void APIENTRY textureImage(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, const void*) {}
 static void sampler(const ImDrawList*, const ImDrawCmd*) {}
+
+// Inspect opaque triangle interiors in the real draw output. Probe points are
+// away from text, so the font atlas does not affect these line/arrow checks.
+static ImU32 opaqueColorAt(const ImDrawList* draw, ImVec2 point) {
+    ImU32 result = 0;
+    const auto cross = [](ImVec2 a, ImVec2 b, ImVec2 p) {
+        return (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+    };
+    for (const auto& command : draw->CmdBuffer) {
+        if (command.UserCallback || point.x < command.ClipRect.x || point.y < command.ClipRect.y
+                || point.x >= command.ClipRect.z || point.y >= command.ClipRect.w) continue;
+        for (unsigned int i = 0; i + 2 < command.ElemCount; i += 3) {
+            const auto& a = draw->VtxBuffer[draw->IdxBuffer[command.IdxOffset + i] + command.VtxOffset];
+            const auto& b = draw->VtxBuffer[draw->IdxBuffer[command.IdxOffset + i + 1] + command.VtxOffset];
+            const auto& c = draw->VtxBuffer[draw->IdxBuffer[command.IdxOffset + i + 2] + command.VtxOffset];
+            if (a.col != b.col || a.col != c.col || (a.col & IM_COL32_A_MASK) != IM_COL32_A_MASK) continue;
+            const float area = cross(a.pos, b.pos, c.pos);
+            if (std::abs(area) < 1e-6f) continue;
+            const float ab = cross(a.pos, b.pos, point), bc = cross(b.pos, c.pos, point), ca = cross(c.pos, a.pos, point);
+            if ((ab >= 0 && bc >= 0 && ca >= 0) || (ab <= 0 && bc <= 0 && ca <= 0)) result = a.col;
+        }
+    }
+    return result;
+}
 
 static std::vector<float> geometry() {
     const auto* root = ImGui::FindWindowByName("##Main Window");
@@ -418,6 +445,160 @@ int main(int argc, char** argv) {
             require(!editor.node(firstId) && editor.node(secondId), "Connecting selected the destination instead of retaining the source zone");
             key(ImGuiKey_Z, true);
             require(editor.node(firstId) && editor.document()["symmetrical_edges"].size() == 1, "Cannot undo source-zone deletion after connecting");
+            {
+                const auto original = editor.document();
+                auto noWalls = original;
+                noWalls["symmetrical_edges"][0]["data"]["passes"]["minWallLength"] = 0;
+                noWalls["symmetrical_edges"][0]["data"]["passes"]["maxWallLength"] = 0;
+                require(editor.replace(noWalls), "Cannot prepare a connection without walls");
+                io.AddMousePosEvent(-100, -100); editorFrame();
+                const ImVec2 middle((firstPoint.x + secondPoint.x) / 2, firstPoint.y);
+                const auto colorAt = [&](float x, float y) {
+                    return opaqueColorAt(canvasWindow()->DrawList, {middle.x + x, middle.y + y});
+                };
+                const ImU32 black = IM_COL32(0, 0, 0, 255);
+                require(colorAt(0, -4.5f) == black && colorAt(0, 4.5f) == black,
+                    "Wall-free symmetric connection lost its continuous rails");
+                auto wallPattern = original;
+                wallPattern["symmetrical_edges"][0]["data"]["passes"]["minWallLength"] = 100;
+                wallPattern["symmetrical_edges"][0]["data"]["passes"]["maxWallLength"] = 100;
+                for (const char* material : {"rock", "dunes", "sand", "spice", "thick_spice", "cliff_rock"}) {
+                    wallPattern["walls"]["resource"] = material;
+                    require(editor.replace(wallPattern), "Cannot change wall material"); editorFrame();
+                    require(colorAt(0, 0) == resourceColor(*resourceFromString(material)),
+                        "Wall pattern color does not match the configured wall material");
+                }
+                wallPattern.erase("walls");
+                require(editor.replace(wallPattern), "Cannot disable custom wall material"); editorFrame();
+                require(colorAt(0, 0) == resourceColor(Resource::CLIFF_ROCK),
+                    "Wall pattern does not fall back to the default cliff rock color");
+                if (argc > 1) savePreview(std::string(argv[1]) + "-wall-material");
+                auto oneWay = noWalls;
+                oneWay["asymmetrical_edges"].push_back({{"ID_from", firstId}, {"ID_to", secondId},
+                    {"data", {{"intakeDistance", 2}, {"areaGuaranteed", 100}, {"bonusValue", 0.6}}}});
+                require(editor.replace(oneWay), "Cannot prepare a single directed arrow");
+                editorFrame();
+                const auto forwardColor = colorAt(0, 13);
+                require(forwardColor != 0 && forwardColor != black && colorAt(-25, 13) == forwardColor
+                    && colorAt(25, 13) == forwardColor && colorAt(0, -13) != forwardColor,
+                    "Single directed rule did not draw exactly one solid colored arrow");
+                const float tipOffset = (secondPoint.x - firstPoint.x) * 0.5f - 36;
+                require(colorAt(tipOffset - 0.5f, 14.75f) == colorAt(tipOffset + 6, 14.75f),
+                    "A rectangular backing protrudes beside the forward arrow tip");
+                if (argc > 1) savePreview(std::string(argv[1]) + "-one-way-connection");
+                auto normalized = oneWay;
+                normalized["asymmetrical_edges"][0]["data"]["intakeDistance"] = 2.0;
+                normalized["asymmetrical_edges"][0]["data"]["areaGuaranteed"] = 100.0;
+                require(editor.replace(normalized), "Cannot prepare equivalent numeric rule spelling");
+                editorFrame();
+                require(colorAt(0, 13) == forwardColor, "Equivalent integer and float parameters changed the arrow color");
+                auto slightlyDifferent = oneWay;
+                slightlyDifferent["asymmetrical_edges"][0]["data"]["bonusValue"] = 0.600000001;
+                require(editor.replace(slightlyDifferent), "Cannot change the directed parameters"); editorFrame();
+                require(colorAt(0, 13) == forwardColor, "A sole parameter set did not retain the single-color palette");
+                require(editor.replace(oneWay), "Cannot restore the single directed rule"); editorFrame();
+                settleClicks(); click({middle.x, middle.y + 13}); key(ImGuiKey_R);
+                const auto reversed = editor.document();
+                require(reversed["asymmetrical_edges"][0]["ID_to"] == firstId,
+                    "Selecting the arrow lane and pressing R did not reverse the connection");
+                key(ImGuiKey_Escape);
+                io.AddMousePosEvent(-100, -100); editorFrame();
+                require(colorAt(0, -13) == forwardColor && colorAt(0, 13) != forwardColor,
+                    "Reversing a single arrow lost its color or left a second arrow");
+                require(colorAt(-tipOffset + 0.5f, -14.75f) == colorAt(-tipOffset - 6, -14.75f),
+                    "A rectangular backing protrudes beside the reversed arrow tip");
+                key(ImGuiKey_Z, true); require(editor.document() == oneWay, "Keyboard inversion is not one undo step");
+                key(ImGuiKey_Y, true); require(editor.document() == reversed, "Keyboard inversion redo lost its direction");
+                auto twoWay = oneWay;
+                twoWay["asymmetrical_edges"].push_back({{"ID_from", secondId}, {"ID_to", firstId},
+                    {"data", oneWay["asymmetrical_edges"][0]["data"]}});
+                require(editor.replace(twoWay), "Cannot prepare opposing arrows"); editorFrame();
+                require(colorAt(0, -13) == forwardColor && colorAt(0, 13) == forwardColor,
+                    "Equal parameters did not give opposing arrows the same color");
+                twoWay["asymmetrical_edges"][1]["data"]["areaGuaranteed"] = 101;
+                require(editor.replace(twoWay), "Cannot prepare distinct opposing arrows"); editorFrame();
+                const auto reverseColor = colorAt(0, -13);
+                require(reverseColor != forwardColor && reverseColor != black && reverseColor != 0,
+                    "Distinct opposing parameters did not get distinct arrow colors");
+                const auto separation = [](ImU32 a, ImU32 b) {
+                    const auto x = ImGui::ColorConvertU32ToFloat4(a), y = ImGui::ColorConvertU32ToFloat4(b);
+                    return (x.x - y.x) * (x.x - y.x) + (x.y - y.y) * (x.y - y.y) + (x.z - y.z) * (x.z - y.z);
+                };
+                require(separation(forwardColor, reverseColor) > 0.5f, "Two unique parameter sets received similar colors");
+                if (argc > 1) savePreview(std::string(argv[1]) + "-two-way-connection");
+                doubleClick(middle);
+                require(ImGui::FindWindowByName("Connection settings")->Active, "Cannot edit directed connection");
+                key(ImGuiKey_R);
+                require(editor.document() == twoWay, "R inside Connection settings committed unapplied changes");
+                editorFrame();
+                require(colorAt(0, 13) == reverseColor && colorAt(0, -13) == forwardColor,
+                    "Canvas preview did not follow the draft rule colors");
+                key(ImGuiKey_Z, true); key(ImGuiKey_Enter);
+                require(editor.document() == twoWay, "Draft inversion did not undo independently");
+                doubleClick(middle); key(ImGuiKey_R); key(ImGuiKey_Enter);
+                const auto swapped = editor.copyConnectionData(0);
+                require(swapped["forward"] == twoWay["asymmetrical_edges"][1]["data"]
+                    && swapped["reverse"] == twoWay["asymmetrical_edges"][0]["data"],
+                    "Applying draft inversion did not swap both directed rules");
+                key(ImGuiKey_Z, true); require(editor.document() == twoWay, "Applied inversion did not undo together");
+                doubleClick(middle);
+                auto* fields = ImGui::FindWindowByName("Connection settings")->DC.ChildWindows[0];
+                fields->Scroll.y = fields->ScrollMax.y;
+                for (int i = 0; i < 3; ++i) editorFrame();
+                bool matchingSwatch = false;
+                for (const auto& vertex : fields->DrawList->VtxBuffer)
+                    if (vertex.col == reverseColor) matchingSwatch = true;
+                require(matchingSwatch, "Connection menu swatch does not match the directed arrow");
+                if (argc > 1) savePreview(std::string(argv[1]) + "-directed-connection-menu");
+                const int direction = 0;
+                const auto directionID = ImHashData(&direction, sizeof(direction), fields->ID);
+                const auto enabledGroup = ImHashStr("Enable directed rule", 0, directionID);
+                ImGui::ActivateItemByID(ImHashStr("Enable directed rule", 0, enabledGroup));
+                for (int i = 0; i < 3; ++i) editorFrame();
+                require(editor.document() == twoWay && colorAt(0, 13) != forwardColor
+                    && colorAt(0, -13) == forwardColor, "Removing a draft parameter set did not rebalance the preview palette");
+                key(ImGuiKey_Z, true);
+                require(colorAt(0, 13) == forwardColor && colorAt(0, -13) == reverseColor,
+                    "Undo did not restore the preview palette");
+                key(ImGuiKey_Escape);
+
+                // Four nearly identical parameter sets on different connections
+                // must share one widely distributed palette across the template.
+                TemplateEditor paletteExample;
+                std::vector<int> paletteIds;
+                const auto firstPosition = editor.position(firstId), secondPosition = editor.position(secondId);
+                for (int row = 0; row < 3; ++row) {
+                    paletteIds.push_back(paletteExample.addNode({firstPosition.x, firstPosition.y + row * 140}));
+                    paletteIds.push_back(paletteExample.addNode({secondPosition.x, secondPosition.y + row * 140}));
+                    paletteExample.connect(paletteIds[row * 2], paletteIds[row * 2 + 1]);
+                }
+                auto fourTypes = paletteExample.document();
+                for (auto& edge : fourTypes["symmetrical_edges"]) edge["data"]["passes"] = noWalls["symmetrical_edges"][0]["data"]["passes"];
+                for (int i = 0; i < 5; ++i) {
+                    const int from = paletteIds[(i / 2) * 2 + i % 2], to = paletteIds[(i / 2) * 2 + 1 - i % 2];
+                    fourTypes["asymmetrical_edges"].push_back({{"ID_from", from}, {"ID_to", to},
+                        {"data", {{"intakeDistance", 2}, {"areaGuaranteed", 100}, {"bonusValue", 0.6 + (i % 4) * 1e-9}}}});
+                }
+                require(editor.replace(fourTypes), "Cannot prepare four unique rule types");
+                io.AddMousePosEvent(-100, -100); editorFrame();
+                std::array<ImU32, 4> paletteColors;
+                for (int i = 0; i < 4; ++i) paletteColors[i] = colorAt(0, (i / 2) * 140 + (i % 2 ? -13 : 13));
+                for (size_t i = 0; i < paletteColors.size(); ++i) for (size_t j = 0; j < i; ++j)
+                    require(separation(paletteColors[i], paletteColors[j]) > 0.5f,
+                        "Four unique parameter sets did not receive widely separated colors");
+                require(colorAt(0, 293) == paletteColors[0], "Repeated parameters on another connection got a new color");
+                if (argc > 1) {
+                    io.DeltaTime = 13; editorFrame(); io.DeltaTime = 1.0f / 60;
+                    savePreview(std::string(argv[1]) + "-four-rule-palette");
+                }
+                std::reverse(fourTypes["asymmetrical_edges"].begin(), fourTypes["asymmetrical_edges"].end());
+                require(editor.renameNode(paletteIds[0], 999, fourTypes) && editor.replace(fourTypes),
+                    "Cannot reorder rules and rename a node"); editorFrame();
+                for (int i = 0; i < 4; ++i)
+                    require(colorAt(0, (i / 2) * 140 + (i % 2 ? -13 : 13)) == paletteColors[i],
+                        "Rule order or node IDs changed the template palette");
+                require(editor.replace(original), "Cannot restore editor after connection checks");
+            }
             const auto beforeDrag = editor.position(firstId);
             settleClicks();
             io.AddMousePosEvent(firstPoint.x, firstPoint.y); editorFrame();

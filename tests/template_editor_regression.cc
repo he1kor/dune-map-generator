@@ -171,6 +171,50 @@ static void checkHistory(const std::filesystem::path& scratch) {
     std::filesystem::remove(scratch);
 }
 
+static void checkConnectionInversion() {
+    TemplateEditor editor;
+    const int a = editor.addNode({0, 0}), b = editor.addNode({160, 0}), c = editor.addNode({320, 0});
+    editor.connect(a, b); editor.connect(b, c);
+    const auto plain = editor.document();
+    require(!editor.invertConnection(0) && !editor.invertConnection(99) && editor.document() == plain,
+        "Inverting a connection without rules or an invalid index changed the document");
+    auto oneWay = plain;
+    oneWay["asymmetrical_edges"] = Json::array({
+        {{"ID_from", a}, {"ID_to", b}, {"data", {{"intakeDistance", 2}, {"areaGuaranteed", 100}, {"bonusValue", 0.6}}},
+            {"extension", "keep"}},
+        {{"ID_from", b}, {"ID_to", c}, {"data", {{"intakeDistance", 0}, {"areaGuaranteed", 0}, {"bonusValue", 0.0}}}}
+    });
+    require(editor.replace(oneWay), editor.error());
+    require(editor.invertConnection(0), "Single directed rule was not inverted");
+    const auto reversed = editor.document();
+    require(reversed["asymmetrical_edges"][0]["ID_from"] == b
+        && reversed["asymmetrical_edges"][0]["ID_to"] == a
+        && reversed["asymmetrical_edges"][0]["data"] == oneWay["asymmetrical_edges"][0]["data"]
+        && reversed["asymmetrical_edges"][0]["extension"] == "keep"
+        && reversed["asymmetrical_edges"][1] == oneWay["asymmetrical_edges"][1]
+        && reversed["symmetrical_edges"] == oneWay["symmetrical_edges"] && reversed["nodes"] == oneWay["nodes"],
+        "Inversion changed rule parameters, metadata, symmetric settings, positions or another connection");
+    require(templateValidationError(reversed, false).empty(), "Inverted single rule is invalid");
+    editor.undo(); require(editor.document() == oneWay, "Inversion was not one undo step");
+    require(!editor.invertConnection(1 + 10) && editor.canRedo(), "No-op inversion cleared redo");
+    editor.redo(); require(editor.document() == reversed, "Inversion redo lost its direction");
+    require(editor.invertConnection(0) && editor.document() == oneWay, "Double inversion did not restore the connection");
+    auto twoWay = oneWay;
+    twoWay["asymmetrical_edges"].push_back({{"ID_from", b}, {"ID_to", a},
+        {"data", {{"intakeDistance", 3}, {"areaGuaranteed", 20}, {"bonusValue", 0.15}}}});
+    require(editor.replace(twoWay), editor.error());
+    require(editor.invertConnection(0), "Two directed rules were not inverted");
+    const auto payload = editor.copyConnectionData(0);
+    require(payload["forward"] == twoWay["asymmetrical_edges"][2]["data"]
+        && payload["reverse"] == twoWay["asymmetrical_edges"][0]["data"], "Opposing rule parameters were not exchanged");
+    require(templateValidationError(editor.document(), false).empty(), "Inverted opposing rules are invalid");
+    editor.undo(); require(editor.document() == twoWay, "Undo did not restore both directions together");
+    auto draft = twoWay;
+    require(TemplateEditor::invertConnection(draft, 0) && draft != twoWay && editor.document() == twoWay,
+        "Draft inversion committed unapplied settings");
+    require(TemplateEditor::invertConnection(draft, 0) && draft == twoWay, "Draft inversion is not reversible");
+}
+
 static void checkDataClipboard() {
     TemplateEditor editor;
     const int source = editor.addNode({3.125785f, -8.889999f});
@@ -409,6 +453,7 @@ int main(int argc, char** argv) {
         checkHistory(scratch);
         checkMagnets(scratch);
         checkDataClipboard();
+        checkConnectionInversion();
         checkAutoPlacement();
         require(templateValidationError(editor.document(), false).empty(), "New draft is malformed");
         require(!templateValidationError(editor.document()).empty(), "Empty draft accepted for generation");

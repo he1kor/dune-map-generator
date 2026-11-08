@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cfloat>
+#include <map>
 #include <vector>
 
 namespace {
@@ -24,6 +25,90 @@ constexpr float gridSpacing = 64;
 constexpr double toastDuration = 4;
 constexpr double toastFadeDuration = 0.4;
 constexpr ImU32 boundaryColor=IM_COL32(100,225,240,235);
+constexpr float directedLaneOffset = 13;
+
+std::array<const Json*, 2> directedRules(const Json& document, int first, int second) {
+    std::array<const Json*, 2> result{};
+    for (const auto& rule : document["asymmetrical_edges"]) {
+        if (rule["ID_from"] == first && rule["ID_to"] == second) result[0] = &rule;
+        else if (rule["ID_from"] == second && rule["ID_to"] == first) result[1] = &rule;
+    }
+    return result;
+}
+
+bool hasDirectedRules(const Json& document, size_t index) {
+    const auto& edges = document["symmetrical_edges"];
+    if (index >= edges.size()) return false;
+    const auto rules = directedRules(document, edges[index]["ID_first"], edges[index]["ID_second"]);
+    return rules[0] || rules[1];
+}
+
+void normalizeRuleNumbers(Json& value) {
+    if (value.is_number()) {
+        const double number = value.get<double>();
+        value = number == 0 ? 0.0 : number;
+    } else if (value.is_structured()) {
+        for (auto& child : value) normalizeRuleNumbers(child);
+    }
+}
+
+std::string directedRuleKey(const Json& data) {
+    // Compare parameters independently of formatting, numeric spelling, IDs
+    // and direction. The ordered JSON keys also make assignment repeatable.
+    auto canonical = data;
+    normalizeRuleNumbers(canonical);
+    return canonical.dump();
+}
+
+class DirectedRulePalette {
+public:
+    explicit DirectedRulePalette(const Json& document) {
+        for (const auto& rule : document["asymmetrical_edges"])
+            colors_.try_emplace(directedRuleKey(rule["data"]), 0);
+        // Use the whole color wheel for the actual number of distinct rules,
+        // rather than letting independent hashes choose neighboring colors.
+        size_t index = 0;
+        for (auto& [key, color] : colors_) {
+            float red, green, blue;
+            ImGui::ColorConvertHSVtoRGB(float(index++) / colors_.size(), 0.8f, 1.0f, red, green, blue);
+            color = ImGui::ColorConvertFloat4ToU32({red, green, blue, 1});
+        }
+    }
+
+    ImU32 color(const Json& data) const { return colors_.at(directedRuleKey(data)); }
+
+private:
+    std::map<std::string, ImU32> colors_;
+};
+
+void directedEdge(ImDrawList* draw, ImVec2 a, ImVec2 b, ImU32 color, bool highlighted) {
+    const float length = std::hypot(b.x - a.x, b.y - a.y);
+    if (length < 1) return;
+    const ImVec2 direction((b.x - a.x) / length, (b.y - a.y) / length);
+    const ImVec2 normal(-direction.y, direction.x);
+    const float padding = std::min(12.0f, length * 0.2f);
+    const ImVec2 start(a.x + normal.x * directedLaneOffset + direction.x * padding,
+        a.y + normal.y * directedLaneOffset + direction.y * padding);
+    const ImVec2 tip(b.x + normal.x * directedLaneOffset - direction.x * padding,
+        b.y + normal.y * directedLaneOffset - direction.y * padding);
+    const float head = std::min(10.0f, (length - 2 * padding) * 0.4f);
+    const float width = head * 0.5f;
+    const ImVec2 left(tip.x - direction.x * head + normal.x * width,
+        tip.y - direction.y * head + normal.y * width);
+    const ImVec2 right(tip.x - direction.x * head - normal.x * width,
+        tip.y - direction.y * head - normal.y * width);
+    const float shaft = std::min(1.25f, width * 0.5f);
+    const ImVec2 neck(tip.x - direction.x * head, tip.y - direction.y * head);
+    // One contour joins shaft and head, so no rectangular backing protrudes
+    // beyond the arrowhead. Selection follows the same arrow silhouette.
+    const std::array<ImVec2, 7> arrow{tip, left,
+        ImVec2(neck.x + normal.x * shaft, neck.y + normal.y * shaft),
+        ImVec2(start.x + normal.x * shaft, start.y + normal.y * shaft),
+        ImVec2(start.x - normal.x * shaft, start.y - normal.y * shaft),
+        ImVec2(neck.x - normal.x * shaft, neck.y - normal.y * shaft), right};
+    if (highlighted) draw->AddPolyline(arrow.data(), arrow.size(), accent, 5.0f, ImDrawFlags_Closed);
+    draw->AddConcavePolyFilled(arrow.data(), arrow.size(), color);
+}
 
 void dashedBoundaryLine(ImDrawList* draw,ImVec2 a,ImVec2 b) {
     const float dx=b.x-a.x,dy=b.y-a.y,length=std::hypot(dx,dy);
@@ -182,7 +267,8 @@ float pointDistance(ImVec2 point, ImVec2 a, ImVec2 b) {
 
 // Clip before emitting dashes so offscreen nodes cannot create millions of
 // draw commands. The phase stays anchored to the first endpoint when panning.
-void patternedEdge(ImDrawList* draw, ImVec2 a, ImVec2 b, const Json& passes, ImVec2 clipMin, ImVec2 clipMax, bool highlighted) {
+void patternedEdge(ImDrawList* draw, ImVec2 a, ImVec2 b, const Json& passes, ImU32 wallColor,
+        ImVec2 clipMin, ImVec2 clipMax, bool highlighted) {
     const float length = std::hypot(b.x - a.x, b.y - a.y);
     if (length < 0.01f) return;
     const ImVec2 direction((b.x - a.x) / length, (b.y - a.y) / length);
@@ -195,8 +281,17 @@ void patternedEdge(ImDrawList* draw, ImVec2 a, ImVec2 b, const Json& passes, ImV
         end = std::min(end, hi);
         return start < end;
     };
-    if (!clip(a.x, direction.x, clipMin.x - 4, clipMax.x + 4)
-        || !clip(a.y, direction.y, clipMin.y - 4, clipMax.y + 4)) return;
+    if (!clip(a.x, direction.x, clipMin.x - 8, clipMax.x + 8)
+        || !clip(a.y, direction.y, clipMin.y - 8, clipMax.y + 8)) return;
+    // Continuous rails keep a connection visible even when it has no walls.
+    for (float side : {-4.5f, 4.5f}) {
+        const ImVec2 from(a.x + direction.x * start - direction.y * side,
+            a.y + direction.y * start + direction.x * side);
+        const ImVec2 to(a.x + direction.x * end - direction.y * side,
+            a.y + direction.y * end + direction.x * side);
+        if (highlighted) draw->AddLine(from, to, accent, 5);
+        draw->AddLine(from, to, IM_COL32(0, 0, 0, 255), 1.5f);
+    }
     // Two screen pixels per unit, independent of zoom or map resolution.
     const std::array<double, 4> pattern{2 * passes["minWallLength"].get<double>(),
         2 * passes["minPassWidth"].get<double>(), 2 * passes["maxWallLength"].get<double>(),
@@ -213,7 +308,7 @@ void patternedEdge(ImDrawList* draw, ImVec2 a, ImVec2 b, const Json& passes, ImV
             const ImVec2 wallStart(a.x + direction.x * at, a.y + direction.y * at);
             const ImVec2 wallEnd(a.x + direction.x * next, a.y + direction.y * next);
             if (highlighted) draw->AddLine(wallStart, wallEnd, accent, 7);
-            draw->AddLine(wallStart, wallEnd, IM_COL32(0, 0, 0, 255), 3.5f);
+            draw->AddLine(wallStart, wallEnd, wallColor, 3.5f);
         }
         at = next;
         phase = 0;
@@ -286,6 +381,8 @@ void TemplateEditorUI::toolbar() {
                 ImGui::Separator();
                 if (ImGui::MenuItem("Copy data", "Ctrl+C", false, selectedNode_ >= 0 || selectedEdge_ >= 0)) copyData();
                 if (ImGui::MenuItem("Paste data", "Ctrl+V", false, canPasteData())) pasteData();
+                if (ImGui::MenuItem("Invert connection", "R", false,
+                        selectedEdge_ >= 0 && hasDirectedRules(editor_.document(), selectedEdge_))) invertConnection();
                 if(ImGui::MenuItem("Cycle boundary placement","Ctrl+B",false,!selectedNodes_.empty())) {
                     finishMove();editor_.cycleBoundaryPlacement({selectedNodes_.begin(),selectedNodes_.end()});
                 }
@@ -505,7 +602,14 @@ void TemplateEditorUI::shortcuts() {
         if(ImGui::IsKeyPressed(ImGuiKey_B,false)){mode_=Mode::Boundary;connectionStart_=-1;}
         if (ImGui::IsKeyPressed(ImGuiKey_F, false) || ImGui::IsKeyPressed(ImGuiKey_Home, false)) fit_ = true;
         if (ImGui::IsKeyPressed(ImGuiKey_F2, false)) openHelp_ = true;
+        if (!io.KeyAlt && !io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_R, false)) invertConnection();
     }
+}
+
+void TemplateEditorUI::invertConnection() {
+    finishMove();
+    if (selectedEdge_ >= 0 && editor_.invertConnection(selectedEdge_))
+        notify(uiDescriptions().text("connection_inverted"));
 }
 
 void TemplateEditorUI::copyData() {
@@ -635,8 +739,16 @@ void TemplateEditorUI::canvas() {
         float closest = 8;
         for (size_t i = 0; i < edges.size(); ++i) {
             const auto& edge = edges[i];
-            const float distance = pointDistance(io.MousePos, screen(editor_.position(edge["ID_first"])),
-                screen(editor_.position(edge["ID_second"])));
+            const auto a = screen(editor_.position(edge["ID_first"])), b = screen(editor_.position(edge["ID_second"]));
+            float distance = pointDistance(io.MousePos, a, b);
+            const auto rules = directedRules(editor_.document(), edge["ID_first"], edge["ID_second"]);
+            const float length = std::hypot(b.x - a.x, b.y - a.y);
+            if (length > 0.01f) for (int reverse = 0; reverse < 2; ++reverse) if (rules[reverse]) {
+                const float side = (reverse ? -1 : 1) * directedLaneOffset / length;
+                const ImVec2 offset(-(b.y - a.y) * side, (b.x - a.x) * side);
+                distance = std::min(distance, pointDistance(io.MousePos,
+                    {a.x + offset.x, a.y + offset.y}, {b.x + offset.x, b.y + offset.y}));
+            }
             if (distance < closest) { hitEdge = static_cast<int>(i); closest = distance; }
         }
     }
@@ -776,6 +888,8 @@ void TemplateEditorUI::canvas() {
         if (contextNode_ >= 0 || contextEdge_ >= 0) {
             if (ImGui::MenuItem("Copy data", "Ctrl+C")) copyData();
             if (ImGui::MenuItem("Paste data", "Ctrl+V", false, canPasteData())) pasteData();
+            if (contextEdge_ >= 0 && ImGui::MenuItem("Invert connection", "R", false,
+                    hasDirectedRules(editor_.document(), contextEdge_))) invertConnection();
             ImGui::Separator();
             if (ImGui::MenuItem("Edit")) edit(contextNode_ >= 0 ? Dialog::Node : Dialog::Edge,
                 contextNode_ >= 0 ? contextNode_ : contextEdge_);
@@ -892,6 +1006,13 @@ void TemplateEditorUI::canvas() {
         }
     }
     // Re-read arrays after canvas actions, which may have erased entries.
+    const auto wallResource = editor_.document().contains("walls")
+        ? *resourceFromString(editor_.document()["walls"]["resource"]) : Resource::CLIFF_ROCK;
+    const auto wallColor = resourceColor(wallResource);
+    // Preview connection drafts with the same rule collection used by their
+    // menu swatches; applying or discarding keeps the palette consistent.
+    const auto& visualDocument = dialog_ == Dialog::Edge ? draft_ : editor_.document();
+    const DirectedRulePalette rulePalette(visualDocument);
     for (size_t i = 0; i < editor_.document()["symmetrical_edges"].size(); ++i) {
         const auto& edge = editor_.document()["symmetrical_edges"][i];
         const int first = edge["ID_first"], second = edge["ID_second"];
@@ -904,8 +1025,11 @@ void TemplateEditorUI::canvas() {
         if (firstFraction + secondFraction >= 1) continue;
         b = {b.x - dx * secondFraction, b.y - dy * secondFraction};
         a = {a.x + dx * firstFraction, a.y + dy * firstFraction};
-        patternedEdge(draw, a, b, edge["data"]["passes"], canvasOrigin_, maximum,
-            static_cast<int>(i) == selectedEdge_ || static_cast<int>(i) == hitEdge);
+        const bool highlighted = static_cast<int>(i) == selectedEdge_ || static_cast<int>(i) == hitEdge;
+        patternedEdge(draw, a, b, edge["data"]["passes"], wallColor, canvasOrigin_, maximum, highlighted);
+        const auto rules = directedRules(visualDocument, first, second);
+        if (rules[0]) directedEdge(draw, a, b, rulePalette.color((*rules[0])["data"]), highlighted);
+        if (rules[1]) directedEdge(draw, b, a, rulePalette.color((*rules[1])["data"]), highlighted);
     }
     const int source = !magnetMode&&!boundaryMode ? (connectionStart_ >= 0 ? connectionStart_ : io.KeyShift ? selectedNode_ : -1) : -1;
     if (hovered && source >= 0 && editor_.node(source)) draw->AddLine(screen(editor_.position(source)), io.MousePos, accent, 2);
@@ -1240,7 +1364,17 @@ void TemplateEditorUI::edgeFields() {
     }
     overrideNumberField("Distance weight", weight ? &data["geometry"]["distanceWeight"] : nullptr, 1.0);
     ImGui::SeparatorText("Asymmetrical settings");
+    ImGui::BeginDisabled(!hasDirectedRules(draft_, editingEdge_));
+    const bool invert = ImGui::Button("Invert connection (R)");
+    ImGui::EndDisabled();
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        descriptionTooltip(uiDescriptions().text("invert_connection").c_str());
+    const auto& io = ImGui::GetIO();
+    if (invert || (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !io.WantTextInput
+            && !io.KeyCtrl && !io.KeyAlt && !io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_R, false)))
+        TemplateEditor::invertConnection(draft_, editingEdge_);
     auto& directed = draft_["asymmetrical_edges"];
+    const DirectedRulePalette rulePalette(draft_);
     for (int reverse = 0; reverse < 2; ++reverse) {
         const int from = reverse ? second : first, to = reverse ? first : second;
         ImGui::PushID(reverse);
@@ -1248,6 +1382,12 @@ void TemplateEditorUI::edgeFields() {
         int index = -1;
         for (size_t i = 0; i < directed.size(); ++i)
             if (directed[i]["ID_from"] == from && directed[i]["ID_to"] == to) index = static_cast<int>(i);
+        if (index >= 0) {
+            ImGui::SameLine();
+            ImGui::ColorButton("##rule_color", ImGui::ColorConvertU32ToFloat4(rulePalette.color(directed[index]["data"])),
+                ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, {16, 16});
+            if (ImGui::IsItemHovered()) descriptionTooltip(uiDescriptions().text("directed_rule_color").c_str());
+        }
         bool enabled = index >= 0;
         if (checkboxField("Enable directed rule", &enabled)) {
             if (enabled) {
