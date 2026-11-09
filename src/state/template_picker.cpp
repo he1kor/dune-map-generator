@@ -239,10 +239,23 @@ SymEdges readSymEdges(const Json& json, const std::set<int>& ids) {
         const auto& data = member(edge, "data", edgePath);
         const auto passesPath = child(dataPath, "passes");
         const auto& passes = member(data, "passes", dataPath);
-        const int minPass = integer(member(passes, "minPassWidth", passesPath), child(passesPath, "minPassWidth"));
-        const int maxPass = integer(member(passes, "maxPassWidth", passesPath), child(passesPath, "maxPassWidth"));
-        const int minWall = integer(member(passes, "minWallLength", passesPath), child(passesPath, "minWallLength"));
-        const int maxWall = integer(member(passes, "maxWallLength", passesPath), child(passesPath, "maxWallLength"));
+        object(passes, passesPath);
+        tiles::PassMode mode = tiles::PassMode::Ranged;
+        if (const auto it = passes.find("mode"); it != passes.end()) {
+            const auto modePath = child(passesPath, "mode");
+            const auto value = text(*it, modePath);
+            if (value == "open") mode = tiles::PassMode::Open;
+            else if (value == "closed") mode = tiles::PassMode::Closed;
+            else if (value != "ranged") invalid(modePath, "ranged, open or closed");
+        }
+        const auto dimension = [&](const char* key) {
+            if (mode != tiles::PassMode::Ranged && !passes.contains(key)) return 0;
+            return integer(member(passes, key, passesPath), child(passesPath, key));
+        };
+        const int minPass = dimension("minPassWidth");
+        const int maxPass = dimension("maxPassWidth");
+        const int minWall = dimension("minWallLength");
+        const int maxWall = dimension("maxWallLength");
         if (maxPass < minPass) invalid(child(passesPath, "maxPassWidth"), "a value >= minPassWidth");
         if (maxWall < minWall) invalid(child(passesPath, "maxWallLength"), "a value >= minWallLength");
         int blendDistance = 0;
@@ -252,7 +265,7 @@ SymEdges readSymEdges(const Json& json, const std::set<int>& ids) {
         }
         BasicSymConnection connection(blendDistance, tiles::PassParams{
             static_cast<size_t>(minPass), static_cast<size_t>(maxPass),
-            static_cast<size_t>(minWall), static_cast<size_t>(maxWall)
+            static_cast<size_t>(minWall), static_cast<size_t>(maxWall), mode
         });
         if (const auto it = data.find("geometry"); it != data.end()) {
             const auto geometryPath = child(dataPath, "geometry");

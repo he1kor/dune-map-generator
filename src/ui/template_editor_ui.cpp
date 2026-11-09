@@ -294,10 +294,20 @@ void patternedEdge(ImDrawList* draw, ImVec2 a, ImVec2 b, const Json& passes, ImU
         if (highlighted) draw->AddLine(from, to, accent, 5);
         draw->AddLine(from, to, IM_COL32(0, 0, 0, 255), 1.5f);
     }
+    const auto mode = passes.value("mode", std::string("ranged"));
+    if (mode == "open") return;
+    if (mode == "closed") {
+        const ImVec2 from(a.x + direction.x * start, a.y + direction.y * start);
+        const ImVec2 to(a.x + direction.x * end, a.y + direction.y * end);
+        if (highlighted) draw->AddLine(from, to, accent, 7);
+        draw->AddLine(from, to, wallColor, 3.5f);
+        return;
+    }
     // Two screen pixels per unit, independent of zoom or map resolution.
-    const std::array<double, 4> pattern{2 * passes["minWallLength"].get<double>(),
-        2 * passes["minPassWidth"].get<double>(), 2 * passes["maxWallLength"].get<double>(),
-        2 * passes["maxPassWidth"].get<double>()};
+    // A live draft may contain negative values before validation on Apply.
+    const auto dimension = [&](const char* key) { return 2 * std::max(0.0, passes[key].get<double>()); };
+    const std::array<double, 4> pattern{dimension("minWallLength"), dimension("minPassWidth"),
+        dimension("maxWallLength"), dimension("maxPassWidth")};
     const double period = pattern[0] + pattern[1] + pattern[2] + pattern[3];
     if (period <= 0) return;
     double phase = std::fmod(start, period);
@@ -1014,8 +1024,7 @@ void TemplateEditorUI::canvas() {
     const auto wallResource = editor_.document().contains("walls")
         ? *resourceFromString(editor_.document()["walls"]["resource"]) : Resource::CLIFF_ROCK;
     const auto wallColor = resourceColor(wallResource);
-    // Preview connection drafts with the same rule collection used by their
-    // menu swatches; applying or discarding keeps the palette consistent.
+    // Preview border and directed-rule drafts before applying the dialog.
     const auto& visualDocument = dialog_ == Dialog::Edge ? draft_ : editor_.document();
     const DirectedRulePalette rulePalette(visualDocument);
     for (size_t i = 0; i < editor_.document()["symmetrical_edges"].size(); ++i) {
@@ -1031,7 +1040,8 @@ void TemplateEditorUI::canvas() {
         b = {b.x - dx * secondFraction, b.y - dy * secondFraction};
         a = {a.x + dx * firstFraction, a.y + dy * firstFraction};
         const bool highlighted = static_cast<int>(i) == selectedEdge_ || static_cast<int>(i) == hitEdge;
-        patternedEdge(draw, a, b, edge["data"]["passes"], wallColor, canvasOrigin_, maximum, highlighted);
+        patternedEdge(draw, a, b, visualDocument["symmetrical_edges"][i]["data"]["passes"],
+            wallColor, canvasOrigin_, maximum, highlighted);
         const auto rules = directedRules(visualDocument, first, second);
         if (rules[0]) directedEdge(draw, a, b, rulePalette.color((*rules[0])["data"]), highlighted);
         if (rules[1]) directedEdge(draw, b, a, rulePalette.color((*rules[1])["data"]), highlighted);
@@ -1345,10 +1355,26 @@ void TemplateEditorUI::edgeFields() {
     ImGui::SeparatorText("Shared border");
     auto& data = edge["data"];
     auto& passes = data["passes"];
-    numberField("Minimum passage width", passes["minPassWidth"], true);
-    numberField("Maximum passage width", passes["maxPassWidth"], true);
-    numberField("Minimum wall length", passes["minWallLength"], true);
-    numberField("Maximum wall length", passes["maxWallLength"], true);
+    const char* modes[] = {"ranged", "open", "closed"};
+    const char* labels[] = {"Passage and wall ranges", "Fully open", "Fully closed"};
+    const auto mode = passes.value("mode", std::string("ranged"));
+    int selectedMode = mode == "open" ? 1 : mode == "closed" ? 2 : 0;
+    fieldLabel("Border mode");
+    if (ImGui::Combo("##border_mode", &selectedMode, labels, IM_ARRAYSIZE(labels))) {
+        passes["mode"] = modes[selectedMode];
+        if (selectedMode == 0) {
+            const Json defaults = {{"minPassWidth", 13}, {"maxPassWidth", 25},
+                {"minWallLength", 3}, {"maxWallLength", 5}};
+            for (const auto& [key, value] : defaults.items())
+                if (!passes.contains(key)) passes[key] = value;
+        }
+    }
+    if (selectedMode == 0) {
+        numberField("Minimum passage width", passes["minPassWidth"], true);
+        numberField("Maximum passage width", passes["maxPassWidth"], true);
+        numberField("Minimum wall length", passes["minWallLength"], true);
+        numberField("Maximum wall length", passes["maxWallLength"], true);
+    }
     bool blend = data.contains("resourceBlend");
     if (checkboxField("Resource blending", &blend)) {
         if (blend) data["resourceBlend"] = {{"distance", 0}};

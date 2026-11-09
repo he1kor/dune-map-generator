@@ -458,6 +458,49 @@ int main(int argc, char** argv) {
                 const ImU32 black = IM_COL32(0, 0, 0, 255);
                 require(colorAt(0, -4.5f) == black && colorAt(0, 4.5f) == black,
                     "Wall-free symmetric connection lost its continuous rails");
+                auto explicitMode = original;
+                explicitMode["symmetrical_edges"][0]["data"]["passes"] = {{"mode", "open"}};
+                require(editor.replace(explicitMode), "Cannot prepare a fully open connection"); editorFrame();
+                const auto cliffColor = resourceColor(Resource::CLIFF_ROCK);
+                require(colorAt(0, -4.5f) == black && colorAt(0, 4.5f) == black && colorAt(0, 0) != cliffColor,
+                    "Fully open preview has walls or lost its rails");
+                explicitMode["symmetrical_edges"][0]["data"]["passes"]["mode"] = "closed";
+                require(editor.replace(explicitMode), "Cannot prepare a fully closed connection"); editorFrame();
+                for (float offset : {-35.0f, 0.0f, 35.0f})
+                    require(colorAt(offset, 0) == cliffColor, "Fully closed preview has a gap in its wall");
+                const auto chooseBorderMode = [&](int index, const char* label) {
+                    auto* fields = ImGui::FindWindowByName("Connection settings")->DC.ChildWindows[0];
+                    ImGui::ActivateItemByID(fields->GetID("##border_mode"));
+                    for (int i = 0; i < 3; ++i) editorFrame();
+                    require(!GImGui->OpenPopupStack.empty(), "Border mode selector did not open");
+                    auto* popup = GImGui->OpenPopupStack.back().Window;
+                    require(popup && std::string(popup->Name).find("##Combo") == 0, "Border mode selector has no choice popup");
+                    const auto group = ImHashData(&index, sizeof(index), popup->ID);
+                    ImGui::ActivateItemByID(ImHashStr(label, 0, group));
+                    for (int i = 0; i < 3; ++i) editorFrame();
+                    require(GImGui->OpenPopupStack.Size == 1, "Border mode choice did not close its popup");
+                };
+                doubleClick(middle);
+                chooseBorderMode(1, "Fully open");
+                require(editor.document() == explicitMode, "Mode selector committed a border before Apply");
+                require(colorAt(0, 0) != cliffColor, "Mode selector failed to preview a fully open border");
+                key(ImGuiKey_Enter);
+                require(editor.document()["symmetrical_edges"][0]["data"]["passes"] == nlohmann::json{{"mode", "open"}},
+                    "Mode selector did not apply a fully open border");
+                doubleClick(middle);
+                chooseBorderMode(0, "Passage and wall ranges"); key(ImGuiKey_Enter);
+                auto restoredRanges = editor.document()["symmetrical_edges"][0]["data"]["passes"];
+                restoredRanges.erase("mode");
+                require(restoredRanges == original["symmetrical_edges"][0]["data"]["passes"],
+                    "Switching a mode-only border to ranges did not initialize valid defaults");
+                doubleClick(middle);
+                chooseBorderMode(2, "Fully closed"); key(ImGuiKey_Enter);
+                auto retainedRanges = editor.document()["symmetrical_edges"][0]["data"]["passes"];
+                require(retainedRanges["mode"] == "closed", "Mode selector did not apply a fully closed border");
+                retainedRanges.erase("mode");
+                require(retainedRanges == restoredRanges, "Switching border modes lost the saved range settings");
+                key(ImGuiKey_Escape);
+                io.AddMousePosEvent(-100, -100); editorFrame();
                 auto wallPattern = original;
                 wallPattern["symmetrical_edges"][0]["data"]["passes"]["minWallLength"] = 100;
                 wallPattern["symmetrical_edges"][0]["data"]["passes"]["maxWallLength"] = 100;

@@ -367,12 +367,7 @@ void Generation::buildBorders() {
         if (!passParams.has_value()){
             passParams = BasicSymConnection(
                 0,
-                tiles::PassParams{
-                    .minPassWidth = 0,
-                    .maxPassWidth = 0,
-                    .minWallLength = 0,
-                    .maxWallLength = 200
-                }
+                tiles::PassParams{.mode = tiles::PassMode::Closed}
             );
         }; // No pass if no connection
         for (auto sameBorders : border){

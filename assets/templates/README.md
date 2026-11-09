@@ -401,8 +401,20 @@ The connection fields currently have these meanings:
 | `geometry.distanceWeight` | Non-negative importance of that edge's distance preference; default 1 |
 | `passes.minPassWidth`, `maxPassWidth` | Passage widths on the generated zone border |
 | `passes.minWallLength`, `maxWallLength` | Wall lengths between passages |
+| `passes.mode` | `ranged` (default), `open` (no walls), or `closed` (continuous wall) |
 | `resourceBlend.distance` | Resource blending across a zone border |
 | `intakeDistance`, `areaGuaranteed`, `bonusValue` | Directed resource influence and guarantees during blending |
+
+Choose **Border mode** in the connection editor to switch between passage/wall
+ranges, **Fully open**, and **Fully closed**. Open and closed modes apply to the
+entire shared border, including its endpoints, regardless of its length. They
+preserve the connection's zone spacing and resource blending settings.
+
+For JSON templates, set `data.passes` to `{"mode": "open"}` or
+`{"mode": "closed"}`. The four range fields may be omitted in these modes;
+retained fields are validated but do not affect generation. The editor preserves
+them when switching modes. Omitting `mode` keeps the existing range behavior,
+which requires all four range fields.
 
 Add the optional `geometry` object inside a symmetrical edge's `data`:
 

@@ -28,6 +28,7 @@
         "Maximum": "Enable an inclusive upper bound.",
         "min": "Inclusive lower bound. Aspect ratio is width divided by height.",
         "max": "Inclusive upper bound. The range must allow at least one supported map size.",
+        "Border mode": "Use passage and wall ranges, open the entire shared border without walls, or close it with a continuous wall. Switching modes preserves your range settings.",
         "Minimum passage width": "Smallest opening through a zone border, in cells.",
         "Maximum passage width": "Largest opening through a zone border, in cells.",
         "Minimum wall length": "Shortest wall segment between passages, in cells.",

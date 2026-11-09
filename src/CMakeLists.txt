@@ -89,6 +89,21 @@ endif()
 option(MAPGENERATOR_BUILD_TESTS "Build map generation regression tests" OFF)
 if(MAPGENERATOR_BUILD_TESTS)
     enable_testing()
+    add_executable(connection_modes_regression
+        ../tests/connection_modes_regression.cc
+        state/map_template.cpp
+        state/template_picker.cpp
+        state/template_editor.cpp
+        state/template_editor_layout.cpp
+        state/generation.cpp
+    )
+    target_include_directories(connection_modes_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/state
+        ${CMAKE_SOURCE_DIR}/include/global
+    )
+    target_link_libraries(connection_modes_regression PRIVATE GenCore nlohmann_json::nlohmann_json)
+    add_test(NAME connection_modes_regression COMMAND connection_modes_regression
+        "${CMAKE_CURRENT_BINARY_DIR}/connection-modes-regression.json")
     add_executable(boundary_template_regression
         ../tests/boundary_template_regression.cc
         state/map_template.cpp

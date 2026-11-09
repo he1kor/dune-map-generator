@@ -35,7 +35,9 @@ std::shared_ptr<const planar::Reflection> MapTemplate::reflectionForGeneration(c
             }
         }
         auto symmetric=[](const auto& edge) {
-            return std::tuple{edge.minPassWidth,edge.maxPassWidth,edge.minWallLength,edge.maxWallLength,
+            const bool ranged = edge.mode == tiles::PassMode::Ranged;
+            return std::tuple{edge.mode,ranged ? edge.minPassWidth : 0,ranged ? edge.maxPassWidth : 0,
+                ranged ? edge.minWallLength : 0,ranged ? edge.maxWallLength : 0,
                 edge.blendDistance,edge.geometry.preferredCenterDistance,edge.geometry.distanceWeight};
         };
         for(const auto& [pair,edge]:zoneGraph->getSymEdges()) {
