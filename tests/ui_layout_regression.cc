@@ -274,42 +274,50 @@ int main(int argc, char** argv) {
             generation.generationProgress = 0.0f;
 
             DevPanelUI devPanel;
-            auto devFrame = [&] {
+            auto editorFrame = [&] {
                 ImGui::NewFrame();
                 devPanel.handleInput();
                 appLayout::build(settingsUI, filesUI, generationUI, editorUI);
                 devPanel.render(generation, renderer, picker);
                 ImGui::Render();
             };
-            io.AddKeyEvent(ImGuiKey_F1, true);
-            devFrame();
-            io.AddKeyEvent(ImGuiKey_F1, false);
-            devFrame();
+            auto key = [&](ImGuiKey value, bool ctrl = false, bool shift = false) {
+                if (ctrl) io.AddKeyEvent(ImGuiMod_Ctrl, true);
+                if (shift) io.AddKeyEvent(ImGuiMod_Shift, true);
+                io.AddKeyEvent(value, true); editorFrame();
+                io.AddKeyEvent(value, false); editorFrame();
+                if (ctrl) io.AddKeyEvent(ImGuiMod_Ctrl, false);
+                if (shift) io.AddKeyEvent(ImGuiMod_Shift, false);
+                editorFrame();
+            };
+            key(ImGuiKey_F1);
+            require(!devPanel.shouldOverrideRender(), "F1 still opens the developer panel");
+            key(ImGuiKey_G, true);
+            require(!generation.isRunning(), "Ctrl+G started generation without a template");
+            key(ImGuiKey_GraveAccent);
             const auto* devWindow = ImGui::FindWindowByName("Dev Panel");
-            require(devWindow && devWindow->Active, "F1 did not open the developer panel");
+            require(devWindow && devWindow->Active, "Backtick did not open the developer panel");
             io.AddMousePosEvent(devWindow->DC.CursorStartPos.x + ImGui::GetFrameHeight() * 0.5f,
                 devWindow->DC.CursorStartPos.y + ImGui::GetFrameHeight() * 0.5f);
-            devFrame();
+            editorFrame();
             for (bool enabled : {true, false}) {
                 io.AddMouseButtonEvent(0, true);
-                devFrame();
+                editorFrame();
                 io.AddMouseButtonEvent(0, false);
-                devFrame();
+                editorFrame();
                 require(generation.isAnimationEnabled() == enabled, "Animate checkbox did not update generation");
             }
-            io.AddKeyEvent(ImGuiKey_F1, true); devFrame();
-            io.AddKeyEvent(ImGuiKey_F1, false); devFrame();
-
-            auto editorFrame = [&] {
-                ImGui::NewFrame();
-                appLayout::build(settingsUI, filesUI, generationUI, editorUI);
-                ImGui::Render();
-            };
+            key(ImGuiKey_GraveAccent, false, true);
+            require(!devPanel.shouldOverrideRender(), "Tilde did not close the developer panel");
             auto* root = ImGui::FindWindowByName("##Main Window");
             auto* tabs = GImGui->TabBars.GetByKey(root->GetID("Workspaces"));
             require(tabs && tabs->Tabs.Size == 2, "Editor tab is missing");
-            tabs->NextSelectedTabId = tabs->Tabs[1].ID;
-            for (int i = 0; i < 3; ++i) editorFrame();
+            key(ImGuiKey_F2);
+            require(tabs->SelectedTabId == tabs->Tabs[1].ID, "F2 did not select Template editor");
+            require(GImGui->OpenPopupStack.empty(), "F2 still opens Help");
+            key(ImGuiKey_F1);
+            require(tabs->SelectedTabId == tabs->Tabs[0].ID, "F1 did not select Generator");
+            key(ImGuiKey_F2);
             auto canvasWindow = [&]() -> ImGuiWindow* {
                 for (auto* child : root->DC.ChildWindows)
                     if (std::string(child->Name).find("graph_canvas") != std::string::npos) return child;
@@ -337,15 +345,6 @@ int main(int argc, char** argv) {
             auto doubleClick = [&](ImVec2 point) {
                 settleClicks(); click(point); click(point);
                 for (int i = 0; i < 5; ++i) editorFrame();
-            };
-            auto key = [&](ImGuiKey value, bool ctrl = false, bool shift = false) {
-                if (ctrl) io.AddKeyEvent(ImGuiMod_Ctrl, true);
-                if (shift) io.AddKeyEvent(ImGuiMod_Shift, true);
-                io.AddKeyEvent(value, true); editorFrame();
-                io.AddKeyEvent(value, false); editorFrame();
-                if (ctrl) io.AddKeyEvent(ImGuiMod_Ctrl, false);
-                if (shift) io.AddKeyEvent(ImGuiMod_Shift, false);
-                editorFrame();
             };
             auto drag = [&](ImVec2 from, ImVec2 to, bool ctrl = false) {
                 settleClicks();
@@ -748,6 +747,11 @@ int main(int argc, char** argv) {
             click({globalFields.x + 60, globalFields.y + ImGui::GetFontSize() + 7 + inputHeight * 0.5f});
             key(ImGuiKey_A, true);
             io.AddInputCharactersUTF8("UI template"); editorFrame();
+            require(io.WantTextInput, "Global name field did not enter text editing");
+            key(ImGuiKey_GraveAccent);
+            key(ImGuiKey_G, true);
+            require(!devPanel.shouldOverrideRender() && !picker.mapTemplate && !generation.isRunning(),
+                "Shortcuts fired while editing text in a settings dialog");
             key(ImGuiKey_A, true); key(ImGuiKey_C, true);
             require(clipboard == "UI template", "Graph shortcut intercepted native text copy in a settings field");
             key(ImGuiKey_V, true);
@@ -770,8 +774,9 @@ int main(int argc, char** argv) {
                 ImGui::ActivateItemByID(ImHashStr(label,0,content->IDStack.back()));editorFrame();key(ImGuiKey_Enter);
                 require(templateSymmetryMode(editor.document())==mode,"Symmetry radio selected the wrong mode");
             }
-            key(ImGuiKey_Enter, true);
-            require(picker.mapTemplate && picker.templateName == "UI template", "Use for generation did not select editor snapshot");
+            key(ImGuiKey_G, true);
+            require(picker.mapTemplate && picker.templateName == "UI template", "Ctrl+G did not select editor snapshot");
+            require(!generation.isRunning(), "Ctrl+G in Template editor also started generation");
             require(picker.mapTemplate->rotatePositionMagnets, "Global magnet rotation checkbox did not reach generation");
             require(picker.mapTemplate->symmetryMode==SymmetryMode::Embedding && picker.mapTemplate->embeddingReflection,
                 "Embedding symmetry radio did not reach generation");
@@ -779,7 +784,7 @@ int main(int argc, char** argv) {
             // their small X region should capture clicks; hover must not keep
             // them alive, and the final part of their lifetime must fade.
             io.DeltaTime = 5; editorFrame(); io.DeltaTime = 1.0f / 60; editorFrame();
-            key(ImGuiKey_Enter, true); key(ImGuiKey_Enter, true);
+            key(ImGuiKey_G, true); key(ImGuiKey_G, true);
             const auto dismissButtons = [&] {
                 std::vector<ImGuiWindow*> windows;
                 for (auto* window : GImGui->Windows)
@@ -787,8 +792,7 @@ int main(int argc, char** argv) {
                 return windows;
             };
             require(dismissButtons().size() == 2, "Notifications do not each have a dismiss button");
-            tabs->NextSelectedTabId = tabs->Tabs[0].ID;
-            for (int i = 0; i < 3; ++i) editorFrame();
+            key(ImGuiKey_F1);
             const auto beforeDismiss = editor.document();
             click(dismissButtons().back()->Rect().GetCenter());
             editorFrame(); // The dismissed overlay disappears on the next redraw.
@@ -808,8 +812,32 @@ int main(int argc, char** argv) {
                 generation.poll(); std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
             require(!generation.isRunning(), "Notification click-through generation did not finish");
-            tabs->NextSelectedTabId = tabs->Tabs[1].ID;
-            for (int i = 0; i < 3; ++i) editorFrame();
+            generation.isSeedRandom = false;
+            editorFrame();
+            auto* generationPanel = root->DC.ChildWindows[1];
+            ImGui::ActivateItemByID(ImHashStr("##Seed", 0, generationPanel->IDStack.back()));
+            editorFrame(); editorFrame();
+            require(io.WantTextInput, "Seed field did not enter text editing");
+            key(ImGuiKey_G, true);
+            key(ImGuiKey_GraveAccent);
+            require(!generation.isRunning() && !devPanel.shouldOverrideRender(),
+                "Generator shortcuts fired while editing the seed");
+            key(ImGuiKey_Enter);
+            key(ImGuiKey_G, true, true);
+            require(!generation.isRunning(), "Ctrl+Shift+G unexpectedly started generation");
+            const auto selectedSnapshot = picker.mapTemplate;
+            key(ImGuiKey_G, true);
+            require(generation.isRunning(), "Ctrl+G in Generator did not start generation");
+            key(ImGuiKey_G, true);
+            key(ImGuiKey_F2);
+            key(ImGuiKey_G, true);
+            require(generation.isRunning() && picker.mapTemplate == selectedSnapshot,
+                "Ctrl+G replaced the template while generation was running");
+            const auto shortcutDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+            while (generation.isRunning() && std::chrono::steady_clock::now() < shortcutDeadline) {
+                generation.poll(); std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+            require(!generation.isRunning(), "Keyboard-triggered generation did not finish");
             key(ImGuiKey_Enter, true);
             auto maxToastAlpha = [&] {
                 const auto* window = ImGui::FindWindowByName("##editor_toast_0");
@@ -842,8 +870,13 @@ int main(int argc, char** argv) {
             key(ImGuiKey_Z, true, true);
             require(editor.document()["nodes"].empty(), "Ctrl+Shift+Z did not redo");
             key(ImGuiKey_Z, true);
-            key(ImGuiKey_F2);
+            key(ImGuiKey_F3);
             require(ImGui::FindWindowByName("Template editor help")->Active, "Help shortcut failed");
+            const auto helpSnapshot = picker.mapTemplate;
+            key(ImGuiKey_F1); key(ImGuiKey_F2); key(ImGuiKey_G, true); key(ImGuiKey_GraveAccent);
+            require(tabs->SelectedTabId == tabs->Tabs[1].ID && picker.mapTemplate == helpSnapshot
+                    && !generation.isRunning() && !devPanel.shouldOverrideRender(),
+                "Workspace shortcuts fired behind the Help dialog");
             if (argc > 1) {
                 for (int i = 0; i < 5; ++i) editorFrame();
                 savePreview(std::string(argv[1]) + "-help");
@@ -978,7 +1011,7 @@ int main(int argc, char** argv) {
             const auto* unsaved = ImGui::FindWindowByName("Unsaved template");
             require(unsaved && unsaved->Active && !editorUI.closeApproved(), "Closing loses unsaved template changes");
             std::cout << cases << " full-window scenarios remained stable across consecutive frames\n"
-                << "Window sizes, template limits, status labels, F1 Animate and editor canvas interactions passed\n";
+                << "Window sizes, template limits, status labels, workspace shortcuts, Dev Animate and editor canvas interactions passed\n";
         }
         ImGui::DestroyContext();
         return 0;

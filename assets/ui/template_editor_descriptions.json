@@ -60,7 +60,7 @@
         "magnet_position": "Target: X {x} / Y {y}",
         "fit_graph": "Fit all zones in view (F / Home)",
         "empty_canvas": "Double-click the canvas to create your first node.",
-        "canvas_status": "{count} selected  |  {mode}  |  F2: help",
+        "canvas_status": "{count} selected  |  {mode}  |  F3: help",
         "node_tooltip": "Node {id}\nRadius: {radius}\nSusceptibility: {susceptibility}",
         "edge_tooltip": "Connection {first} - {second}",
         "dimensions": "Width and height must be even, from 32 to 128. Aspect ratio is width / height.",
@@ -70,7 +70,7 @@
         "unapplied_changes": "This menu has unapplied changes.",
         "discard_changes": "Discard them or keep editing?",
         "saved": "Template saved: {filename}",
-        "generation_selected": "Template selected. Open the Generator tab to generate a map.",
+        "generation_selected": "Template selected. Press F1, then Ctrl+G to generate a map.",
         "node_copied": "Node data copied.",
         "edge_copied": "Connection data copied.",
         "node_pasted": "Node data pasted to {count} zones.",
@@ -131,14 +131,14 @@
             "title": "Files and history",
             "paragraphs": [
                 "Ctrl+C: copy data from the active zone or connection. Ctrl+V: paste to all selected zones or the selected connection. Copy data and Paste data are also in Edit and the right-click menu. IDs, canvas positions and connections stay unchanged. Edge data includes both directed rules: the source first-to-second rule maps to the destination first-to-second rule. A disabled source direction clears that destination rule. Node and edge clipboards are separate types; incompatible or invalid data is rejected without changes. When several zones are selected, Copy data uses the last clicked zone.",
-                "Ctrl+N: new. Ctrl+O: open. Ctrl+S: save. Ctrl+Shift+S: save as. Ctrl+Z: undo. Ctrl+Y or Ctrl+Shift+Z: redo. Ctrl+comma: global settings. Ctrl+Enter: use for generation. Each group move and applied settings menu is one document undo step. Inside a menu, Undo/Redo also works on individual fields, toggles and resource rows before applying.",
+                "Ctrl+N: new. Ctrl+O: open. Ctrl+S: save. Ctrl+Shift+S: save as. Ctrl+Z: undo. Ctrl+Y or Ctrl+Shift+Z: redo. Ctrl+comma: global settings. Ctrl+G (or Ctrl+Enter): use for generation. F1: Generator tab. F2: Template editor tab. Ctrl+G in Generator: generate a map. Backtick / ~: toggle the Dev panel outside text fields and dialogs. Each group move and applied settings menu is one document undo step. Inside a menu, Undo/Redo also works on individual fields, toggles and resource rows before applying.",
                 "Undo/redo notifications list changed values as from -> to. Notifications stack and let mouse input pass through to controls below; only each message's x button captures clicks. Click x to dismiss it, or let it fade after four seconds. Hover does not extend its lifetime. Selection and camera navigation do not edit the template."
             ]
         },
         {
             "title": "Settings menus",
             "paragraphs": [
-                "Enter applies the menu. Escape, Cancel and the x button close it. If you changed values, a confirmation lets you keep editing or discard them. Hover any (?) marker to learn what that parameter does. F2 opens this help."
+                "Enter applies the menu. Escape, Cancel and the x button close it. If you changed values, a confirmation lets you keep editing or discard them. Hover any (?) marker to learn what that parameter does. F3 opens this help."
             ]
         },
         {

@@ -8,17 +8,23 @@
 #include <algorithm>
 
 namespace {
-bool beginWorkspaceTab(const char* label) {
+bool beginWorkspaceTab(const char* label, const char* shortcut, bool select) {
     // ImGui uses the hover color for held tabs too; give mouse presses their own gold.
     ImGui::PushStyleColor(ImGuiCol_TabHovered, ImGui::IsMouseDown(ImGuiMouseButton_Left)
         ? VARIANT2_ULTRA : ImGui::GetStyleColorVec4(ImGuiCol_TabHovered));
-    const bool visible = ImGui::BeginTabItem(label);
+    const bool visible = ImGui::BeginTabItem(label, nullptr, select ? ImGuiTabItemFlags_SetSelected : 0);
     ImGui::PopStyleColor();
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s (%s)", label, shortcut);
     return visible;
 }
 }
 
 void appLayout::build(QuickSettingsUI& settings, TemplatePickerUI& files, GenerationUI& generation, TemplateEditorUI& editor) {
+    const auto& io = ImGui::GetIO();
+    const bool canSwitchTabs = !io.KeyCtrl && !io.KeyAlt && !io.KeyShift && !io.KeySuper
+        && !ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel);
+    const bool selectGenerator = canSwitchTabs && ImGui::IsKeyPressed(ImGuiKey_F1, false);
+    const bool selectEditor = canSwitchTabs && ImGui::IsKeyPressed(ImGuiKey_F2, false);
     const auto* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
@@ -31,7 +37,7 @@ void appLayout::build(QuickSettingsUI& settings, TemplatePickerUI& files, Genera
     const bool workspacesVisible = ImGui::BeginTabBar("Workspaces", ImGuiTabBarFlags_DrawSelectedOverline);
     ImGui::PopStyleColor();
     if (workspacesVisible) {
-        if (beginWorkspaceTab("Generator")) {
+        if (beginWorkspaceTab("Generator", "F1", selectGenerator)) {
             const float middleWidth = std::max(1.0f, ImGui::GetContentRegionAvail().x - 2 * sidebarWidth - 2 * panelSpacing);
             if (ImGui::BeginChild("settings_panel", ImVec2(sidebarWidth, 0))) settings.build();
             ImGui::EndChild();
@@ -44,7 +50,7 @@ void appLayout::build(QuickSettingsUI& settings, TemplatePickerUI& files, Genera
 
             ImGui::EndTabItem();
         }
-        if (beginWorkspaceTab("Template editor")) {
+        if (beginWorkspaceTab("Template editor", "F2", selectEditor)) {
             editor.build();
             ImGui::EndTabItem();
         }

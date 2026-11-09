@@ -90,21 +90,24 @@ Settings menus have labeled input boxes and `(?)` explanations on each parameter
 Unchecked single-value overrides keep their input visible and disabled, showing
 the default value (or Automatic for radius-derived center distances).
 Enter applies the menu. Escape, Cancel, and the close icon ask before discarding
-changed settings. **Help** (`F2`) explains the controls and template concepts.
+changed settings. **Help** (`F3`) explains the controls and template concepts.
 
 | Shortcut | Action |
 | --- | --- |
+| F1 / F2 | Generator tab / Template editor tab |
+| Backtick / ~ | Toggle the Dev panel (outside text fields and dialogs) |
 | Ctrl+N / Ctrl+O | New template / Open JSON |
 | Ctrl+S / Ctrl+Shift+S | Save / Save as |
 | Ctrl+Z | Undo |
 | Ctrl+Y / Ctrl+Shift+Z | Redo |
 | Ctrl+A | Select all zones on the canvas |
 | Ctrl+comma | Global settings |
-| Ctrl+Enter | Use for generation |
+| Ctrl+G (Template editor) / Ctrl+Enter | Use for generation |
+| Ctrl+G (Generator) | Generate a map |
 | Enter / Delete | Edit / delete selection on the canvas |
 | V / E / hold Shift | Selection mode / Edge mode / temporary Edge mode |
 | F / Home | Fit graph |
-| F2 | Help |
+| F3 | Help |
 
 Each node stores its canvas center in optional metadata alongside `id` and `data`:
 
@@ -120,7 +123,8 @@ Editing retains other optional fields and unknown extension metadata.
 Drafts with empty, isolated or nonplanar graphs can be saved and reopened.
 Field values and resource interval coverage must still be valid. **Use for
 generation** checks the full generator requirements, selects a separate snapshot,
-and applies its dimension limits. Switch to **Generator** and click **Generate**.
+and applies its dimension limits. Press **Ctrl+G** in the editor to select the
+snapshot, then **F1** and **Ctrl+G** to generate a map in **Generator**.
 Later editor changes take effect when you click **Use for generation** again.
 Saving a runtime JSON in `build/src` does not update its source in
 `assets/templates`; use Save as into that folder to retain edits across CMake

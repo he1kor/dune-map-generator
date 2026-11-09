@@ -109,7 +109,10 @@ private:
 
 public:
     void handleInput() {
-        if (ImGui::IsKeyPressed(ImGuiKey_F1)) {
+        const auto& io = ImGui::GetIO();
+        if (!io.WantTextInput && !io.KeyCtrl && !io.KeyAlt && !io.KeySuper
+                && !ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel)
+                && ImGui::IsKeyPressed(ImGuiKey_GraveAccent, false)) {
             showDevPanel = !showDevPanel;
         }
     }
@@ -228,7 +231,7 @@ public:
             
             ImGui::EndDisabled();
             ImGui::Separator();
-            ImGui::TextUnformatted("Press F1 to close");
+            ImGui::TextUnformatted("Press ~ to close");
         }
         ImGui::End();
     }

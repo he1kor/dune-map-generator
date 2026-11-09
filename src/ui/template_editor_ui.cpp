@@ -400,7 +400,7 @@ void TemplateEditorUI::toolbar() {
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Settings")) edit(Dialog::Globals);
-            if (ImGui::MenuItem("Help", "F2")) openHelp_ = true;
+            if (ImGui::MenuItem("Help", "F3")) openHelp_ = true;
             if (!topologyWarning.empty()) {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImGui::ColorConvertU32ToFloat4(accent));
                 if (ImGui::MenuItem("!##topology_warning")) ImGui::OpenPopup("Graph topology warning");
@@ -511,6 +511,7 @@ void TemplateEditorUI::toolbar() {
     ImGui::BeginDisabled(generation_.isRunning());
     if (ImGui::Button("Use for generation")) useForGeneration();
     ImGui::EndDisabled();
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Use this template for generation (Ctrl+G).");
     if (!message_.empty()) ImGui::TextWrapped("%s", message_.c_str());
 }
 
@@ -587,7 +588,9 @@ void TemplateEditorUI::shortcuts() {
         if (ImGui::IsKeyPressed(ImGuiKey_O, false)) load();
         if (ImGui::IsKeyPressed(ImGuiKey_N, false)) createNew();
         if (ImGui::IsKeyPressed(ImGuiKey_Comma, false)) edit(Dialog::Globals);
-        if (ImGui::IsKeyPressed(ImGuiKey_Enter, false)) useForGeneration();
+        if (!io.KeyAlt && !io.KeyShift && !io.KeySuper
+                && (ImGui::IsKeyPressed(ImGuiKey_G, false) || ImGui::IsKeyPressed(ImGuiKey_Enter, false)))
+            useForGeneration();
         if (ImGui::IsKeyPressed(ImGuiKey_Z, false)) history(io.KeyShift);
         if (ImGui::IsKeyPressed(ImGuiKey_Y, false)) history(true);
         if (ImGui::IsKeyPressed(ImGuiKey_C, false)) copyData();
@@ -601,7 +604,7 @@ void TemplateEditorUI::shortcuts() {
         if (ImGui::IsKeyPressed(ImGuiKey_M, false)) { mode_ = Mode::Magnet; connectionStart_ = -1; }
         if(ImGui::IsKeyPressed(ImGuiKey_B,false)){mode_=Mode::Boundary;connectionStart_=-1;}
         if (ImGui::IsKeyPressed(ImGuiKey_F, false) || ImGui::IsKeyPressed(ImGuiKey_Home, false)) fit_ = true;
-        if (ImGui::IsKeyPressed(ImGuiKey_F2, false)) openHelp_ = true;
+        if (!io.KeyAlt && !io.KeyShift && !io.KeySuper && ImGui::IsKeyPressed(ImGuiKey_F3, false)) openHelp_ = true;
         if (!io.KeyAlt && !io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_R, false)) invertConnection();
     }
 }

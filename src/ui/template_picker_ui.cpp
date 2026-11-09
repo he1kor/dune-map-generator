@@ -64,7 +64,12 @@ void TemplatePickerUI::buildGenerateButton(){
     const bool noTemplate = templatePickerPtr->mapTemplate == nullptr;
     ImGui::BeginDisabled(running || noTemplate);
     const auto size = quickSettingsPtr->dimensions();
-    if (ImGui::Button(running ? "Generating..." : "Generate", ImVec2(-1, 30))){
+    const auto& io = ImGui::GetIO();
+    const bool shortcut = io.KeyCtrl && !io.KeyShift && !io.KeyAlt && !io.KeySuper && !io.WantTextInput
+        && !ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel)
+        && ImGui::IsKeyPressed(ImGuiKey_G, false);
+    const bool clicked = ImGui::Button(running ? "Generating..." : "Generate", ImVec2(-1, 30));
+    if (!running && !noTemplate && (clicked || shortcut)) {
         try {
             if (generationPtr->startAsync(templatePickerPtr->mapTemplate, size.width, size.height))
                 mapRenderer.setDistinctColors(*(templatePickerPtr->mapTemplate->zoneGraph));
@@ -74,6 +79,8 @@ void TemplatePickerUI::buildGenerateButton(){
     }
     if (noTemplate && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
         ImGui::SetTooltip("No template is set!");
+    } else if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("Generate a map (Ctrl+G).");
     }
     ImGui::EndDisabled();
 }
