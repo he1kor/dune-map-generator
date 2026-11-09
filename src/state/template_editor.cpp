@@ -318,7 +318,7 @@ int TemplateEditor::addNode(TemplatePoint point) {
     for (const auto& node : document_["nodes"]) used.insert(node["id"].get<int>());
     int id = 1;
     while (used.contains(id)) {
-        if (id == std::numeric_limits<int>::max()) { error_ = "No free node ID."; return -1; }
+        if (id == std::numeric_limits<int>::max()) { error_ = "No free zone ID."; return -1; }
         ++id;
     }
     document_["nodes"].push_back({{"id", id}, {"visualizer", {{"x", 0.0}, {"y", 0.0}}},
@@ -356,7 +356,7 @@ bool TemplateEditor::invertConnection(Json& document, size_t index) {
 }
 
 bool TemplateEditor::invertConnection(size_t index) {
-    Action action(*this, "Invert connection");
+    Action action(*this, "Reverse connection");
     return invertConnection(document_, index);
 }
 
@@ -391,7 +391,7 @@ Json TemplateEditor::copyConnectionData(size_t index) const {
 
 bool TemplateEditor::pasteNodeData(const Json& payload, const std::vector<int>& ids) {
     if (!isDataClipboard(payload, "node") || ids.empty()) {
-        error_ = "Copy node data, then select one or more destination zones."; return false;
+        error_ = "Paste requires zone data and a zone selection."; return false;
     }
     auto candidate = document_;
     for (int id : ids) {
@@ -405,7 +405,7 @@ bool TemplateEditor::pasteNodeData(const Json& payload, const std::vector<int>& 
 
 bool TemplateEditor::pasteConnectionData(const Json& payload, size_t index) {
     if (!isDataClipboard(payload, "edge") || index >= document_["symmetrical_edges"].size()) {
-        error_ = "Copy connection data, then select a destination connection."; return false;
+        error_ = "Paste requires connection data and a selected connection."; return false;
     }
     auto candidate = document_;
     auto& target = candidate["symmetrical_edges"][index];
@@ -486,7 +486,7 @@ Json historyView(Json document) {
                 key = "Zone " + item["id"].dump();
                 item.erase("id");
             } else if (std::string(section) == "symmetrical_edges") {
-                key = "Edge " + item["ID_first"].dump() + " - " + item["ID_second"].dump();
+                key = "Connection " + item["ID_first"].dump() + " - " + item["ID_second"].dump();
                 item.erase("ID_first"); item.erase("ID_second");
             } else {
                 key = item["ID_from"].dump() + " -> " + item["ID_to"].dump();

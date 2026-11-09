@@ -78,15 +78,15 @@ void TemplatePickerUI::buildGenerateButton(){
         }
     }
     if (noTemplate && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-        ImGui::SetTooltip("No template is set!");
+        ImGui::SetTooltip("No template selected.");
     } else if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("Generate a map (Ctrl+G).");
+        ImGui::SetTooltip("Generate (Ctrl+G)");
     }
     ImGui::EndDisabled();
 }
 
 void TemplatePickerUI::buildTemplatePickButton(){
-    if (buildFilePickButton("Template:", templatePickerPtr->templateName, "template")){
+    if (buildFilePickButton("Template", templatePickerPtr->templateName, "template")){
         auto expectedPath = fileDialog.tryGetPathFromDialog();
         if (expectedPath){
             templatePickerPtr->tryReadTemplate(*expectedPath);
@@ -119,7 +119,7 @@ void TemplatePickerUI::build(){
     ImGui::PushStyleColor(ImGuiCol_Button, VARIANT_BASIC);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, VARIANT_EXTRA);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, VARIANT_ULTRA);
-    buildFilePickButton("Tileset config:", "Select file...", "config");
+    buildFilePickButton("Tileset", "Select file...", "config");
 
     ImGui::PopStyleColor(3);
 

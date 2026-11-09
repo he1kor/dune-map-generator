@@ -271,12 +271,12 @@ std::unique_ptr<GenerationPreview> Generation::makePreview() const {
 const char* Generation::statusText() const {
     if (!generationError.empty()) return "Failed";
     switch (generationStage) {
-        case GenerationStage::EMBED: return "Embedding";
-        case GenerationStage::ZONE_BLOAT: return "Expand zones";
-        case GenerationStage::POST_PROCESS: return "Smooth zones";
-        case GenerationStage::BORDERS: return "Walls/passes";
+        case GenerationStage::EMBED: return "Placement";
+        case GenerationStage::ZONE_BLOAT: return "Zone growth";
+        case GenerationStage::POST_PROCESS: return "Smoothing";
+        case GenerationStage::BORDERS: return "Borders";
         case GenerationStage::NOISE: return "Noise";
-        case GenerationStage::BLEND: return "Blend zones";
+        case GenerationStage::BLEND: return "Blending";
         case GenerationStage::RESOURCES: return "Resources";
         case GenerationStage::FINISH: return "Finishing";
         default: return generationProgress == 1.0f ? "Complete" : "Ready";

@@ -218,7 +218,7 @@ ResourceRadialNode<Resource> readNode(const Json& node, const std::string& path,
 
 int endpoint(const Json& edge, const std::string& key, const std::string& path, const std::set<int>& ids) {
     const int id = integer(member(edge, key, path), child(path, key));
-    if (!ids.contains(id)) invalid(child(path, key), "an existing node ID");
+    if (!ids.contains(id)) invalid(child(path, key), "an existing zone ID");
     return id;
 }
 
@@ -232,7 +232,7 @@ SymEdges readSymEdges(const Json& json, const std::set<int>& ids) {
         const auto& edge = edges[i];
         const int first = endpoint(edge, "ID_first", edgePath, ids);
         const int second = endpoint(edge, "ID_second", edgePath, ids);
-        if (first == second) invalid(child(edgePath, "ID_second"), "a different node ID");
+        if (first == second) invalid(child(edgePath, "ID_second"), "a different zone ID");
         if (result.contains({first, second}) || result.contains({second, first}))
             invalid(edgePath, "a unique undirected connection");
         const auto dataPath = child(edgePath, "data");
@@ -277,7 +277,7 @@ AsymEdges readAsymEdges(const Json& json, const std::set<int>& ids, const SymEdg
         const auto& edge = edges[i];
         const int from = endpoint(edge, "ID_from", edgePath, ids);
         const int to = endpoint(edge, "ID_to", edgePath, ids);
-        if (from == to) invalid(child(edgePath, "ID_to"), "a different node ID");
+        if (from == to) invalid(child(edgePath, "ID_to"), "a different zone ID");
         if (!symEdges.contains({from, to}) && !symEdges.contains({to, from}))
             invalid(edgePath, "a directed rule on an existing symmetrical connection");
         if (result.contains({from, to})) invalid(edgePath, "a unique directed connection");
@@ -316,7 +316,7 @@ std::shared_ptr<MapTemplate> readGraph(const Json& json, bool requireGeneratable
     for (size_t i = 0; i < nodes.size(); ++i) {
         const auto path = child("nodes", std::to_string(i));
         const int id = integer(member(nodes[i], "id", path), child(path, "id"));
-        if (!ids.insert(id).second) invalid(child(path, "id"), "a unique node ID");
+        if (!ids.insert(id).second) invalid(child(path, "id"), "a unique zone ID");
         rawGraph.push_back({readNode(nodes[i], path, id, result->octaves.size()), {}});
         const auto& data = nodes[i]["data"];
         if(const auto it=data.find("boundary");it!=data.end()) {

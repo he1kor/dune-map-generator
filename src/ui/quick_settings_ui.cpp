@@ -50,7 +50,7 @@ void QuickSettingsUI::build() {
     ImGui::TextWrapped("%s", uiDescriptions().text("map_dimensions").c_str());
     if (limits != MapDimensionLimits{}) {
         ImGui::Spacing();
-        ImGui::TextUnformatted("Template limits:");
+        ImGui::TextUnformatted("Template limits");
         ImGui::Text("Width: %d-%d", limits.minWidth, limits.maxWidth);
         ImGui::Text("Height: %d-%d", limits.minHeight, limits.maxHeight);
         if (limits.squareOnly()) {
@@ -71,14 +71,14 @@ void QuickSettingsUI::build() {
     ImGui::Dummy(ImVec2(0, 10));
     ImGui::Separator();
     if (!ImGui::CollapsingHeader("Other settings")) return;
-    ImGui::TextWrapped("These settings aren't available yet.");
+    ImGui::TextDisabled("Unavailable");
     ImGui::BeginDisabled();
-    buildIntField(quickSettingsPtr->spotCount, "Number of spots", "##spots");
+    buildIntField(quickSettingsPtr->spotCount, "Spots", "##spots");
     ImGui::Dummy(ImVec2(0, 10));
-    buildSlider(quickSettingsPtr->amountOfSpice, "Amount of spice", "##spice");
+    buildSlider(quickSettingsPtr->amountOfSpice, "Spice", "##spice");
     ImGui::Dummy(ImVec2(0, 10));
-    buildSlider(quickSettingsPtr->amountOfDunes, "Amount of dunes", "##dunes");
+    buildSlider(quickSettingsPtr->amountOfDunes, "Dunes", "##dunes");
     ImGui::Dummy(ImVec2(0, 10));
-    buildSlider(quickSettingsPtr->amountOfInfantryCliffs, "Amount of infantry cliffs", "##inf_cliffs");
+    buildSlider(quickSettingsPtr->amountOfInfantryCliffs, "Infantry cliffs", "##inf_cliffs");
     ImGui::EndDisabled();
 }

@@ -155,6 +155,7 @@ void magnetContour(ImDrawList* draw, ImVec2 minimum, ImVec2 maximum, float round
 }
 
 void descriptionTooltip(const char* text) {
+    if (!text || !*text) return;
     ImGui::BeginTooltip();
     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 25);
     ImGui::TextUnformatted(text);
@@ -163,6 +164,7 @@ void descriptionTooltip(const char* text) {
 }
 
 void helpMarker(const char* text) {
+    if (!text || !*text) return;
     ImGui::SameLine();
     ImGui::TextDisabled("(?)");
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) descriptionTooltip(text);
@@ -381,7 +383,7 @@ void TemplateEditorUI::toolbar() {
                 ImGui::Separator();
                 if (ImGui::MenuItem("Copy data", "Ctrl+C", false, selectedNode_ >= 0 || selectedEdge_ >= 0)) copyData();
                 if (ImGui::MenuItem("Paste data", "Ctrl+V", false, canPasteData())) pasteData();
-                if (ImGui::MenuItem("Invert connection", "R", false,
+                if (ImGui::MenuItem("Reverse connection", "R", false,
                         selectedEdge_ >= 0 && hasDirectedRules(editor_.document(), selectedEdge_))) invertConnection();
                 if(ImGui::MenuItem("Cycle boundary placement","Ctrl+B",false,!selectedNodes_.empty())) {
                     finishMove();editor_.cycleBoundaryPlacement({selectedNodes_.begin(),selectedNodes_.end()});
@@ -395,7 +397,7 @@ void TemplateEditorUI::toolbar() {
             if (ImGui::BeginMenu("View")) {
                 if (ImGui::MenuItem("Fit graph", "F / Home")) fit_ = true;
                 if (ImGui::MenuItem("Selection mode", "V", mode_ == Mode::Selection)) mode_ = Mode::Selection;
-                if (ImGui::MenuItem("Edge mode", "E / hold Shift", mode_ == Mode::Edge)) mode_ = Mode::Edge;
+                if (ImGui::MenuItem("Connection mode", "E / hold Shift", mode_ == Mode::Edge)) mode_ = Mode::Edge;
                 if(ImGui::MenuItem("Boundary mode","B",mode_==Mode::Boundary))mode_=Mode::Boundary;
                 ImGui::EndMenu();
             }
@@ -511,7 +513,7 @@ void TemplateEditorUI::toolbar() {
     ImGui::BeginDisabled(generation_.isRunning());
     if (ImGui::Button("Use for generation")) useForGeneration();
     ImGui::EndDisabled();
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Use this template for generation (Ctrl+G).");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Select a template snapshot for the Generator (Ctrl+G).");
     if (!message_.empty()) ImGui::TextWrapped("%s", message_.c_str());
 }
 
@@ -885,18 +887,18 @@ void TemplateEditorUI::canvas() {
         ImGui::OpenPopup("Canvas actions");
     }
     if (ImGui::BeginPopup("Canvas actions")) {
-        if (ImGui::MenuItem("Add node here")) {
+        if (ImGui::MenuItem("Add zone here")) {
             selectedNode_ = editor_.addNode(contextPoint_); selectedNodes_ = {selectedNode_}; selectedEdge_ = -1;
         }
         if (contextNode_ >= 0 || contextEdge_ >= 0) {
             if (ImGui::MenuItem("Copy data", "Ctrl+C")) copyData();
             if (ImGui::MenuItem("Paste data", "Ctrl+V", false, canPasteData())) pasteData();
-            if (contextEdge_ >= 0 && ImGui::MenuItem("Invert connection", "R", false,
+            if (contextEdge_ >= 0 && ImGui::MenuItem("Reverse connection", "R", false,
                     hasDirectedRules(editor_.document(), contextEdge_))) invertConnection();
             ImGui::Separator();
             if (ImGui::MenuItem("Edit")) edit(contextNode_ >= 0 ? Dialog::Node : Dialog::Edge,
                 contextNode_ >= 0 ? contextNode_ : contextEdge_);
-            if (contextNode_ >= 0 && ImGui::MenuItem("Connect from this node")) {
+            if (contextNode_ >= 0 && ImGui::MenuItem("Connect from this zone")) {
                 mode_ = Mode::Edge; connectionStart_ = contextNode_;
             }
             if(contextNode_>=0&&ImGui::BeginMenu("Boundary placement")) {
@@ -1122,7 +1124,7 @@ void TemplateEditorUI::canvas() {
         draw->AddRectFilled(lo, hi, IM_COL32(255, 202, 104, 35)); draw->AddRect(lo, hi, accent);
     }
     const auto status = uiDescriptions().format("canvas_status", {{"count", std::to_string(selectedNodes_.size())},
-        {"mode", magnetMode ? "Magnet mode" : boundaryMode?"Boundary mode":effectiveMode == Mode::Edge ? "Edge mode" : "Selection mode"}});
+        {"mode", magnetMode ? "Magnet mode" : boundaryMode?"Boundary mode":effectiveMode == Mode::Edge ? "Connection mode" : "Selection mode"}});
     draw->AddRectFilled({canvasOrigin_.x, maximum.y - ImGui::GetTextLineHeight() - 8}, maximum, IM_COL32(35, 28, 25, 210));
     draw->AddText({canvasOrigin_.x + 8, maximum.y - ImGui::GetTextLineHeight() - 4}, textColor, status.c_str());
     draw->PopClipRect();
@@ -1159,7 +1161,7 @@ void TemplateEditorUI::edit(Dialog dialog, int index) {
 void TemplateEditorUI::globalFields() {
     stringField("Template name", draft_["name"]);
     bool walls = draft_.contains("walls");
-    if (checkboxField("Custom wall resource", &walls)) {
+    if (checkboxField("Custom wall material", &walls)) {
         if (walls) draft_["walls"] = {{"resource", "cliff_rock"}};
         else draft_.erase("walls");
     }
@@ -1211,16 +1213,17 @@ void TemplateEditorUI::globalFields() {
         numberField("Maximum radius", octave["maxRadius"]);
         ImGui::PopID();
     }
-    ImGui::SeparatorText("Map dimensions");
+    ImGui::SeparatorText("Map size");
     bool dimensions = draft_.contains("dimensions");
-    if (checkboxField("Restrict map dimensions", &dimensions)) {
+    if (checkboxField("Limit map size", &dimensions)) {
         if (dimensions) draft_["dimensions"] = {{"width", {{"min", 32}, {"max", 128}}},
             {"height", {{"min", 32}, {"max", 128}}}, {"aspectRatio", {{"min", 0.25}, {"max", 4.0}}}};
         else draft_.erase("dimensions");
     }
     if (dimensions) for (const auto* axis : {"width", "height", "aspectRatio"}) {
         ImGui::PushID(axis);
-        ImGui::TextUnformatted(axis);
+        const std::string axisKey = axis;
+        ImGui::TextUnformatted(axisKey == "width" ? "Width" : axisKey == "height" ? "Height" : "Aspect ratio");
         auto range = draft_["dimensions"].value(axis, Json::object());
         const auto before = range;
         for (const auto* bound : {"min", "max"}) {
@@ -1228,8 +1231,8 @@ void TemplateEditorUI::globalFields() {
             const bool aspectRatio = std::string(axis) == "aspectRatio";
             const Json defaultValue = aspectRatio ? Json(std::string(bound) == "min" ? 0.25 : 4.0)
                 : Json(std::string(bound) == "min" ? 32 : 128);
-            const auto label = std::string("Set ") + bound;
-            if (checkboxField(label.c_str(), &enabled)) {
+            const char* label = std::string(bound) == "min" ? "Minimum" : "Maximum";
+            if (checkboxField(label, &enabled)) {
                 if (enabled) range[bound] = defaultValue;
                 else range.erase(bound);
             }
@@ -1245,7 +1248,7 @@ void TemplateEditorUI::nodeFields() {
     auto* node = findNode(draft_, editingNode_);
     if (!node) return;
     Json id = editedId_;
-    numberField("Node ID", id, true);
+    numberField("Zone ID", id, true);
     editedId_ = id.get<int>();
     auto& data = (*node)["data"];
     numberField("Radius", data["radius"]);
@@ -1288,7 +1291,7 @@ void TemplateEditorUI::nodeFields() {
         ImGui::Spacing();
         ImGui::SeparatorText(("Octave " + std::to_string(i)).c_str());
         ImGui::Spacing();
-        if (checkboxField("Override", &enabled)) {
+        if (checkboxField("Custom weight", &enabled)) {
             if (enabled) resources[key] = 0.0;
             else resources.erase(key);
         }
@@ -1339,11 +1342,11 @@ void TemplateEditorUI::edgeFields() {
     auto& edge = draft_["symmetrical_edges"][editingEdge_];
     const int first = edge["ID_first"], second = edge["ID_second"];
     ImGui::Text("Connection %d - %d", first, second);
-    ImGui::SeparatorText("Symmetrical settings");
+    ImGui::SeparatorText("Shared border");
     auto& data = edge["data"];
     auto& passes = data["passes"];
-    numberField("Minimum pass width", passes["minPassWidth"], true);
-    numberField("Maximum pass width", passes["maxPassWidth"], true);
+    numberField("Minimum passage width", passes["minPassWidth"], true);
+    numberField("Maximum passage width", passes["maxPassWidth"], true);
     numberField("Minimum wall length", passes["minWallLength"], true);
     numberField("Maximum wall length", passes["maxWallLength"], true);
     bool blend = data.contains("resourceBlend");
@@ -1352,7 +1355,7 @@ void TemplateEditorUI::edgeFields() {
         else data.erase("resourceBlend");
     }
     overrideNumberField("Blend distance", blend ? &data["resourceBlend"]["distance"] : nullptr, 0, true);
-    ImGui::SeparatorText("Optional generation geometry");
+    ImGui::SeparatorText("Zone spacing");
     bool distance = data.contains("geometry") && data["geometry"].contains("preferredCenterDistance");
     if (checkboxField("Preferred center distance", &distance)) {
         if (distance) data["geometry"]["preferredCenterDistance"] = 15.0;
@@ -1366,9 +1369,9 @@ void TemplateEditorUI::edgeFields() {
         else data["geometry"].erase("distanceWeight");
     }
     overrideNumberField("Distance weight", weight ? &data["geometry"]["distanceWeight"] : nullptr, 1.0);
-    ImGui::SeparatorText("Asymmetrical settings");
+    ImGui::SeparatorText("Directed blending");
     ImGui::BeginDisabled(!hasDirectedRules(draft_, editingEdge_));
-    const bool invert = ImGui::Button("Invert connection (R)");
+    const bool invert = ImGui::Button("Reverse connection (R)");
     ImGui::EndDisabled();
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
         descriptionTooltip(uiDescriptions().text("invert_connection").c_str());
@@ -1417,7 +1420,7 @@ bool TemplateEditorUI::dialogChanged() const {
 bool TemplateEditorUI::applyDialog() {
     auto candidate = draft_;
     if (dialog_ == Dialog::Node && !editor_.renameNode(editingNode_, editedId_, candidate)) {
-        dialogError_ = "Node ID must be non-negative and unique.";
+        dialogError_ = "Zone ID must be non-negative and unique.";
         return false;
     }
     const std::string label = dialog_ == Dialog::Globals ? "Edit global settings"
@@ -1479,7 +1482,7 @@ void TemplateEditorUI::buildDialogs() {
         if (!message_.empty()) ImGui::TextWrapped("%s", message_.c_str());
         ImGui::EndPopup();
     }
-    const char* title = dialog_ == Dialog::Globals ? "Global template settings" : dialog_ == Dialog::Node ? "Node settings" : "Connection settings";
+    const char* title = dialog_ == Dialog::Globals ? "Global template settings" : dialog_ == Dialog::Node ? "Zone settings" : "Connection settings";
     if (openDialog_) { ImGui::OpenPopup(title); openDialog_ = false; }
     const auto* viewport = ImGui::GetMainViewport();
     const float width = std::min(540.0f, viewport->Size.x - 24);
@@ -1551,7 +1554,6 @@ void TemplateEditorUI::buildDialogs() {
         }
         if (ImGui::BeginPopupModal("Discard settings changes?", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextUnformatted(uiDescriptions().text("unapplied_changes").c_str());
-            ImGui::TextUnformatted(uiDescriptions().text("discard_changes").c_str());
             if (ImGui::Button("Keep editing") || (!ImGui::IsWindowAppearing() && ImGui::IsKeyPressed(ImGuiKey_Escape, false)))
                 ImGui::CloseCurrentPopup();
             ImGui::SetItemDefaultFocus();

@@ -33,12 +33,12 @@ void GenerationUI::build(){
         ImGui::EndDisabled();
 
         if (ImGui::IsMouseHoveringRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax())) {
-        ImGui::SetTooltip("Seed will randomize on generation");
+        ImGui::SetTooltip("New seed for each map.");
     }
     } else {
         ImGui::InputScalar("##Seed", ImGuiDataType_S64, &(generationPtr->seed));
     }
-    ImGui::Checkbox("Use random##use random seed", &(generationPtr->isSeedRandom));
+    ImGui::Checkbox("Random##use random seed", &(generationPtr->isSeedRandom));
     ImGui::EndDisabled();
 
     float available_space = std::max(0.0f, ImGui::GetContentRegionAvail().y - 30.0f - ImGui::GetStyle().ItemSpacing.y);
@@ -54,6 +54,6 @@ void GenerationUI::build(){
         if (!generationPtr->generationError.empty())
             ImGui::SetTooltip("%s", generationPtr->generationError.c_str());
         else if (generationPtr->isRunning())
-            ImGui::SetTooltip("%s\nProgress is estimated by generation stage.", status);
+            ImGui::SetTooltip("%s\nEstimated progress.", status);
     }
 }

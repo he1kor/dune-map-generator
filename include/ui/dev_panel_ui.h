@@ -25,12 +25,12 @@ private:
     
     const char* getModeName(DisplayMode mode) const {
         switch(mode) {
-            case DisplayMode::SPICE_MAP: return "Spice Map";
-            case DisplayMode::ZONE_MAP: return "Zone Map";
-            case DisplayMode::INFLUENCE_MASK: return "Influence Mask";
-            case DisplayMode::ZONE_BORDERS: return "Zone Borders";
-            case DisplayMode::BONUS_MASK: return "Bonus Mask";
-            case DisplayMode::ZONE_NOISE: return "Zone Noise";
+            case DisplayMode::SPICE_MAP: return "Resources";
+            case DisplayMode::ZONE_MAP: return "Zones";
+            case DisplayMode::INFLUENCE_MASK: return "Influence mask";
+            case DisplayMode::ZONE_BORDERS: return "Zone borders";
+            case DisplayMode::BONUS_MASK: return "Bonus mask";
+            case DisplayMode::ZONE_NOISE: return "Zone noise";
             default: return "Unknown";
         }
     }
@@ -100,7 +100,7 @@ private:
                             generation.plane.getHeight()
                         );
                     } catch (const std::out_of_range&) {
-                        ImGui::TextColored(ImVec4(1,0,0,1), "Zone %d not found in resource generators!", selectedZoneId.value());
+                        ImGui::TextColored(ImVec4(1,0,0,1), "No resource data for zone %d.", selectedZoneId.value());
                     }
                 }
                 break;
@@ -120,40 +120,40 @@ public:
     void render(Generation& generation, MapRenderer& mapRenderer, TemplatePicker& templatePicker) {
         if (!showDevPanel) return;
         
-        if (ImGui::Begin("Dev Panel", &showDevPanel, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::Begin("Dev panel", &showDevPanel, ImGuiWindowFlags_AlwaysAutoResize)) {
             bool animate = generation.isAnimationEnabled();
             if (ImGui::Checkbox("Animate", &animate)) generation.setAnimate(animate);
             if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Show generation steps in the map preview. Slows generation for viewing.");
+                ImGui::SetTooltip("Slow down generation to preview each stage.");
             bool showZoneIds = mapRenderer.areZoneIdsVisible();
             if (ImGui::Checkbox("Show zone IDs", &showZoneIds)) mapRenderer.setZoneIdsVisible(showZoneIds);
             if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Show each zone's ID at its node center, including on the generated map.");
+                ImGui::SetTooltip("Label zone centers in the preview.");
             ImGui::Separator();
             ImGui::BeginDisabled(generation.isRunning());
-            ImGui::Text("Display Mode:");
+            ImGui::Text("Display");
             ImGui::Separator();
             
             bool spiceSelected = (currentMode == DisplayMode::SPICE_MAP);
-            if (ImGui::RadioButton("Spice Map", spiceSelected)) {
+            if (ImGui::RadioButton("Resources", spiceSelected)) {
                 currentMode = DisplayMode::SPICE_MAP;
                 applyMode(generation, mapRenderer);
             }
             
             bool zoneSelected = (currentMode == DisplayMode::ZONE_MAP);
-            if (ImGui::RadioButton("Zone Map", zoneSelected)) {
+            if (ImGui::RadioButton("Zones", zoneSelected)) {
                 currentMode = DisplayMode::ZONE_MAP;
                 applyMode(generation, mapRenderer);
             }
             
             bool bordersSelected = (currentMode == DisplayMode::ZONE_BORDERS);
-            if (ImGui::RadioButton("Zone Borders", bordersSelected)) {
+            if (ImGui::RadioButton("Zone borders", bordersSelected)) {
                 currentMode = DisplayMode::ZONE_BORDERS;
                 applyMode(generation, mapRenderer);
             }
             
             bool influenceSelected = (currentMode == DisplayMode::INFLUENCE_MASK);
-            if (ImGui::RadioButton("Influence Mask", influenceSelected)) {
+            if (ImGui::RadioButton("Influence mask", influenceSelected)) {
                 currentMode = DisplayMode::INFLUENCE_MASK;
                 if (selectedZoneId.has_value()) {
                     applyMode(generation, mapRenderer);
@@ -161,7 +161,7 @@ public:
             }
             
             bool bonusSelected = (currentMode == DisplayMode::BONUS_MASK);
-            if (ImGui::RadioButton("Bonus Mask", bonusSelected)) {
+            if (ImGui::RadioButton("Bonus mask", bonusSelected)) {
                 currentMode = DisplayMode::BONUS_MASK;
                 if (selectedZoneId.has_value()) {
                     applyMode(generation, mapRenderer);
@@ -169,7 +169,7 @@ public:
             }
             
             bool noiseSelected = (currentMode == DisplayMode::ZONE_NOISE);
-            if (ImGui::RadioButton("Zone Noise", noiseSelected)) {
+            if (ImGui::RadioButton("Zone noise", noiseSelected)) {
                 currentMode = DisplayMode::ZONE_NOISE;
                 if (selectedZoneId.has_value()) {
                     applyMode(generation, mapRenderer);
@@ -181,11 +181,11 @@ public:
             if (currentMode == DisplayMode::INFLUENCE_MASK || 
                 currentMode == DisplayMode::BONUS_MASK || 
                 currentMode == DisplayMode::ZONE_NOISE) {
-                ImGui::Text("Select Zone:");
+                ImGui::Text("Zone");
                 ImGui::Separator();
                 
                 if (!templatePicker.mapTemplate || !templatePicker.mapTemplate->zoneGraph) {
-                    ImGui::TextColored(ImVec4(1,0,0,1), "No template selected!");
+                    ImGui::TextColored(ImVec4(1,0,0,1), "No template selected.");
                 } else {
                     const auto& ids = templatePicker.mapTemplate->zoneGraph->getIDs();
                     
@@ -230,8 +230,6 @@ public:
             }
             
             ImGui::EndDisabled();
-            ImGui::Separator();
-            ImGui::TextUnformatted("Press ~ to close");
         }
         ImGui::End();
     }

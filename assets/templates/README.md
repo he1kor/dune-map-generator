@@ -20,8 +20,8 @@ your work before continuing.
 
 - Double-click empty canvas to add a square node; drag a node to move it.
 - Click a node, hold Shift, and click another to connect them. The cursor and
-  edge icons select **Selection** (`V`) and **Edge** (`E`) modes; Shift temporarily
-  activates Edge mode. The source stays selected after connecting; keep holding
+  edge icons select **Selection** (`V`) and **Connection** (`E`) modes; Shift temporarily
+  activates Connection mode. The source stays selected after connecting; keep holding
   Shift to connect it to more zones. Self-connections and duplicates are ignored.
 - Ctrl-click adds or removes individual zones from the selection. Drag empty
   space to select a box of zones; Ctrl adds to the current selection. Drag any
@@ -105,7 +105,7 @@ changed settings. **Help** (`F3`) explains the controls and template concepts.
 | Ctrl+G (Template editor) / Ctrl+Enter | Use for generation |
 | Ctrl+G (Generator) | Generate a map |
 | Enter / Delete | Edit / delete selection on the canvas |
-| V / E / hold Shift | Selection mode / Edge mode / temporary Edge mode |
+| V / E / hold Shift | Selection mode / Connection mode / temporary Connection mode |
 | F / Home | Fit graph |
 | F3 | Help |
 
@@ -185,7 +185,7 @@ both comparisons at seeds `42`, `12419`, and `2026`.
 The editor's Magnet mode (M, or hold Alt) toggles a position magnet with a
 single click. Drag a zone outward to increase force, or grab it off-center and
 drag toward its center to reduce force. Force ranges from 0.1 to 100; its minimum
-does not disable it. Node settings also expose the toggle and force. Red/blue
+does not disable it. Zone settings also expose the toggle and force. Red/blue
 contours glow more strongly as force increases. Each gesture is undoable.
 
 In Magnet mode the wheel changes the centered square map frame's scale. Its

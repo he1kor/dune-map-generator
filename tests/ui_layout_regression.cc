@@ -295,7 +295,7 @@ int main(int argc, char** argv) {
             key(ImGuiKey_G, true);
             require(!generation.isRunning(), "Ctrl+G started generation without a template");
             key(ImGuiKey_GraveAccent);
-            const auto* devWindow = ImGui::FindWindowByName("Dev Panel");
+            const auto* devWindow = ImGui::FindWindowByName("Dev panel");
             require(devWindow && devWindow->Active, "Backtick did not open the developer panel");
             io.AddMousePosEvent(devWindow->DC.CursorStartPos.x + ImGui::GetFrameHeight() * 0.5f,
                 devWindow->DC.CursorStartPos.y + ImGui::GetFrameHeight() * 0.5f);
@@ -649,7 +649,7 @@ int main(int argc, char** argv) {
             require(editor.position(firstId) == centerTarget, "Ctrl-drag cannot align to a grid cell center");
             key(ImGuiKey_Z, true);
             doubleClick(secondPoint);
-            const auto* nodePopup = ImGui::FindWindowByName("Node settings");
+            const auto* nodePopup = ImGui::FindWindowByName("Zone settings");
             require(nodePopup && nodePopup->Active, "Double-click node did not open settings");
             require(nodePopup->Pos.y >= 0 && nodePopup->Pos.y + nodePopup->Size.y <= io.DisplaySize.y,
                 "Settings footer is outside the window");
@@ -663,7 +663,7 @@ int main(int argc, char** argv) {
             const float inputHeight = ImGui::GetFontSize() + 10;
             const float fieldHeight = ImGui::GetFontSize() + 7 + inputHeight + 7;
             auto radiusPoint = [&] {
-                const auto start = ImGui::FindWindowByName("Node settings")->DC.ChildWindows[0]->DC.CursorStartPos;
+                const auto start = ImGui::FindWindowByName("Zone settings")->DC.ChildWindows[0]->DC.CursorStartPos;
                 return ImVec2(start.x + 60, start.y + fieldHeight + ImGui::GetFontSize() + 7 + inputHeight * 0.5f);
             };
             click(radiusPoint());
@@ -680,7 +680,7 @@ int main(int argc, char** argv) {
             click(radiusPoint()); key(ImGuiKey_A, true);
             io.AddInputCharactersUTF8("-1"); editorFrame();
             key(ImGuiKey_Enter);
-            require(ImGui::FindWindowByName("Node settings")->Active && editor.node(secondId)->at("data").at("radius") == 3,
+            require(ImGui::FindWindowByName("Zone settings")->Active && editor.node(secondId)->at("data").at("radius") == 3,
                 "Invalid settings were applied or closed the menu");
             key(ImGuiKey_Z, true);
             click(radiusPoint()); key(ImGuiKey_A, true);
@@ -689,12 +689,12 @@ int main(int argc, char** argv) {
             auto* confirm = ImGui::FindWindowByName("Discard settings changes?");
             require(confirm && confirm->Active, "Escape discarded edited settings without confirmation");
             key(ImGuiKey_Escape);
-            require(ImGui::FindWindowByName("Node settings")->Active, "Keep editing closed settings");
-            auto* modal = ImGui::FindWindowByName("Node settings");
+            require(ImGui::FindWindowByName("Zone settings")->Active, "Keep editing closed settings");
+            auto* modal = ImGui::FindWindowByName("Zone settings");
             click({modal->Pos.x + modal->Size.x - 16 - 192 + 46, modal->DC.CursorMaxPos.y - inputHeight * 0.5f});
             require(ImGui::FindWindowByName("Discard settings changes?")->Active, "Cancel discarded edited settings without confirmation");
             key(ImGuiKey_Escape);
-            modal = ImGui::FindWindowByName("Node settings");
+            modal = ImGui::FindWindowByName("Zone settings");
             click({modal->Pos.x + modal->Size.x - 16 - inputHeight * 0.5f, modal->DC.CursorStartPos.y + inputHeight * 0.5f});
             require(ImGui::FindWindowByName("Discard settings changes?")->Active, "Close icon discarded settings without confirmation");
             confirm = ImGui::FindWindowByName("Discard settings changes?");
