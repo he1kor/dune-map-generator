@@ -16,6 +16,7 @@ foreach(template IN ITEMS
     "habbanya erg true 2.json"
     "grid3x3 magnetic.json"
     "edge geometry example.json"
+    "sirocco basin.json"
 )
     configure_file(
         "${CMAKE_SOURCE_DIR}/assets/templates/${template}"

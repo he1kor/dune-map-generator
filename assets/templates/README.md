@@ -1,6 +1,15 @@
 `habbanya erg true 2.json` is the current template. CMake copies it to `build/src`
 when configuring the application; edit this source copy to retain changes.
 
+[`sirocco basin.json`](sirocco%20basin.json) is a 128×128 six-player template
+for 3v3, 2v2v2 or FFA. It uses face-only topological symmetry: paired zone roles
+and connection rules match, while placement refinement, terrain, passages and
+spice vary independently. Each starting rock has two guaranteed 105-tile spice
+aprons and a smaller direct approach to the rich central basin. For 3v3, use
+zones 1, 5, 6 against 2, 3, 4. CMake also copies this template to `build/src`.
+Generation was checked across 70 seeds for building space, resource access and
+routes between starting islands.
+
 ### Template editor
 
 Open the **Template editor** tab to create a template or load an existing JSON.

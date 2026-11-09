@@ -1,0 +1,975 @@
+{
+    "asymmetrical_edges": [
+        {
+            "ID_from": 7,
+            "ID_to": 1,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        },
+        {
+            "ID_from": 12,
+            "ID_to": 1,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        },
+        {
+            "ID_from": 8,
+            "ID_to": 2,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        },
+        {
+            "ID_from": 7,
+            "ID_to": 2,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        },
+        {
+            "ID_from": 9,
+            "ID_to": 3,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        },
+        {
+            "ID_from": 8,
+            "ID_to": 3,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        },
+        {
+            "ID_from": 10,
+            "ID_to": 4,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        },
+        {
+            "ID_from": 9,
+            "ID_to": 4,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        },
+        {
+            "ID_from": 11,
+            "ID_to": 5,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        },
+        {
+            "ID_from": 10,
+            "ID_to": 5,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        },
+        {
+            "ID_from": 12,
+            "ID_to": 6,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        },
+        {
+            "ID_from": 11,
+            "ID_to": 6,
+            "data": {
+                "areaGuaranteed": 105,
+                "bonusValue": 120.0,
+                "intakeDistance": 0
+            }
+        }
+    ],
+    "dimensions": {
+        "height": {
+            "max": 128,
+            "min": 128
+        },
+        "width": {
+            "max": 128,
+            "min": 128
+        }
+    },
+    "embedding": {
+        "symmetry": "faces"
+    },
+    "magnets": {
+        "randomRotation": false
+    },
+    "name": "Sirocco Basin",
+    "nodes": [
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.28,
+                        "y": 0.15
+                    }
+                },
+                "radius": 2.0,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 1,
+                            "name": "rock",
+                            "startThreshold": 0
+                        }
+                    ]
+                },
+                "susceptibility": 0.0
+            },
+            "id": 1,
+            "visualizer": {
+                "x": -528.0,
+                "y": -840.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.72,
+                        "y": 0.15
+                    }
+                },
+                "radius": 2.0,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 1,
+                            "name": "rock",
+                            "startThreshold": 0
+                        }
+                    ]
+                },
+                "susceptibility": 0.0
+            },
+            "id": 2,
+            "visualizer": {
+                "x": 528.0,
+                "y": -840.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.84,
+                        "y": 0.5
+                    }
+                },
+                "radius": 2.8,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 1,
+                            "name": "rock",
+                            "startThreshold": 0
+                        }
+                    ]
+                },
+                "susceptibility": 0.0
+            },
+            "id": 3,
+            "visualizer": {
+                "x": 816.0,
+                "y": 0.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.72,
+                        "y": 0.85
+                    }
+                },
+                "radius": 2.0,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 1,
+                            "name": "rock",
+                            "startThreshold": 0
+                        }
+                    ]
+                },
+                "susceptibility": 0.0
+            },
+            "id": 4,
+            "visualizer": {
+                "x": 528.0,
+                "y": 840.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.28,
+                        "y": 0.85
+                    }
+                },
+                "radius": 2.0,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 1,
+                            "name": "rock",
+                            "startThreshold": 0
+                        }
+                    ]
+                },
+                "susceptibility": 0.0
+            },
+            "id": 5,
+            "visualizer": {
+                "x": -528.0,
+                "y": 840.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.16,
+                        "y": 0.5
+                    }
+                },
+                "radius": 2.8,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 1,
+                            "name": "rock",
+                            "startThreshold": 0
+                        }
+                    ]
+                },
+                "susceptibility": 0.0
+            },
+            "id": 6,
+            "visualizer": {
+                "x": -816.0,
+                "y": 0.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.5,
+                        "y": 0.1
+                    }
+                },
+                "radius": 1.45,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 0.44,
+                            "name": "sand",
+                            "startThreshold": 0
+                        },
+                        {
+                            "endThreshold": 0.76,
+                            "name": "spice",
+                            "startThreshold": 0.44
+                        },
+                        {
+                            "endThreshold": 1,
+                            "name": "thick_spice",
+                            "startThreshold": 0.76
+                        }
+                    ],
+                    "octave1_weight": 0.5,
+                    "octave2_weight": 0.5,
+                    "octave3_weight": 1.0
+                },
+                "susceptibility": 0.0
+            },
+            "id": 7,
+            "visualizer": {
+                "x": 0.0,
+                "y": -960.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.84,
+                        "y": 0.29
+                    }
+                },
+                "radius": 1.45,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 0.44,
+                            "name": "sand",
+                            "startThreshold": 0
+                        },
+                        {
+                            "endThreshold": 0.76,
+                            "name": "spice",
+                            "startThreshold": 0.44
+                        },
+                        {
+                            "endThreshold": 1,
+                            "name": "thick_spice",
+                            "startThreshold": 0.76
+                        }
+                    ],
+                    "octave1_weight": 0.15,
+                    "octave2_weight": 0.55,
+                    "octave3_weight": 1.0
+                },
+                "susceptibility": 0.0
+            },
+            "id": 8,
+            "visualizer": {
+                "x": 816.0,
+                "y": -504.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.84,
+                        "y": 0.71
+                    }
+                },
+                "radius": 1.45,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 0.44,
+                            "name": "sand",
+                            "startThreshold": 0
+                        },
+                        {
+                            "endThreshold": 0.76,
+                            "name": "spice",
+                            "startThreshold": 0.44
+                        },
+                        {
+                            "endThreshold": 1,
+                            "name": "thick_spice",
+                            "startThreshold": 0.76
+                        }
+                    ],
+                    "octave1_weight": 0.15,
+                    "octave2_weight": 0.55,
+                    "octave3_weight": 1.0
+                },
+                "susceptibility": 0.0
+            },
+            "id": 9,
+            "visualizer": {
+                "x": 816.0,
+                "y": 504.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.5,
+                        "y": 0.9
+                    }
+                },
+                "radius": 1.45,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 0.44,
+                            "name": "sand",
+                            "startThreshold": 0
+                        },
+                        {
+                            "endThreshold": 0.76,
+                            "name": "spice",
+                            "startThreshold": 0.44
+                        },
+                        {
+                            "endThreshold": 1,
+                            "name": "thick_spice",
+                            "startThreshold": 0.76
+                        }
+                    ],
+                    "octave1_weight": 0.15,
+                    "octave2_weight": 0.55,
+                    "octave3_weight": 1.0
+                },
+                "susceptibility": 0.0
+            },
+            "id": 10,
+            "visualizer": {
+                "x": 0.0,
+                "y": 960.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.16,
+                        "y": 0.71
+                    }
+                },
+                "radius": 1.45,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 0.44,
+                            "name": "sand",
+                            "startThreshold": 0
+                        },
+                        {
+                            "endThreshold": 0.76,
+                            "name": "spice",
+                            "startThreshold": 0.44
+                        },
+                        {
+                            "endThreshold": 1,
+                            "name": "thick_spice",
+                            "startThreshold": 0.76
+                        }
+                    ],
+                    "octave1_weight": 0.15,
+                    "octave2_weight": 0.55,
+                    "octave3_weight": 1.0
+                },
+                "susceptibility": 0.0
+            },
+            "id": 11,
+            "visualizer": {
+                "x": -816.0,
+                "y": 504.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "outer",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.16,
+                        "y": 0.29
+                    }
+                },
+                "radius": 1.45,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 0.44,
+                            "name": "sand",
+                            "startThreshold": 0
+                        },
+                        {
+                            "endThreshold": 0.76,
+                            "name": "spice",
+                            "startThreshold": 0.44
+                        },
+                        {
+                            "endThreshold": 1,
+                            "name": "thick_spice",
+                            "startThreshold": 0.76
+                        }
+                    ],
+                    "octave1_weight": 0.15,
+                    "octave2_weight": 0.55,
+                    "octave3_weight": 1.0
+                },
+                "susceptibility": 0.0
+            },
+            "id": 12,
+            "visualizer": {
+                "x": -816.0,
+                "y": -504.0
+            }
+        },
+        {
+            "data": {
+                "boundary": "inner",
+                "magnet": {
+                    "force": 35.0,
+                    "position": {
+                        "x": 0.5,
+                        "y": 0.5
+                    }
+                },
+                "radius": 2.5,
+                "resources": {
+                    "content": [
+                        {
+                            "endThreshold": 0.18,
+                            "name": "sand",
+                            "startThreshold": 0
+                        },
+                        {
+                            "endThreshold": 0.44,
+                            "name": "spice",
+                            "startThreshold": 0.18
+                        },
+                        {
+                            "endThreshold": 1,
+                            "name": "thick_spice",
+                            "startThreshold": 0.44
+                        }
+                    ],
+                    "octave1_weight": 0.1,
+                    "octave2_weight": 0.6,
+                    "octave3_weight": 1.25
+                },
+                "susceptibility": 0.0
+            },
+            "id": 13,
+            "visualizer": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        }
+    ],
+    "octaves": {
+        "octave1": {
+            "maxRadius": 4,
+            "minRadius": 2
+        },
+        "octave2": {
+            "maxRadius": 8,
+            "minRadius": 5
+        },
+        "octave3": {
+            "maxRadius": 17,
+            "minRadius": 11
+        }
+    },
+    "symmetrical_edges": [
+        {
+            "ID_first": 1,
+            "ID_second": 7,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 1,
+            "ID_second": 12,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 7,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 22,
+                    "maxWallLength": 7,
+                    "minPassWidth": 14,
+                    "minWallLength": 3
+                },
+                "resourceBlend": {
+                    "distance": 2
+                }
+            }
+        },
+        {
+            "ID_first": 2,
+            "ID_second": 8,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 2,
+            "ID_second": 7,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 8,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 22,
+                    "maxWallLength": 7,
+                    "minPassWidth": 14,
+                    "minWallLength": 3
+                },
+                "resourceBlend": {
+                    "distance": 2
+                }
+            }
+        },
+        {
+            "ID_first": 3,
+            "ID_second": 9,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 3,
+            "ID_second": 8,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 9,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 22,
+                    "maxWallLength": 7,
+                    "minPassWidth": 14,
+                    "minWallLength": 3
+                },
+                "resourceBlend": {
+                    "distance": 2
+                }
+            }
+        },
+        {
+            "ID_first": 4,
+            "ID_second": 10,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 4,
+            "ID_second": 9,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 10,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 22,
+                    "maxWallLength": 7,
+                    "minPassWidth": 14,
+                    "minWallLength": 3
+                },
+                "resourceBlend": {
+                    "distance": 2
+                }
+            }
+        },
+        {
+            "ID_first": 5,
+            "ID_second": 11,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 5,
+            "ID_second": 10,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 11,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 22,
+                    "maxWallLength": 7,
+                    "minPassWidth": 14,
+                    "minWallLength": 3
+                },
+                "resourceBlend": {
+                    "distance": 2
+                }
+            }
+        },
+        {
+            "ID_first": 6,
+            "ID_second": 12,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 6,
+            "ID_second": 11,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 24,
+                    "maxWallLength": 5,
+                    "minPassWidth": 16,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 12,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 22,
+                    "maxWallLength": 7,
+                    "minPassWidth": 14,
+                    "minWallLength": 3
+                },
+                "resourceBlend": {
+                    "distance": 2
+                }
+            }
+        },
+        {
+            "ID_first": 1,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 16,
+                    "maxWallLength": 4,
+                    "minPassWidth": 8,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 2,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 16,
+                    "maxWallLength": 4,
+                    "minPassWidth": 8,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 3,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 16,
+                    "maxWallLength": 4,
+                    "minPassWidth": 8,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 4,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 16,
+                    "maxWallLength": 4,
+                    "minPassWidth": 8,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 5,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 16,
+                    "maxWallLength": 4,
+                    "minPassWidth": 8,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        },
+        {
+            "ID_first": 6,
+            "ID_second": 13,
+            "data": {
+                "passes": {
+                    "maxPassWidth": 16,
+                    "maxWallLength": 4,
+                    "minPassWidth": 8,
+                    "minWallLength": 2
+                },
+                "resourceBlend": {
+                    "distance": 0
+                }
+            }
+        }
+    ],
+    "visualizer": {
+        "magnetFrame": {
+            "center": {
+                "x": 0.0,
+                "y": 0.0
+            },
+            "halfExtent": 1200.0,
+            "scale": 1.1871774831816384
+        }
+    },
+    "walls": {
+        "resource": "cliff_rock"
+    }
+}
